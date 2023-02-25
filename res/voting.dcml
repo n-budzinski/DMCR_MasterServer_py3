@@ -1,0 +1,26 @@
+<VOTING>
+
+#font(GC12,R2C12,RC12)
+#txt[%ANS0](%B_VOTE[x:5,y:3,w:100%-10,h:14],{},"Top donations: ")
+#apan[%PAN1](%B_VOTE[x:0-3,y:%ANS0+0+10,w:100%-4,h:13],{GW|open&voting.dcml\00&question=32^answer=65\00|LW_lockall},14,"")
+
+#font(R2C12,R2C12,RC12)
+#txt[%ANS1](%B_VOTE[x:0,y:%ANS0+0+11,w:100%,h:20],{},"1. - ")
+#ctxt[%RES1](%B_VOTE[x:105,y:%ANS0+0+11,w:40,h:20],{},"0")
+#apan[%PAN2](%B_VOTE[x:0-3,y:%ANS0+14+10,w:100%-4,h:13],{GW|open&voting.dcml\00&question=32^answer=62\00|LW_lockall},14,"")
+
+#font(R2C12,R2C12,RC12)
+#txt[%ANS2](%B_VOTE[x:0,y:%ANS0+14+11,w:100%,h:20],{},"2. - ")
+#ctxt[%RES2](%B_VOTE[x:105,y:%ANS0+14+11,w:40,h:20],{},"0")
+#apan[%PAN3](%B_VOTE[x:0-3,y:%ANS0+28+10,w:100%-4,h:13],{GW|open&voting.dcml\00&question=32^answer=63\00|LW_lockall},14,"")
+
+#font(R2C12,R2C12,RC12)
+#txt[%ANS3](%B_VOTE[x:0,y:%ANS0+28+11,w:100%,h:20],{},"3. - ")
+#ctxt[%RES3](%B_VOTE[x:105,y:%ANS0+28+11,w:40,h:20],{},"0")
+#apan[%PAN4](%B_VOTE[x:0-3,y:%ANS0+42+10,w:100%-4,h:13],{GW|open&voting.dcml\00&question=32^answer=64\00|LW_lockall},14,"")
+
+#font(R2C12,R2C12,RC12)
+#txt[%ANS4](%B_VOTE[x:0,y:%ANS0+42+11,w:100%,h:20],{},"4. - ")
+#ctxt[%RES4](%B_VOTE[x:105,y:%ANS0+42+11,w:40,h:20],{},"0")
+
+<VOTING>

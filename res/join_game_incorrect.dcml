@@ -1,0 +1,5 @@
+<NGDLG>
+#exec(LW_cfile&\00&Bastet/%GV_VE_PASSWD)
+#ebox[%BF](x:0,y:0,w:100%,h:100%)
+     #table[%TBL](%BF[x:243,y:130,w:415,h:205],{}{}{GW|open&join_game.dcml\00&id_room=LOBBY_ID\00|LW_lockall}{LW_file&Internet/Cash/cancel.cml},2,0,3,13,252,"ERROR","You cannot join the room! This is an incorrect room. Press Cancel button to exit",26,"Try Again","Cancel")
+     <NGDLG>
