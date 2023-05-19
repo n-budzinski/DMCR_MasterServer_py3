@@ -30,6 +30,21 @@ def _def_gp_btn(element, a, b, c, d):
 def _gpbtn(id, posX, posY, width, height, command, text):
     return f"#gpbtn[%{id}][x:{posX},y:{posY},w:{width},h:{height}],{{{command}}},\"{text}\")"
 
+def _txt(id, posX, posY, width, height, command, text):
+    return f"#txt[%{id}][x:{posX},y:{posY},w:{width},h:{height}],{{{command}}},\"{text}\")"
+
+def _edit(id, posX, posY, width, height, command, text):
+    return f"#txt[%{id}][x:{posX},y:{posY},w:{width},h:{height}],{{{command}}},\"{text}\")"
+
+def _block(a, b):
+    return f"#block({a},{b})"
+
+def _end(a, b):
+    return f"#block({a})"
+
+def _hint(parentID, text):
+    return f"#hint(%{parentID},\"{text}\")"
+
 
 def _mesdlg() -> str:
     return "<MESDLG>"
@@ -40,7 +55,7 @@ def logUser(gameManager, options, chatAddress, player) -> str:
     from common import check_alpha
     gameManager.leave_lobby(player)
     player.nickname = options.get("VE_NICK")
-    if len(player.playerName) > 3 and check_alpha(player.playerName):
+    if len(player.nickname) > 3 and check_alpha(player.nickname):
         return "\n".join((
                 _mesdlg(),
                 _ebox("MBG", 0, 0, 1024, 768),
@@ -157,16 +172,16 @@ def logUser(gameManager, options, chatAddress, player) -> str:
                 _pix("PX0", "BTABLE2", 391, 310-10, 50, 70, "Internet/pix/head01", 0, 0, 0, 0),
                 _pix("PX1", "BTABLE2", 626, 310-10, 50, 70, "Internet/pix/head01", 1, 1, 1, 1),
                 _font("BG18", "BG18", "RG18"),
-                _ctxt("TTEXT", "BTABLE2", 306, 310-1, 415, 20, "ERROR"),
+                _ctxt("TTEXT", "BTABLE2", 306, 310-1, 415, 20, "", "ERROR"),
                 _font("BC12", "RC12", "RC12"),
-                _ctxt("TTEXT", "BTABLE2", 306+20, 310+22, 415-40, 20, 
+                _ctxt("TTEXT", "BTABLE2", 306+20, 310+22, 415-40, 20, "",
                       "Incorrect nickname! Nickname must begin with a letter\
                           and must not contain other characters than letters and digits in its body.\
                             Press Edit button to check nickname. Press Cancel to exit"),
                 _exec("LW_vis", {
                     f"0": "%MTXT0"
                 }),
-                _ctxt("MTXT", "BTABLE2", 306+20, 420-3, 415-40, "%MTXT0" - 310 - 23, 
+                _ctxt("MTXT", "BTABLE2", 306+20, 420-3, 415-40, "%MTXT0" - 310 - 23, "",
                       "Incorrect nickname! Nickname must begin with a letter\
                           and must not contain other characters than letters and digits in its body.\
                             Press Edit button to check nickname. Press Cancel to exit"),
@@ -178,3 +193,126 @@ def logUser(gameManager, options, chatAddress, player) -> str:
                 _gpbtn("TTEXT", "BTABLE2", 520-433, 499-16, "100%", 70, "LW_file&Internet/Cash/l_games_btn.cml","Cancel"),
                 _mesdlg()
                 ))
+
+
+# player, options, gamemanager
+def demoLogin() -> str:
+    return "\n".join((
+                _ebox("EBG", 0, 0, 1024, 768),
+                _exec("LW_enbbox", {
+                    f"0": "%L0"
+                }),
+                _exec("LW_enbbox", {
+                    f"0": "%B"
+                }),
+                _exec("LW_enbbox", {
+                    f"0": "%FLBOX"
+                }),
+                _exec("LW_enbbox", {
+                    f"0": "%BP"
+                }),
+                _exec("LW_enbbox", {
+                    f"0": "%L"
+                }),
+                _exec("LW_enbbox", {
+                    f"0": "%BB"
+                }),
+                _exec("LW_enbbox", {
+                    f"0": "%B1"
+                }),
+                _exec("LW_enbbox", {
+                    f"0": "%BG"
+                }),
+                _exec("LW_enbbox", {
+                    f"0": "%B2"
+                }),
+                _exec("LW_enbbox", {
+                    f"0": "%BPANEL"
+                }),
+                _exec("LW_enbbox", {
+                    f"0": "%BPANEL2"
+                }),
+                _exec("LW_enbbox", {
+                    f"0": "%TB"
+                }),
+                _exec("LW_enbbox", {
+                    f"0": "%B_VOTE"
+                }),
+                _exec("LW_enbbox", {
+                    f"0": "%MBG"
+                }),
+                _exec("LW_enbbox", {
+                    f"0": "%B0"
+                }),
+                _exec("LW_enbbox", {
+                    f"0": "%M"
+                }),
+                _exec("LW_enbbox", {
+                    f"0": "%LB"
+                }),
+                _exec("LW_enbbox", {
+                    f"0": "%MB"
+                }),
+                _exec("LW_enbbox", {
+                    f"0": "%EBG"
+                }),
+                _exec("LW_enbbox", {
+                    f"0": "%LBX"
+                }),
+                _exec("LW_enbbox", {
+                    f"0": "%BARDLD"
+                }),
+                _exec("LW_enbbox", {
+                    f"0": "%BF2"
+                }),
+                _exec("LW_enbbox", {
+                    f"0": "%B01"
+                }),
+                _exec("LW_enbbox", {
+                    f"0": "%BF"
+                }),
+                _exec("LW_enbbox", {
+                    f"0": "%BTABLE"
+                }),
+                _exec("LW_enbbox", {
+                    f"0": "%SB"
+                }),
+                _ebox("BTABLE", 0, 0, "100%", "100%"),
+                _font("BC12", "BC12", "BC12"),
+                _def_panel(11, "Interf3/elements/b02", -1, -1, -1, -1, -1, -1, -1, -1, 8, 8),
+                _pan("MPNT", "BTABLE", 251, 308, 523, 240, 11),
+                _def_panel(11, "Interf3/elements/b02", -1, -1, 14, 15, 4, 5, 11, 16, -1, -1),
+                _pan("MPN", "BTABLE", 251, 308, 523, 240, 11),
+                _pix("PXT1", "BTABLE", 251-208, 308-189, 50, 70, "Interf3/elements/b02", 18, 18, 18, 18),
+                _pix("PXT2", "BTABLE",566, 308-189, 50, 70, "Interf3/elements/b02", 19, 19, 19, 19),
+                _pix("PX2", "BTABLE", 617+5, 308-5, 50, 70, "Internet/pix/head01", 2, 2, 2, 2),
+                _pix("PX3", "BTABLE", 347+5, 308-5, 50, 70, "Internet/pix/head01", 2, 2, 2, 2),
+                _pix("PX4", "BTABLE", 397+5, 308-5, 50, 70, "Internet/pix/head01", 2, 2, 2, 2),
+                _pix("PX5", "BTABLE", 447+5, 308-5, 50, 70, "Internet/pix/head01", 2, 2, 2, 2),
+                _pix("PX6", "BTABLE", 497+5, 308-5, 50, 70, "Internet/pix/head01", 2, 2, 2, 2),
+                _pix("PX7", "BTABLE", 547+5, 308-5, 50, 70, "Internet/pix/head01", 2, 2, 2, 2),
+                _pix("PX8", "BTABLE", 597+5, 308-5, 50, 70, "Internet/pix/head01", 2, 2, 2, 2),
+                _pix("PX0", "BTABLE", 342, 308-5, 90, 70, "Internet/pix/head01", 0, 0, 0, 0),
+                _pix("PX1", "BTABLE", 672, 308-5, 90, 70, "Internet/pix/head01", 1, 1, 1, 1),
+                _font("BG18", "BG18", "RG18"),
+                _ctxt("TTEXT", "BTABLE2", 251+2, 308+4, 523, 20, 0, "Bastet Login"),
+                _def_gp_btn("Internet/pix/i_pri0", 49, 50, 0, 0),
+                _def_gp_btn("Internet/pix/i_pri0", 49, 50, 0, 0),
+                _font("WG14", "BG14", "WG14"),
+                _gpbtn("PXBT", "BTABLE", 519-433, 517-16, "100%", 70, "LW_key&#CANCEL","Cancel"),
+                _ebox("LBX", 270, 310, 500, 220),
+                _pix("PX1", "LBX", 2, 54, "100%", "100%", "Internet/pix/i_pri0", 35, 35, 35, 35),
+                _font("BC14", "BC14", "BC14"),
+                _txt("L_NICK", "LBX", 74, 115, "100%", 20, "", "Nickname"),
+                _pan("P_NICK", "LBX", 167, 115, 238, 14, 1),
+                _edit("E_NICK", "LBX", 172, 112, 232, 18, "%GV_VE_NICK", "Player"),
+                _pix("PX2", "LBX", 4, 157, "100%", "100%", "Internet/pix/i_pri0", 35, 35, 35, 35),
+                _mesdlg(),
+                _mesdlg(),
+                _block("l_games_btn.cml","CAN"),
+                _mesdlg(),
+                _mesdlg(),
+                _end("CAN"),
+                _hint("L_NICK", "Enter your nickname"),
+                _hint("Login", "Join the server"),
+            ))
