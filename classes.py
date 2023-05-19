@@ -94,10 +94,10 @@ class Player:
                  ipAddress, 
                  sessionID: str, 
                  lobby: Lobby = None, 
-                 playerName: str = 'Player'):
+                 nickname: str = 'Player'):
         self.ipAddress = ipAddress
         self.sessionID = sessionID
-        self.playerName = playerName
+        self.nickname = nickname
         self.lobby = lobby
         self.packetOrdinal = 0
         self.gameVersion = 0
