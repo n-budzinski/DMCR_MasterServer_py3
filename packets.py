@@ -81,36 +81,3 @@ def add_header(packet, request):
     return finalizedpacket
 
 
-def handle_client(recvdata, recvaddr, keepalivesock, gamemanager):
-
-    # datalen = len(recvdata)
-    action_id = recvdata[4]
-
-    if action_id == 22:
-        publicaddr = bytearray()
-        publicaddr.extend(recvdata[:4])
-        publicaddr.extend(struct.pack('H', 17))
-        octets = recvaddr[0].split(sep=".")
-
-        for octet in octets:
-            octetint = int(octet)
-            octetint = struct.pack("B", octetint)
-            publicaddr.extend(octetint)
-        clientport = struct.pack("H", recvaddr[1])
-        publicaddr.extend(clientport)
-        keepalivesock.sendto(publicaddr, recvaddr)
-
-    # Relays client network interfaces to the provided lobby host
-    elif action_id == 24:
-        hostaddr = recvdata[6:10]
-        hostaddr = [str(byte) for byte in hostaddr]
-        hostaddr = ".".join(hostaddr)
-
-        for lobby in gamemanager.lobbies:
-            if hostaddr == gamemanager.lobbies[lobby].host.ipAddress[0]:
-                recvdata = bytearray(recvdata)
-                recvdata[-5:] = [0x25, 0xCD, 0x40, 0x6E, 0x3E]
-                keepalivesock.sendto(recvdata, (hostaddr, 34000))
-
-    else:
-        pass

@@ -162,7 +162,7 @@ def joinGame(player: classes.Player, options, gamemanager: classes.GameManager):
                 .replace("LOBBY_ID", options["id_room"])
         else:
             if lobby.password:
-                if options.get("password", "") is "":
+                if options.get("password", "") == "":
                     return common.get_file("password_prompt.dcml")\
                         .replace("LOBBYID", options["id_room"])
                 elif options.get("password", "") != lobby.password:

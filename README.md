@@ -1,9 +1,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/n-budzinski/Bastet/badge.svg?branch=main)](https://coveralls.io/github/n-budzinski/Bastet?branch=main)
-# Bastet - Alexander Anubis emulator 
+# Bastet - Alexander Anubis emulator
 
 A simple PoC master server emulator for GSC's Alexander (anubis.2gw.net).
-Non-viable for a large scale deployment. Doesn't support any form of user authentication.
-Doesn't work with the demo version of the game, yet.
 
 <br />
 <br />
@@ -21,7 +19,7 @@ Doesn't work with the demo version of the game, yet.
 
 # Dependencies
 
-- N/A
+- None
 
 <br />
 
@@ -47,12 +45,8 @@ Doesn't work with the demo version of the game, yet.
 
 <br />
 
-# TODOs
-
-- TODO 😐
-
 <br />
 
 # Disclaimer
 
-We are not affiliated, associated, authorized, endorsed by, or in any way officially connected with the GSC, Ubisoft, or any of its subsidiaries or its affiliates.
+I am not affiliated, associated, authorized, endorsed by, or in any way officially connected with the GSC, Ubisoft, or any of its subsidiaries or its affiliates.

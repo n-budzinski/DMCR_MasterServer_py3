@@ -10,7 +10,6 @@ import json
 from common import genID
 import traceback
 
-
 with open("./settings.json") as file:
     SETTINGS = json.load(file)
 
@@ -18,16 +17,50 @@ gamemanager = classes.GameManager()
 Lock = threading.Lock()
 
 
-def handle_udp(udp_sock: socket.socket):
+def stunServe(recvdata, recvaddr, keepalivesock):
+    from struct import pack
+    # datalen = len(recvdata)
+    action_id = recvdata[4]
+
+    if action_id == 22:
+        publicaddr = bytearray()
+        publicaddr.extend(recvdata[:4])
+        publicaddr.extend(pack('H', 17))
+        octets = recvaddr[0].split(sep=".")
+
+        for octet in octets:
+            octetint = int(octet)
+            octetint = pack("B", octetint)
+            publicaddr.extend(octetint)
+        clientport = pack("H", recvaddr[1])
+        publicaddr.extend(clientport)
+        keepalivesock.sendto(publicaddr, recvaddr)
+
+    elif action_id == 24:
+        hostaddr = recvdata[6:10]
+        hostaddr = [str(byte) for byte in hostaddr]
+        hostaddr = ".".join(hostaddr)
+
+        for lobby in gamemanager.lobbies:
+            if hostaddr == gamemanager.lobbies[lobby].host.ipAddress[0]:
+                recvdata = bytearray(recvdata)
+                recvdata[-5:] = [0x25, 0xCD, 0x40, 0x6E, 0x3E]
+                keepalivesock.sendto(recvdata, (hostaddr, 34000))
+
+    else:
+        pass
+
+
+def handleUDP(udp_sock: socket.socket):
     while True:
         recvdata, recvaddr = udp_sock.recvfrom(64)
         keepalivethread = threading.Thread(
-            target=packets.handle_client,
+            target=stunServe,
             args=(recvdata, recvaddr, udp_sock, gamemanager))
         keepalivethread.start()
 
 
-async def handle_tcp(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
+async def handleTCP(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
     player = Player(
         writer.get_extra_info(name='peername'),
         genID()
@@ -67,7 +100,7 @@ async def handle_tcp(reader: asyncio.StreamReader, writer: asyncio.StreamWriter)
 
 
 async def run_server():
-    server = await asyncio.start_server(handle_tcp, SETTINGS["HOST"], SETTINGS["TCP_PORT"])
+    server = await asyncio.start_server(handleTCP, SETTINGS["HOST"], SETTINGS["TCP_PORT"])
     async with server:
         await server.serve_forever()
 
@@ -76,9 +109,9 @@ def start():
     udpsocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udpsocket.bind((SETTINGS["HOST"], SETTINGS["UDP_PORT"]))
     udpsocket.setblocking(True)
-    lobby_thread = threading.Thread(target=handle_udp, args=(udpsocket,))
-    lobby_thread.daemon = True
-    lobby_thread.start()
+    stunThread = threading.Thread(target=handleUDP, args=(udpsocket,))
+    stunThread.daemon = True
+    stunThread.start()
     asyncio.run(run_server())
 
 
