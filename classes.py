@@ -85,7 +85,7 @@ class Lobby:
         self._players.append(player)
 
     def hasPassword(self):
-        return self.password is not None
+        return self.password != ""
 
     def isFull(self):
         return self.getPlayerCount() >= self.maxPlayers

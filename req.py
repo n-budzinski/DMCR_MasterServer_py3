@@ -26,8 +26,11 @@ def process_request(packetData, player: classes.Player, gamemanager: classes.Gam
     integrity = parameters[len(parameters) - 2].decode()
 
     if player.packetOrdinal != header.packetOrdinal:
-        player.packetOrdinal = header.packetOrdinal
-        return responseParameters.append(["LW_show", "<NGDLG>#exec(GW|open&log_user.dcml\\00&VE_NICK=<%GV_VE_NICK>\\00<NGDLG>"])
+        # player.packetOrdinal = header.packetOrdinal
+        # return responseParameters.append(["LW_show", "<NGDLG>#exec(GW|open&log_user.dcml\\00&VE_NICK=<%GV_VE_NICK>\\00<NGDLG>"])
+        gamemanager.leaveLobby(player)
+        #responseParameters.append([responseCommand, common.get_file("login.dcml")])
+        responseParameters.append([responseCommand, dcml.demoLogin()])
 
     if player.sessionID == b'0':
         responseParameters.append([responseCommand, "exec(LW_key&#CANCEL)"])
@@ -183,7 +186,7 @@ def browser_get(options: dict, gamemanager:classes.GameManager, player:classes.P
         buttonstring += buttonstringtemp
         entrypos += 21
         pingstringtemp = \
-            f',21,"{lobby.gameTitle + (lambda : "  *password*  " if lobby.password is not "" else "")()}",'\
+            f',21,"{lobby.gameTitle + (lambda : "  *password*  " if lobby.password != "" else "")()}",'\
             f'"{lobby.host.nickname}",'\
             f'"{lobby.gameType.name}",'\
             f'"{str(lobby.getPlayerCount())}/{str(lobby.maxPlayers)}",'\

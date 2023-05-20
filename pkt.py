@@ -4,9 +4,6 @@ import struct
 GGWDSERVER_LANG = 0
 GGWDSERVER_VERS = 16
 
-ENDIANNESS = "little"
-ENCODING = "utf-8"
-
 # TODO Research the behavior when multiple commands are present
 class Header:
         def __init__(self, 
@@ -27,10 +24,10 @@ def unpack(packet):
     fun_count = struct.unpack("B", packetData[0:1])[0]
     for function_n in range(0, fun_count):
         parameter_length = 0
-        function_length = struct.unpack_from("B", packetData[2:3], False)[0]
-        cursor = 5 + function_length
-        functions.append([packetData[3:3 + function_length].decode(ENCODING), []])  # requested function
-        param_n = struct.unpack("B", packetData[3 + function_length:4 + function_length])[0]  # quantity of parameters
+        functionLength = struct.unpack_from("B", packetData[2:3], False)[0]
+        cursor = 5 + functionLength
+        functions.append([packetData[3:3 + functionLength].decode(), []])  # requested function
+        param_n = struct.unpack("B", packetData[3 + functionLength:4 + functionLength])[0]  # quantity of parameters
         for _ in range(0, param_n):
             # buffer = data[cursor:cursor+2]
             parameter_length = struct.unpack("<H", packetData[cursor:cursor+2], )[0]
@@ -45,17 +42,17 @@ def unpack(packet):
 def pack(data, integrity):
     # first entry is action
     packet = bytearray()
-    packet.extend(struct.pack("H", data.__len__()))  # number of functions in the packet
+    packet.extend(struct.pack("H", len(data)))  # number of functions in the packet
     fn = 0
     for function in data:
         data[fn].append(integrity)
-        packet.extend(struct.pack("B", data[fn][0].__len__()))  # function length
-        packet.extend(data[fn][0].encode(ENCODING))  # function name
-        packet.extend(struct.pack("H", data[fn].__len__()-1))  # param count ?(don't count the function)
+        packet.extend(struct.pack("B", len(data[fn][0])))  # function length
+        packet.extend(data[fn][0].encode())  # function name
+        packet.extend(struct.pack("H", len(data[fn])-1))  # param count ?(don't count the function)
         for parameter in function[1:]:
             packet.extend(struct.pack("I", len(parameter)))
             # packet.extend([0x00, 0x00])
-            packet.extend(parameter.encode(ENCODING))
+            packet.extend(parameter.encode())
         fn += 1
     return packet
 
