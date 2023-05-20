@@ -65,8 +65,7 @@ def processRequest(packetData, player: classes.Player, gamemanager: classes.Game
 
     elif requestCommand == "alive":
         if player.lobby:
-            player.lobby.setReportedPlayerCount(
-                int.from_bytes(parameters[0][0:1], 'little'))
+            player.lobby.setReportedPlayerCount(int.from_bytes(parameters[0][0:1]))
         return
 
     elif requestCommand == "login":
@@ -90,7 +89,7 @@ def processRequest(packetData, player: classes.Player, gamemanager: classes.Game
 
         elif request == "log_conf_dlg.dcml":
             responseParameters.append(
-                [responseCommand, common.get_file(request)])
+                [responseCommand, common.getFile(request)])
 
         elif request == "dbtbl.dcml":
             responseParameters.append(
@@ -98,11 +97,11 @@ def processRequest(packetData, player: classes.Player, gamemanager: classes.Game
 
         elif request == "cancel.dcml":
             responseParameters.append(
-                [responseCommand, common.get_file(request)])
+                [responseCommand, common.getFile(request)])
 
         elif request == "startup.dcml":
             responseParameters.append(
-                [responseCommand, common.get_file(request)])
+                [responseCommand, common.getFile(request)])
 
         elif request == "voting.dcml":
             responseParameters.append([responseCommand, voting(options)])
@@ -125,7 +124,7 @@ def processRequest(packetData, player: classes.Player, gamemanager: classes.Game
 
         else:
             responseParameters.append(
-                [responseCommand, common.get_file("cancel.dcml")])
+                [responseCommand, common.getFile("cancel.dcml")])
 
     else:
         raise ValueError
@@ -143,7 +142,7 @@ def createGame(host: classes.Player, options: dict, gamemanager: classes.GameMan
         gameType=getGameType(int(options['type']))
     )
 
-    output = common.get_file("new_game_dlg_create.dcml")\
+    output = common.getFile("new_game_dlg_create.dcml")\
         .replace("MAXPLAYERS", options['max_players'])\
         .replace("LOBBYID", lobbyID)\
         .replace("GAMETITLE", options['title'])
@@ -156,25 +155,25 @@ def joinGame(player: classes.Player, options, gamemanager: classes.GameManager):
     lobby = gamemanager.getLobby(options["id_room"])
     if lobby:
         if lobby.isFull():
-            return common.get_file("lobby_full.dcml")
+            return common.getFile("lobby_full.dcml")
         elif lobby.host.sessionID == player.sessionID:
-            return common.get_file("join_game_own.dcml")\
+            return common.getFile("join_game_own.dcml")\
                 .replace("LOBBY_ID", options["id_room"])
         else:
             if lobby.password:
                 if options.get("password", "") == "":
-                    return common.get_file("password_prompt.dcml")\
+                    return common.getFile("password_prompt.dcml")\
                         .replace("LOBBYID", options["id_room"])
                 elif options.get("password", "") != lobby.password:
-                    return common.get_file("incorrect_password.dcml")
+                    return common.getFile("incorrect_password.dcml")
             gamemanager.joinLobby(lobby, player)
-            return common.get_file("join_game.dcml")\
+            return common.getFile("join_game.dcml")\
                 .replace("LOBBYID", options["id_room"])\
                 .replace("MAXPLAYERS", str(lobby.maxPlayers))\
                 .replace("GAMEHOST", lobby.host.nickname)\
                 .replace("IPADDR", lobby.ipAddress[0])\
                 .replace("PORT", str(TCP_PORT))
-    return common.get_file("join_game_incorrect.dcml").replace("LOBBY_ID", options["id_room"])
+    return common.getFile("join_game_incorrect.dcml").replace("LOBBY_ID", options["id_room"])
 
 
 def browser(options: dict, gamemanager: classes.GameManager, player: classes.Player):
@@ -185,7 +184,7 @@ def browser(options: dict, gamemanager: classes.GameManager, player: classes.Pla
     currlobby = 0
     buttonstring = ""
     pingstring = ""
-    newlobbystring = common.get_file("dbtbl.dcml")
+    newlobbystring = common.getFile("dbtbl.dcml")
     newlobbystring = newlobbystring.replace("//LASTUPDATE", lastupdate)
     for (lid, lobby) in lobbies.items():
         buttonstringtemp = \
@@ -211,7 +210,7 @@ def browser(options: dict, gamemanager: classes.GameManager, player: classes.Pla
 
 
 def newGameDlg(player: classes.Player, options: dict):
-    return common.get_file("newGameDlg.dcml")\
+    return common.getFile("newGameDlg.dcml")\
         .replace("NICKNAME", player.nickname) \
         .replace("//TYPES", "".join([f'{_type.name},' for _type in classes.GameTypes.types]))
 
@@ -219,4 +218,4 @@ def newGameDlg(player: classes.Player, options: dict):
 def voting(options: dict):
     question = options.get("question")
     answer = options.get("answer")
-    return common.get_file("voting.dcml")
+    return common.getFile("voting.dcml")

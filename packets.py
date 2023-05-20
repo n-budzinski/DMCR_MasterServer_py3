@@ -66,7 +66,7 @@ def pack(data, integrity):
     return packet
 
 
-def add_header(packet, request):
+def addHeader(packet, request):
     datalen = len(packet)
     packeddata = compress(packet)
     finalizedpacket = bytearray()

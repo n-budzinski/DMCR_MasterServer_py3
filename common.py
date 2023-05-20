@@ -2,10 +2,10 @@ import ipaddress
 import uuid
 from os import urandom
 
-def get_file(filename: str) -> str:
+def getFile(filename: str) -> str:
     return open(f'res/{filename}', 'rb').read().decode()
 
-def check_alpha(text: str):
+def checkAlpha(text: str):
     if text.isalnum():
         return True
     return False

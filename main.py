@@ -16,8 +16,7 @@ with open("./settings.json") as file:
 gamemanager = classes.GameManager()
 Lock = threading.Lock()
 
-
-def stunServe(recvdata, recvaddr, keepalivesock):
+def udpPunch(recvdata, recvaddr, keepalivesock):
     from struct import pack
     # datalen = len(recvdata)
     action_id = recvdata[4]
@@ -55,7 +54,7 @@ def handleUDP(udp_sock: socket.socket):
     while True:
         recvdata, recvaddr = udp_sock.recvfrom(64)
         keepalivethread = threading.Thread(
-            target=stunServe,
+            target=udpPunch,
             args=(recvdata, recvaddr, udp_sock, gamemanager))
         keepalivethread.start()
 
@@ -82,7 +81,7 @@ async def handleTCP(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
                         data, player, gamemanager)
                     if not response:
                         continue
-                    response = packets.add_header(response, data)
+                    response = packets.addHeader(response, data)
                     fragment_offset = 0
                     for fragment_i in range(0, math.ceil(len(response)/1440)):
                         fragment = response[fragment_offset:fragment_offset + 1440]
