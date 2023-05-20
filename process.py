@@ -1,5 +1,5 @@
 from datetime import datetime
-import pkt
+import packets
 import common
 import classes
 from classes import getGameType
@@ -11,13 +11,14 @@ HOST = set["HOST"]
 IRC_CHAT_ADDRESS = set["IRC_CHAT_ADDRESS"]
 TCP_PORT = set["TCP_PORT"]
 
+
 class Object():
     pass
 
 
-def process_request(packetData, player: classes.Player, gamemanager: classes.GameManager):
+def processRequest(packetData, player: classes.Player, gamemanager: classes.GameManager):
     responseParameters = []
-    header, data = pkt.unpack(packetData)
+    header, data = packets.unpack(packetData)
     requestCommand = data[0][0]
     parameters = data[0][1]
     request = parameters[0].decode()
@@ -29,7 +30,7 @@ def process_request(packetData, player: classes.Player, gamemanager: classes.Gam
         # player.packetOrdinal = header.packetOrdinal
         # return responseParameters.append(["LW_show", "<NGDLG>#exec(GW|open&log_user.dcml\\00&VE_NICK=<%GV_VE_NICK>\\00<NGDLG>"])
         gamemanager.leaveLobby(player)
-        #responseParameters.append([responseCommand, common.get_file("login.dcml")])
+        # responseParameters.append([responseCommand, common.get_file("login.dcml")])
         responseParameters.append([responseCommand, dcml.demoLogin()])
 
     if player.sessionID == b'0':
@@ -50,7 +51,7 @@ def process_request(packetData, player: classes.Player, gamemanager: classes.Gam
     elif requestCommand == "url":
         responseCommand = "LW_time"
         returl = "open:" + parameters[0].decode('utf8')
-        return pkt.pack([[responseCommand, "0", returl]], integrity)
+        return packets.pack([[responseCommand, "0", returl]], integrity)
 
     elif requestCommand == "gmalive":
         return
@@ -64,62 +65,72 @@ def process_request(packetData, player: classes.Player, gamemanager: classes.Gam
 
     elif requestCommand == "alive":
         if player.lobby:
-            player.lobby.setReportedPlayerCount(int.from_bytes(parameters[0][0:1], 'little'))
+            player.lobby.setReportedPlayerCount(
+                int.from_bytes(parameters[0][0:1], 'little'))
         return
 
     elif requestCommand == "login":
         gamemanager.leaveLobby(player)
-        #responseParameters.append([responseCommand, common.get_file("login.dcml")])
+        # responseParameters.append([responseCommand, common.get_file("login.dcml")])
         responseParameters.append([responseCommand, dcml.demoLogin()])
 
     elif requestCommand == "open":
 
-        options = {'others':[]}
-        for option in parameters[1].decode(pkt.ENCODING).split(sep="^"):
+        options = {'others': []}
+        for option in parameters[1].decode().split(sep="^"):
             t = (option.strip("'").split(sep="="))
             if len(t) == 2:
                 options[t[0]] = t[1]
             else:
                 options["others"].append(t[0])
 
-
         if request == "log_user.dcml":
-            responseParameters.append([responseCommand, dcml.logUser(gamemanager, options, IRC_CHAT_ADDRESS, player)])
+            responseParameters.append([responseCommand, dcml.logUser(
+                gamemanager, options, IRC_CHAT_ADDRESS, player)])
 
         elif request == "log_conf_dlg.dcml":
-            responseParameters.append([responseCommand, common.get_file(request)])
+            responseParameters.append(
+                [responseCommand, common.get_file(request)])
 
         elif request == "dbtbl.dcml":
-            responseParameters.append([responseCommand, browser_get(options, gamemanager, player)])
+            responseParameters.append(
+                [responseCommand, browser(options, gamemanager, player)])
 
         elif request == "cancel.dcml":
-            responseParameters.append([responseCommand, common.get_file(request)])
+            responseParameters.append(
+                [responseCommand, common.get_file(request)])
 
         elif request == "startup.dcml":
-            responseParameters.append([responseCommand, common.get_file(request)])
+            responseParameters.append(
+                [responseCommand, common.get_file(request)])
 
         elif request == "voting.dcml":
             responseParameters.append([responseCommand, voting(options)])
 
         elif request == "games.dcml":
-            responseParameters.append([responseCommand, browser_get(options, gamemanager, player)])
+            responseParameters.append(
+                [responseCommand, browser(options, gamemanager, player)])
 
         elif request == "joinGame.dcml":
-            responseParameters.append([responseCommand, joinGame(player, options, gamemanager)])
+            responseParameters.append(
+                [responseCommand, joinGame(player, options, gamemanager)])
 
-        elif request == "new_game_dlg.dcml":
-            responseParameters.append([responseCommand, new_game_dlg(player, options)])
+        elif request == "newGameDlg.dcml":
+            responseParameters.append(
+                [responseCommand, newGameDlg(player, options)])
 
         elif request == "new_game_dlg_create.dcml":
-            responseParameters.append([responseCommand, createGame(player, options, gamemanager)])
+            responseParameters.append(
+                [responseCommand, createGame(player, options, gamemanager)])
 
         else:
-            responseParameters.append([responseCommand, common.get_file("cancel.dcml")])
+            responseParameters.append(
+                [responseCommand, common.get_file("cancel.dcml")])
 
     else:
         raise ValueError
 
-    return pkt.pack(responseParameters, integrity)
+    return packets.pack(responseParameters, integrity)
 
 
 def createGame(host: classes.Player, options: dict, gamemanager: classes.GameManager):
@@ -129,8 +140,8 @@ def createGame(host: classes.Player, options: dict, gamemanager: classes.GameMan
         maxPlayers=int(options['max_players'])+2,
         password=options['password'],
         gameTitle=options['title'],
-        gameType= getGameType(int(options['type']))
-        )
+        gameType=getGameType(int(options['type']))
+    )
 
     output = common.get_file("new_game_dlg_create.dcml")\
         .replace("MAXPLAYERS", options['max_players'])\
@@ -151,10 +162,10 @@ def joinGame(player: classes.Player, options, gamemanager: classes.GameManager):
                 .replace("LOBBY_ID", options["id_room"])
         else:
             if lobby.password:
-                if options.get("password","") is "":
+                if options.get("password", "") is "":
                     return common.get_file("password_prompt.dcml")\
                         .replace("LOBBYID", options["id_room"])
-                elif options.get("password","") != lobby.password:
+                elif options.get("password", "") != lobby.password:
                     return common.get_file("incorrect_password.dcml")
             gamemanager.joinLobby(lobby, player)
             return common.get_file("join_game.dcml")\
@@ -166,7 +177,7 @@ def joinGame(player: classes.Player, options, gamemanager: classes.GameManager):
     return common.get_file("join_game_incorrect.dcml").replace("LOBBY_ID", options["id_room"])
 
 
-def browser_get(options: dict, gamemanager:classes.GameManager, player:classes.Player):
+def browser(options: dict, gamemanager: classes.GameManager, player: classes.Player):
     lobbies = gamemanager.getLobbies(player.lobbySorting, player.lobbyResort)
     lastupdate = datetime.now()
     lastupdate = lastupdate.strftime("%H:%M:%S")
@@ -199,28 +210,13 @@ def browser_get(options: dict, gamemanager:classes.GameManager, player:classes.P
     return newlobbystring
 
 
-def new_game_dlg(player: classes.Player, options: dict):
-    return common.get_file("new_game_dlg.dcml")\
+def newGameDlg(player: classes.Player, options: dict):
+    return common.get_file("newGameDlg.dcml")\
         .replace("NICKNAME", player.nickname) \
         .replace("//TYPES", "".join([f'{_type.name},' for _type in classes.GameTypes.types]))
 
 
 def voting(options: dict):
     question = options.get("question")
-    answer  = options.get("answer")
+    answer = options.get("answer")
     return common.get_file("voting.dcml")
-
-
-# def log_user(player: classes.Player, options, gamemanager):
-#     ve_nick = None
-#     gamemanager.leave_lobby(player)
-#     for option in options:
-#         option = option.strip("'")
-#         if option.startswith("VE_NICK="):
-#             player.nickname = option[8:]
-#     if len(player.nickname) < 3 or not common.check_alpha(player.nickname):
-#         return common.get_file("log_user_bad.dcml")
-#     return common.get_file("log_user.dcml")\
-#         .replace("NICKNAME", player.nickname)\
-#         .replace("PLAYERID", str(player.session_id)) \
-#         .replace("CHAT_ADDRESS", IRC_CHAT_ADDRESS)

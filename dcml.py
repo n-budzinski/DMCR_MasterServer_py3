@@ -21,6 +21,9 @@ def _def_panel(a, element, b, c, d, e, f, g, h, i, j, k):
 def _pan(id, parentID, x, y, width, height, a):
     return f"#pan[%{id}](%{parentID}[x:{x},y:{y},w:{width},h:{height}],{a})"
 
+def _apan(id, parentID, x, y, width, height, command, a, text):
+    return f"#apan[%{id}](%{parentID}[x:{x},y:{y},w:{width},h:{height}],{{{command}}},{a},\"{text}\")"
+
 def _ctxt(id, parentID, posX, posY, width, height, command, text):
     return f"#ctxt[%{id}](%{parentID}[x:{posX},y:{posY},w:{width},h:{height}],{{{command}}},\"{text}\")"
 
@@ -45,11 +48,13 @@ def _end(a):
 def _hint(parentID, text):
     return f"#hint(%{parentID},\"{text}\")"
 
+def _voting() -> str:
+    return "<VOTING>"
 
 def _mesdlg() -> str:
     return "<MESDLG>"
 
-# player, options, gamemanager
+
 def logUser(gameManager, options, chatAddress, player) -> str:
     from common import check_alpha
     gameManager.leaveLobby(player)
@@ -318,3 +323,28 @@ def demoLogin() -> str:
                 _hint("L_NICK", "Enter your nickname"),
                 _hint("Login", "Join the server"),
             ))
+
+
+def voting():
+        return "\n".join((
+           _voting(),
+           _font("GC12", "R2C12", "RC12"),
+           _txt("ANS0", "B_VOTE", 5, 3, "100%-10", 14, "","Top donations: "),
+           _apan("PAN1", "B_VOTE", 0-3, "%ANS0+0+10", "100%-4", 13, "GW|open&voting.dcml\\00&question=32^answer=65\\00|LW_lockall", 14, ""),
+           _font("R2C12", "R2C12", "RC12"),
+           _txt("ANS1","B_VOTE", 0, "%ANS0+0+11", "100%", 20, "", "1. - "),
+           _ctxt("RES1","B_VOTE", 105, "%ANS0+0+11", 40, 20, "", "0"),
+           _apan("PAN2","B_VOTE", 0-3, "%ANS0+14+10", "100%-4", 13, "GW|open&voting.dcml\\00&question=32^answer=62\\00|LW_lockall", 14, ""),
+           _font("R2C12","R2C12","RC12"),
+           _txt("ANS2","B_VOTE", 0, "%ANS0+14+11", "100%", 20, "", "2. - "),
+           _ctxt("RES2","B_VOTE", 105, "%ANS0+14+11", 40, 20, "", "0"),
+           _apan("PAN3","B_VOTE", 0-3, "%ANS0+28+10", "100%-4", 13, "GW|open&voting.dcml\\00&question=32^answer=63\\00|LW_lockall", 14, ""),
+           _font("R2C12","R2C12","RC12"),
+           _txt("ANS3","B_VOTE", 0, "%ANS0+28+11", "100%", 20, "", "3. - "),
+           _ctxt("RES3", "B_VOTE", 105, "%ANS0+28+11", 40, 20, "","0"),
+           _apan("PAN4", "B_VOTE", 0-3, "%ANS0+42+10", "100%-4", 13, "GW|open&voting.dcml\\00&question=32^answer=64\\00|LW_lockall", 14, ""),
+           _font("R2C12", "R2C12", "RC12"),
+           _txt("ANS4","B_VOTE", 0, "%ANS0+42+11", "100%", 20, "", "4. - "),
+           _ctxt("RES4","B_VOTE", 105, "%ANS0+42+11", 40, 20, "", "0"),
+           _voting(),
+        ))

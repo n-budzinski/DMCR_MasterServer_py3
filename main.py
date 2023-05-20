@@ -3,8 +3,8 @@ from classes import Player
 import asyncio
 import socket
 import math
-import pkt
-import req
+import packets
+import process
 import classes
 import json
 from common import genID
@@ -17,11 +17,12 @@ with open("./settings.json") as file:
 gamemanager = classes.GameManager()
 Lock = threading.Lock()
 
+
 def handle_udp(udp_sock: socket.socket):
     while True:
         recvdata, recvaddr = udp_sock.recvfrom(64)
         keepalivethread = threading.Thread(
-            target=pkt.handle_client,
+            target=packets.handle_client,
             args=(recvdata, recvaddr, udp_sock, gamemanager))
         keepalivethread.start()
 
@@ -30,7 +31,7 @@ async def handle_tcp(reader: asyncio.StreamReader, writer: asyncio.StreamWriter)
     player = Player(
         writer.get_extra_info(name='peername'),
         genID()
-        )
+    )
     while True:
         try:
             data = await asyncio.wait_for(reader.read(1440), timeout=120)
@@ -44,10 +45,11 @@ async def handle_tcp(reader: asyncio.StreamReader, writer: asyncio.StreamWriter)
             if data:
                 try:
                     player.packetOrdinal += 1
-                    response = req.process_request(data, player, gamemanager)
+                    response = process.process_request(
+                        data, player, gamemanager)
                     if not response:
                         continue
-                    response = pkt.add_header(response, data)
+                    response = packets.add_header(response, data)
                     fragment_offset = 0
                     for fragment_i in range(0, math.ceil(len(response)/1440)):
                         fragment = response[fragment_offset:fragment_offset + 1440]
@@ -81,5 +83,4 @@ def start():
 
 
 if __name__ == "__main__":
-        start()
-
+    start()
