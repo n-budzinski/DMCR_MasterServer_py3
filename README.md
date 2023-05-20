@@ -4,7 +4,7 @@ A simple PoC master server emulator for GSC's Alexander (anubis.2gw.net).
 
 <br />
 
-### **Server blocks ports required to for hole punching - the game will not work properly on the system hosting the server!**
+### **Server blocks ports required for hole punching - the game will not work properly on the system hosting the server!**
 
 <br />
 <br />
