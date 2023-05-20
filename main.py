@@ -45,7 +45,7 @@ async def handle_tcp(reader: asyncio.StreamReader, writer: asyncio.StreamWriter)
             if data:
                 try:
                     player.packetOrdinal += 1
-                    response = process.process_request(
+                    response = process.processRequest(
                         data, player, gamemanager)
                     if not response:
                         continue
