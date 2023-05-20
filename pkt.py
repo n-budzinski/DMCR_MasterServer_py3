@@ -4,53 +4,55 @@ import struct
 GGWDSERVER_LANG = 0
 GGWDSERVER_VERS = 16
 
-ENDIANNESS = "little"
-ENCODING = "utf-8"
-
 # TODO Research the behavior when multiple commands are present
-
+class Header:
+        def __init__(self, 
+                     packetOrdinal: int, 
+                     clientLanguage: int, 
+                     clientVersion: int) -> None:
+            self.packetOrdinal = packetOrdinal
+            self.clientLanguage = clientLanguage
+            self.clientVersion = clientVersion
 
 def unpack(packet):
-    class Header:
-        pass
-    header = Header()
-    header.packet_ordinal = int(struct.unpack("H", packet[:2])[0])
-    header.client_language = int(struct.unpack("B", packet[2:3])[0])  # client language
-    header.client_version = int(struct.unpack("B", packet[4:5])[0])  # client game
-    data = decompress(packet[12:])
+    header = Header(
+        struct.unpack("H", packet[:2])[0],
+        struct.unpack("B", packet[2:3])[0],
+        struct.unpack("B", packet[4:5])[0])
+    packetData = decompress(packet[12:])
     functions = []
-    fun_count = struct.unpack("B", data[0:1])[0]
+    fun_count = struct.unpack("B", packetData[0:1])[0]
     for function_n in range(0, fun_count):
         parameter_length = 0
-        function_length = struct.unpack_from("B", data[2:3], False)[0]
-        cursor = 5 + function_length
-        functions.append([data[3:3 + function_length].decode(ENCODING), []])  # requested function
-        param_n = struct.unpack("B", data[3 + function_length:4 + function_length])[0]  # quantity of parameters
+        functionLength = struct.unpack_from("B", packetData[2:3], False)[0]
+        cursor = 5 + functionLength
+        functions.append([packetData[3:3 + functionLength].decode(), []])  # requested function
+        param_n = struct.unpack("B", packetData[3 + functionLength:4 + functionLength])[0]  # quantity of parameters
         for _ in range(0, param_n):
             # buffer = data[cursor:cursor+2]
-            parameter_length = struct.unpack("<H", data[cursor:cursor+2], )[0]
+            parameter_length = struct.unpack("<H", packetData[cursor:cursor+2], )[0]
             cursor += 4
-            value = data[cursor:cursor+parameter_length-1]
+            value = packetData[cursor:cursor+parameter_length-1]
             functions[function_n][1].append(value)
             cursor += parameter_length
-        data = data[cursor:]
+        packetData = packetData[cursor:]
     return header, functions
 
 
-def pack(data, magicbytes):
+def pack(data, integrity):
     # first entry is action
     packet = bytearray()
-    packet.extend(struct.pack("H", data.__len__()))  # number of functions in the packet
+    packet.extend(struct.pack("H", len(data)))  # number of functions in the packet
     fn = 0
     for function in data:
-        data[fn].append(magicbytes)
-        packet.extend(struct.pack("B", data[fn][0].__len__()))  # function length
-        packet.extend(data[fn][0].encode(ENCODING))  # function name
-        packet.extend(struct.pack("H", data[fn].__len__()-1))  # param count ?(don't count the function)
+        data[fn].append(integrity)
+        packet.extend(struct.pack("B", len(data[fn][0])))  # function length
+        packet.extend(data[fn][0].encode())  # function name
+        packet.extend(struct.pack("H", len(data[fn])-1))  # param count ?(don't count the function)
         for parameter in function[1:]:
             packet.extend(struct.pack("I", len(parameter)))
             # packet.extend([0x00, 0x00])
-            packet.extend(parameter.encode(ENCODING))
+            packet.extend(parameter.encode())
         fn += 1
     return packet
 
@@ -94,8 +96,7 @@ def handle_client(recvdata, recvaddr, keepalivesock, gamemanager):
         hostaddr = ".".join(hostaddr)
 
         for lobby in gamemanager.lobbies:
-
-            if hostaddr == gamemanager.lobbies[lobby].host.ip_address[0]:
+            if hostaddr == gamemanager.lobbies[lobby].host.ipAddress[0]:
                 recvdata = bytearray(recvdata)
                 recvdata[-5:] = [0x25, 0xCD, 0x40, 0x6E, 0x3E]
                 keepalivesock.sendto(recvdata, (hostaddr, 34000))

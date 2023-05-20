@@ -7,15 +7,17 @@ import pkt
 import req
 import classes
 import json
+from common import genID
+import traceback
+
 
 with open("./settings.json") as file:
     SETTINGS = json.load(file)
 
-connOrd = 0
 gamemanager = classes.GameManager()
 Lock = threading.Lock()
 
-def handle_udp(udp_sock: socket.socket(socket.AF_INET, socket.SOCK_DGRAM)):
+def handle_udp(udp_sock: socket.socket):
     while True:
         recvdata, recvaddr = udp_sock.recvfrom(64)
         keepalivethread = threading.Thread(
@@ -25,44 +27,40 @@ def handle_udp(udp_sock: socket.socket(socket.AF_INET, socket.SOCK_DGRAM)):
 
 
 async def handle_tcp(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
-    global connOrd
-    connOrd += 1
     player = Player(
-        ip_address=writer.get_extra_info(name='peername'),
-        session_id=connOrd,
+        writer.get_extra_info(name='peername'),
+        genID()
         )
     while True:
         try:
-            data = await asyncio.wait_for(reader.read(1440), timeout=60)
-        # except asyncio.TimeoutError:
-        #     print("Timed out")
-        #     break
-        # except ConnectionResetError:
-        #     print("Connection reset")
-        #     break
+            data = await asyncio.wait_for(reader.read(1440), timeout=120)
+        except asyncio.TimeoutError:
+            break
+        except ConnectionResetError:
+            break
         except Exception as e:
-            Lock.acquire()
-            print(e)
-            Lock.release()
             break
         else:
             if data:
-                player.packet_ordinal += 1
-                response = req.process_request(data, player, gamemanager)
-                if not response:
-                    continue
-                response = pkt.add_header(response, data)
-                fragment_offset = 0
-                for fragment_i in range(0, math.ceil(len(response)/1440)):
-                    fragment = response[fragment_offset:fragment_offset + 1440]
-                    fragment_offset = (fragment_i + 1) * 1440
-                    writer.write(fragment)
+                try:
+                    player.packetOrdinal += 1
+                    response = req.process_request(data, player, gamemanager)
+                    if not response:
+                        continue
+                    response = pkt.add_header(response, data)
+                    fragment_offset = 0
+                    for fragment_i in range(0, math.ceil(len(response)/1440)):
+                        fragment = response[fragment_offset:fragment_offset + 1440]
+                        fragment_offset = (fragment_i + 1) * 1440
+                        writer.write(fragment)
+                except Exception as serverException:
+                    traceback.print_exc()
+                    break
             else:
                 writer.write(bytearray())
-        finally:
-            await writer.drain()
+                await writer.drain()
 
-    gamemanager.player_disconnect(player)
+    gamemanager.disconnect(player)
     writer.close()
 
 
@@ -83,7 +81,5 @@ def start():
 
 
 if __name__ == "__main__":
-    try:
         start()
-    except KeyboardInterrupt:
-        pass
+

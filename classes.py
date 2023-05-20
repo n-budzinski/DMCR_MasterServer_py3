@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-
-def get_game_type(game_type: int):
-    if game_type in range(0, len(GameTypes.types)):
-        return GameTypes.types[game_type]
+def getGameType(gameType):
+    if gameType in range(0, len(GameTypes.types)):
+        return GameTypes.types[gameType]
     return GameTypes.types[0]
-
 
 class GameTypes:
 
@@ -15,13 +13,13 @@ class GameTypes:
                 name: str) -> None:
             self.name = name
 
-    GAMETYPE_NORMAL = GameType(name="Normal")
-    GAMETYPE_RANKED = GameType(name="Ranked")
+    NORMAL = GameType(name="Normal")
+    RANKED = GameType(name="Ranked")
 
-    types = [GAMETYPE_NORMAL, GAMETYPE_RANKED]
+    types = [NORMAL, RANKED]
 
     def __init__(self) -> None:
-        self.__nextcurrent__ = 0
+        self._nextcurrent = 0
         self.typeslen = len(self.types)
 
     def __iter__(self):
@@ -29,51 +27,150 @@ class GameTypes:
 
     def __next__(self):
 
-        if self.__nextcurrent__ < self.typeslen:
-            self.__nextcurrent__ += 1
-            return self.types[self.__nextcurrent__-1]
+        if self._nextcurrent < self.typeslen:
+            self._nextcurrent += 1
+            return self.types[self._nextcurrent-1]
         raise StopIteration
 
 
+
 class Lobby:
-
-    def __init__(
-        self,
-        host: Player,
-        max_players: int,
-        password: str,
-        game_title: str,
-        lobby_id: int,
-        game_type: GameTypes.GameType = GameTypes.GAMETYPE_NORMAL
-    ):
-
+    def __init__(self, 
+                 host: Player,
+                 maxPlayers: int, 
+                 lobbyID: str, 
+                 password: str = "", 
+                 gameTitle: str = "A game lobby",
+                 gameType: GameTypes.GameType = GameTypes.NORMAL):
         self.host = host
-        self.__players__ = []
-        self.max_players = max_players
-        self.game_type = game_type
+        self._players = []
+        self.maxPlayers = int(maxPlayers)
+        self.gameType = gameType
         self.password = password
-        self.game_title = game_title
-        self.reported_player_count = 0
-        self.lobby_id = lobby_id
-        self.has_begun = False
-        self.ip_address = host.ip_address
+        self.gameTitle = gameTitle
+        self.lobbyID = lobbyID
+        self.reportedPlayerCount = 0
+        self.hasBegun = False
+        self.ipAddress = host.ipAddress
 
-    def get_players(self):
-        return self.__players__
+    def getPlayers(self) -> list:
+        '''
+                Returns:
+                        Players (list): A list of Players present in the lobby.
+        '''
+        return self._players
 
-    def get_reported_player_count(self):
-        return self.reported_player_count
+    def getReportedPlayerCount(self) -> int:
+        '''
+                Returns:
+                        Player Count (int): Player count of the lobby reported by the host.
+        '''
+        return self.reportedPlayerCount
 
-    def set_reported_player_count(self, count: int):
-        self.reported_player_count = count
+    def setReportedPlayerCount(self, count: int):
+        '''
+                Parameters:
+                        count (str): An integer representing the current amount of players reported by the host.
+        '''
+        self.reportedPlayerCount = count
 
-    def get_player_count(self):
-        return len(self.__players__)
+    def getPlayerCount(self) -> int:
+        '''
+                Returns:
+                        Player Count (int): Player count of the lobby known to the server.
+        '''
+        return len(self._players)
 
-    def remove_player(self, player: Player):
+    def _addPlayer(self, player: Player):
+        self._players.append(player)
+
+    def hasPassword(self):
+        return self.password != ""
+
+    def isFull(self):
+        return self.getPlayerCount() >= self.maxPlayers
+
+
+class Player:
+    def __init__(self, 
+                 ipAddress, 
+                 sessionID: str, 
+                 lobby = None, 
+                 nickname: str = 'Player'):
+        self.ipAddress = ipAddress
+        self.sessionID = sessionID
+        self.nickname = nickname
+        self.lobby = lobby
+        self.packetOrdinal = 0
+        self.gameVersion = 0
+        self.lobbySorting = ""
+        self.lobbyResort = False
+
+    def __str__(self):
+        return str(self.sessionID) + " " + str(self.ipAddress)
+
+class GameManager:
+
+    def __init__(self):
+        self.lobbies = {}  # LobbyID: Lobby Object
+        self.players = {}  # SessionID: Player Object
+
+
+    def __contains__(self, LobbyID: str):
+        return LobbyID in self.lobbies
+
+    def createLobby(self, 
+                    host: Player, 
+                    maxPlayers: int, 
+                    password: str = "", 
+                    gameTitle: str = "", 
+                    gameType: GameTypes.GameType = GameTypes.NORMAL
+                    ) -> str:
+        
+        from common import genID
+        lobbyID = genID()
+
+        self.lobbies[lobbyID] = Lobby(
+            host=host,
+            maxPlayers=maxPlayers, 
+            password=password, 
+            gameTitle=gameTitle, 
+            gameType=gameType,
+            lobbyID=lobbyID
+            )
+        
+        self._joinToLobby(self.lobbies[lobbyID], host)
+        return lobbyID
+
+    def _closeLobby(self, LobbyId: str):
 
         try:
-            self.__players__.pop(self.__players__.index(player))
+            self.lobbies.pop(LobbyId)
+
+        except KeyError:
+            pass
+
+
+    def _joinToLobby(self,lobby: Lobby, player: Player):
+        if player.lobby is not None:
+            self._closeLobby(player.lobby.lobbyID)
+        player.lobby = lobby
+        player.lobby._addPlayer(player)
+
+    def disconnect(self, player: Player):
+        try:
+            self.leaveLobby(player)
+            self.players.pop(player.sessionID)
+        except KeyError:
+            pass
+
+    def leaveLobby(self, player: Player):
+        try:
+            if player.lobby is not None:
+                if player == player.lobby.host:
+                    self._closeLobby(player.lobby.lobbyID)
+                else:
+                    player.lobby._players.pop(player.lobby._players.index(player))
 
         except IndexError:
             pass
@@ -81,120 +178,27 @@ class Lobby:
         except ValueError:
             pass
 
-    def add_player(self, player: Player):
-        """Should not be called directly. Use GameManager to handle Lobby logic."""
-        self.__players__.append(player)
+    def joinLobby(self, lobby: Lobby, player: Player):
+        self._joinToLobby(lobby, player)
 
-    def has_password(self):
-        return self.password is not None
-
-    def is_full(self):
-        return self.get_player_count() >= self.max_players
-
-
-class Player:
-
-    def __init__(
-        self,
-        ip_address,
-        session_id: int,
-        lobby: Lobby = None,
-        player_name: str = 'Player',
-    ):
-
-        self.ip_address = ip_address
-        self.session_id = session_id
-        self.player_name = player_name
-        self.lobby_id = -1
-        self.lobby = lobby
-        self.packet_ordinal = 0
-        self.game_version = 0
-        self.lobby_sorting = None
-        self.lobby_resort = False
-
-    def __str__(self):
-        return str(self.session_id) + " " + str(self.ip_address)
-
-def join_lobby(target_lobby: Lobby, player: Player):
-    target_lobby.add_player(player)
-
-
-class GameManager:
-
-    sid = lid = 0
-    lobbies = {}  # LID: LOBBYOBJ
-    players = {}  # SID: PLAYEROBJ
-
-    def __init__(self) -> None:
-        pass
-
-    def create_lobby(
-        self,
-        host: Player,
-        max_players: int,
-        password: str,
-        game_title: str,
-            game_type: GameTypes.GameType = GameTypes.GAMETYPE_NORMAL) -> int:
-
-        self.lobbies[self.lid] = Lobby(
-            host=host,
-            max_players=max_players,
-            password=password,
-            game_title=game_title,
-            lobby_id=self.lid,
-            game_type=game_type,
-            )
-        self.player_connect(host, self.lobbies[self.lid])
-        self.lid += 1
-        return self.lid-1
-
-    def __close_lobby(self, lobby: Lobby):
-        try:
-            del self.lobbies[lobby.lobby_id]
-
-        except KeyError:
+    def getLobbies(self, order: str, resort: bool = False):
+        if order == "":
             pass
-
-    def leave_lobby(self, player: Player):
-
-        if player.lobby is not None:
-
-            if player == player.lobby.host:
-                self.__close_lobby(player.lobby)
-
-            else:
-                player.lobby.remove_player(player)
-
-    def player_disconnect(self, player: Player):
-
-        try:
-            self.leave_lobby(player)
-            self.players.pop(player.session_id)
-
-        except KeyError:
-            pass
-
-    def player_connect(self, player: Player, lobby: Lobby):
-        self.leave_lobby(player)
-        player.lobby = lobby
-        lobby.add_player(player)
-
-    def does_exist(self, lid: int):
-        if lid in self.lobbies:
-            return True
-        return False
-
-    def get_lobbies(self, order:str=None, resort:bool=False):
-        if order is None:
-            pass
-        elif order == "r.title": # r.title - room title
+        elif order == "r.title":  # r.title - room title
             return dict(sorted(self.lobbies.items(), key=lambda x: x[1].game_title, reverse=resort))
-        elif order == "t.name": # t.name - game type name
+        elif order == "t.name":  # t.name - game type name
             return dict(sorted(self.lobbies.items(), key=lambda x: x[1].game_type.name, reverse=resort))
-        elif order == "u.nick": # u.nick - host nick
+        elif order == "u.nick":  # u.nick - host nick
             return dict(sorted(self.lobbies.items(), key=lambda x: x[1].host.player_name, reverse=resort))
         return self.lobbies
 
-    def get_lobby(self, lid: int) -> Lobby:
-        if lid in self.lobbies:
-            return self.lobbies[lid]
+    def getLobby(self, lobbyID: str) -> Lobby:
+        '''
+                Parameters:
+                        LobbyID (str): LobbyID of the desired lobby.
+
+                Returns:
+                        Lobby (Lobby): A requested lobby.
+                        If the lobby does not exist, returns None.
+        '''
+        return self.lobbies.get(lobbyID, None)
