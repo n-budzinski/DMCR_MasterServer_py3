@@ -1,40 +1,45 @@
-[![Coverage Status](https://coveralls.io/repos/github/n-budzinski/Bastet/badge.svg?branch=main)](https://coveralls.io/github/n-budzinski/Bastet?branch=main)
-# Bastet - Alexander Anubis emulator
+# Bastet
 
 A simple PoC master server emulator for GSC's Alexander (anubis.2gw.net).
 
 <br />
+
+### **Server blocks ports required to for hole punching - the game will not work properly on the system hosting the server!**
+
 <br />
-
-### ***Server blocks ports required by the game. Use the built-in lan mode to play on the local machine.***
-
 <br />
 <br />
 
 # Requirements
 
-- A self hosted IRC server (in-game chat)
+An IRC server used by the in-game comms. You can either host your own or use a public one.
+
+Default IRC channels (rooms) used by the client:
+- #GSP!conquest_m!5
+- #GSP!conquest!3
 
 <br />
-
-# Dependencies
-
-- None
-
 <br />
 
-# Usage
+# Issues
+
+- Doesn't work with the demo version of the game.
+
+<br />
+<br />
+
+# Getting started
 
  - Set up a local IRC server and change the settings.json accordingly.
- - Replace the GGW servers in [GAME_DIR]/Data/Internet/**ggwdc.ini**:
+ - Replace the GGW servers in [Game's location]/Data/Internet/**ggwdc.ini**:
 
         #################################################################
         # This is configuration file for GSC Game World client software #
         ################################################################# 
         # Address of the GGW server
-        ggwdserver_addr_1 your.alexander.server
-        ggwdserver_addr_2 your.alexander.server
-        ggwdserver_addr_3 your.alexander.server
+        ggwdserver_addr_1 [your.alexander.server]
+        ggwdserver_addr_2 [your.alexander.server]
+        ggwdserver_addr_3 [your.alexander.server]
         # Port of the GGW server
         ggwdserver_port 34001
         # Language/Locale to communicate with GGW server
@@ -44,7 +49,6 @@ A simple PoC master server emulator for GSC's Alexander (anubis.2gw.net).
 - Run via main.py.
 
 <br />
-
 <br />
 
 # Disclaimer
