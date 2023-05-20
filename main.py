@@ -9,9 +9,17 @@ import classes
 import json
 from common import genID
 import traceback
+from dcml import error
 
 with open("./settings.json") as file:
     SETTINGS = json.load(file)
+
+def sendPacket(writer, response):
+    fragment_offset = 0
+    for fragment_i in range(0, math.ceil(len(response)/1440)):
+        fragment = response[fragment_offset:fragment_offset + 1440]
+        fragment_offset = (fragment_i + 1) * 1440
+        writer.write(fragment)
 
 gamemanager = classes.GameManager()
 Lock = threading.Lock()
@@ -50,12 +58,12 @@ def udpPunch(recvdata, recvaddr, keepalivesock):
         pass
 
 
-def handleUDP(udp_sock: socket.socket):
+def handleUDP(udpSock: socket.socket):
     while True:
-        recvdata, recvaddr = udp_sock.recvfrom(64)
+        recvdata, recvaddr = udpSock.recvfrom(64)
         keepalivethread = threading.Thread(
             target=udpPunch,
-            args=(recvdata, recvaddr, udp_sock, gamemanager))
+            args=(recvdata, recvaddr, udpSock))
         keepalivethread.start()
 
 
@@ -64,9 +72,10 @@ async def handleTCP(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         writer.get_extra_info(name='peername'),
         genID()
     )
+    sequenceNumber = 1
     while True:
         try:
-            data = await asyncio.wait_for(reader.read(1440), timeout=120)
+            rawData = await asyncio.wait_for(reader.read(1440), timeout=120)
         except asyncio.TimeoutError:
             break
         except ConnectionResetError:
@@ -74,20 +83,33 @@ async def handleTCP(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         except Exception as e:
             break
         else:
-            if data:
+            if rawData:
                 try:
-                    player.packetOrdinal += 1
-                    response = process.processRequest(
-                        data, player, gamemanager)
-                    if not response:
-                        continue
-                    response = packets.addHeader(response, data)
-                    fragment_offset = 0
-                    for fragment_i in range(0, math.ceil(len(response)/1440)):
-                        fragment = response[fragment_offset:fragment_offset + 1440]
-                        fragment_offset = (fragment_i + 1) * 1440
-                        writer.write(fragment)
-                except Exception as serverException:
+                    header, data = packets.unpack(rawData)
+                    command = data[0][0]
+                    parameters = data[0][1]
+                    integrity = parameters[len(parameters) - 2].decode()
+                    if sequenceNumber+1 == header.sequenceNumber:
+                        response = process.processRequest(command, parameters, player, gamemanager)
+                        if not response:
+                            sendPacket(writer, bytearray())
+                            sequenceNumber = header.sequenceNumber
+                            continue
+                        response = packets.pack(response, integrity)
+                        response = packets.addHeader(response, header.sequenceNumber)
+                    else:
+                        print("Packet sequence mismatch")
+                        print(player.sequenceNumber)
+                        print(header.sequenceNumber)
+                        player.sequenceNumber = header.sequenceNumber
+                        gamemanager.leaveLobby(player)
+                        response = packets.addHeader(packets.pack([["LW_show", error()]], integrity), header.sequenceNumber)
+                    
+                    sequenceNumber = header.sequenceNumber
+                    sendPacket(writer, response)
+                    
+                except Exception as e:
+                    print(e)
                     traceback.print_exc()
                     break
             else:
@@ -108,9 +130,9 @@ def start():
     udpsocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udpsocket.bind((SETTINGS["HOST"], SETTINGS["UDP_PORT"]))
     udpsocket.setblocking(True)
-    stunThread = threading.Thread(target=handleUDP, args=(udpsocket,))
-    stunThread.daemon = True
-    stunThread.start()
+    udpPunchThread = threading.Thread(target=handleUDP, args=(udpsocket,))
+    udpPunchThread.daemon = True
+    udpPunchThread.start()
     asyncio.run(run_server())
 
 

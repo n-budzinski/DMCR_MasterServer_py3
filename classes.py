@@ -101,7 +101,7 @@ class Player:
         self.sessionID = sessionID
         self.nickname = nickname
         self.lobby = lobby
-        self.packetOrdinal = 0
+        self.sequenceNumber = 0
         self.gameVersion = 0
         self.lobbySorting = ""
         self.lobbyResort = False

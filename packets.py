@@ -9,10 +9,10 @@ GGWDSERVER_VERS = 16
 
 class Header:
     def __init__(self,
-                 packetOrdinal: int,
+                 sequenceNumber: int,
                  clientLanguage: int,
                  clientVersion: int) -> None:
-        self.packetOrdinal = packetOrdinal
+        self.sequenceNumber = sequenceNumber
         self.clientLanguage = clientLanguage
         self.clientVersion = clientVersion
 
@@ -66,11 +66,11 @@ def pack(data, integrity):
     return packet
 
 
-def addHeader(packet, request):
+def addHeader(packet, sequence):
     datalen = len(packet)
     packeddata = compress(packet)
     finalizedpacket = bytearray()
-    finalizedpacket.extend(request[:2])  # packet ordinal
+    finalizedpacket.extend(struct.pack("H", sequence))  # sequenceNumber
     finalizedpacket.extend(struct.pack(
         "B", GGWDSERVER_LANG))  # client language
     finalizedpacket.extend(struct.pack("B", GGWDSERVER_VERS))  # client game

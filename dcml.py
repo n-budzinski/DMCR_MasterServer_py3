@@ -54,12 +54,15 @@ def _voting() -> str:
 def _mesdlg() -> str:
     return "<MESDLG>"
 
+def _ngdlg() -> str:
+    return "<NGDLG>"
+
 
 def logUser(gameManager, options, chatAddress, player) -> str:
-    from common import check_alpha
+    from common import checkAlpha
     gameManager.leaveLobby(player)
     player.nickname = options.get("VE_NICK")
-    if len(player.nickname) > 3 and check_alpha(player.nickname):
+    if len(player.nickname) > 3 and checkAlpha(player.nickname):
         return "\n".join((
                 _mesdlg(),
                 _ebox("MBG", 0, 0, 1024, 768),
@@ -348,3 +351,113 @@ def voting():
            _ctxt("RES4","B_VOTE", 105, "%ANS0+42+11", 40, 20, "", "0"),
            _voting(),
         ))
+
+def error():
+    return "\n".join((
+        _ngdlg(),
+        _ebox("EBG", 0, 0, 1024, 768),
+        _pix("PX1","L0",0-62,0-136,1024,768,"Interf3/internet",0,0,0,0),
+        _exec("LW_enbbox", {
+            f"0": "%L0"
+        }),
+        _exec("LW_enbbox", {
+            f"0": "%B"
+        }),
+        _exec("LW_enbbox", {
+            f"0": "%FLBOX"
+        }),
+        _exec("LW_enbbox", {
+            f"0": "%BP"
+        }),
+        _exec("LW_enbbox", {
+            f"0": "%L"
+        }),
+        _exec("LW_enbbox", {
+            f"0": "%BB"
+        }),
+        _exec("LW_enbbox", {
+            f"0": "%B1"
+        }),
+        _exec("LW_enbbox", {
+            f"0": "%BG"
+        }),
+        _exec("LW_enbbox", {
+            f"0": "%B2"
+        }),
+        _exec("LW_enbbox", {
+            f"0": "%BPANEL"
+        }),
+        _exec("LW_enbbox", {
+            f"0": "%BPANEL2"
+        }),
+        _exec("LW_enbbox", {
+            f"0": "%TB"
+        }),
+        _exec("LW_enbbox", {
+            f"0": "%B_VOTE"
+        }),
+        _exec("LW_enbbox", {
+            f"0": "%MBG"
+        }),
+        _exec("LW_enbbox", {
+            f"0": "%B0"
+        }),
+        _exec("LW_enbbox", {
+            f"0": "%M"
+        }),
+        _exec("LW_enbbox", {
+            f"0": "%LB"
+        }),
+        _exec("LW_enbbox", {
+            f"0": "%MB"
+        }),
+        _exec("LW_enbbox", {
+            f"0": "%EBG"
+        }),
+        _exec("LW_enbbox", {
+            f"0": "%LBX"
+        }),
+        _exec("LW_enbbox", {
+            f"0": "%BARDLD"
+        }),
+        _exec("LW_enbbox", {
+            f"0": "%BF2"
+        }),
+        _exec("LW_enbbox", {
+            f"0": "%B01"
+        }),
+        _exec("LW_enbbox", {
+            f"0": "%BF"
+        }),
+        _exec("LW_enbbox", {
+            f"0": "%BTABLE2"
+        }),
+        _exec("LW_enbbox", {
+            f"0": "%SB"
+        }),
+        _ebox("BTABLE", 0, 0, "100%", "100%"),
+        _font("BC12", "BC12", "BC12"),
+        _def_panel(11, "Interf3/elements/b02",21,20,14,15,4,5,12,16,8,8),
+        _pan("MPN", "BTABLE2", 242, 115+15, 415, 220-15, 11),
+        _pix("PXP1", "BTABLE2", 242+20, 115+20, "100%", "100%", "Internet/pix/i_pri0", 32, 32, 32, 32),
+        _pix("PX2", "BTABLE", 522, 115-10, 50, 70, "Interf3/elements/head01", 2, 2, 2, 2),
+        _pix("PX3", "BTABLE", 327, 115-10, 50, 70, "Interf3/elements/head01", 2, 2, 2, 2),
+        _pix("PX4", "BTABLE", 377, 115-10, 50, 70, "Interf3/elements/head01", 2, 2, 2, 2),
+        _pix("PX5", "BTABLE", 427, 115-10, 50, 70, "Interf3/elements/head01", 2, 2, 2, 2),
+        _pix("PX6", "BTABLE", 477, 115-10, 50, 70, "Interf3/elements/head01", 2, 2, 2, 2),
+        _pix("PX0", "BTABLE", 317, 115-10, 90, 70, "Interf3/elements/head01", 0, 0, 0, 0),
+        _pix("PX1", "BTABLE", 572, 115-10, 90, 70, "Interf3/elements/head01", 1, 1, 1, 1),
+        _font("BG18","BG18","RG18"),
+
+        _ctxt("TTEXT", "BTABLE", 242, 115-1, 415, 20, 0, "ERROR"),
+        _font("BC12","RC12","RC12"),
+        _ctxt("MTEXT0", "BTABLE", 242+20, 115+22, 415-40, 20, "", "Critical server error!"),
+        _exec("LW_vis", {
+            f"0": "%MTEXT0"
+        }),
+        _ctxt("MTEXT", "BTABLE", 242+20, 225-3, 415-40, "%MTEXT0-115-159", "", "Critical server error!"),
+        _def_gp_btn("Internet/pix/i_pri0",49,50,0,0),
+        _font("WG14","BG14","WG14"),
+        _gpbtn("PXBT", "BTABLE", 520-433, 303-16, "100%", 70, "GW|open&cancel.dcml\\00|LW_lockall", "OK"),
+        _ngdlg(),
+    ))

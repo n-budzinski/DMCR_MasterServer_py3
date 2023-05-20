@@ -16,65 +16,52 @@ class Object():
     pass
 
 
-def processRequest(packetData, player: classes.Player, gamemanager: classes.GameManager):
+def processRequest(command, parameters, player: classes.Player, gamemanager: classes.GameManager):
     responseParameters = []
-    header, data = packets.unpack(packetData)
-    requestCommand = data[0][0]
-    parameters = data[0][1]
-    request = parameters[0].decode()
-
     responseCommand = "LW_show"
-    integrity = parameters[len(parameters) - 2].decode()
-
-    if player.packetOrdinal != header.packetOrdinal:
-        # player.packetOrdinal = header.packetOrdinal
-        # return responseParameters.append(["LW_show", "<NGDLG>#exec(GW|open&log_user.dcml\\00&VE_NICK=<%GV_VE_NICK>\\00<NGDLG>"])
-        gamemanager.leaveLobby(player)
-        # responseParameters.append([responseCommand, common.get_file("login.dcml")])
-        responseParameters.append([responseCommand, dcml.demoLogin()])
-
+    
     if player.sessionID == b'0':
         responseParameters.append([responseCommand, "exec(LW_key&#CANCEL)"])
 
-    elif requestCommand == "setipaddr":
+    elif command == "setipaddr":
         return
 
-    elif requestCommand == "leave":
+    elif command == "leave":
         gamemanager.leaveLobby(player)
         return
 
-    elif requestCommand == "start":
+    elif command == "start":
         if player.lobby:
             player.lobby.hasBegun = True
         return
 
-    elif requestCommand == "url":
+    elif command == "url":
         responseCommand = "LW_time"
         returl = "open:" + parameters[0].decode('utf8')
-        return packets.pack([[responseCommand, "0", returl]], integrity)
+        return [[responseCommand, "0", returl]]
 
-    elif requestCommand == "gmalive":
+    elif command == "gmalive":
         return
 
-    elif requestCommand == "stats":
+    elif command == "stats":
         return
 
-    elif requestCommand == "endgame":
+    elif command == "endgame":
         gamemanager.leaveLobby(player)
         return
 
-    elif requestCommand == "alive":
+    elif command == "alive":
         if player.lobby:
             player.lobby.setReportedPlayerCount(int.from_bytes(parameters[0][0:1]))
         return
 
-    elif requestCommand == "login":
+    elif command == "login":
         gamemanager.leaveLobby(player)
         # responseParameters.append([responseCommand, common.get_file("login.dcml")])
         responseParameters.append([responseCommand, dcml.demoLogin()])
 
-    elif requestCommand == "open":
-
+    elif command == "open":
+        request = parameters[0].decode()
         options = {'others': []}
         for option in parameters[1].decode().split(sep="^"):
             t = (option.strip("'").split(sep="="))
@@ -84,52 +71,42 @@ def processRequest(packetData, player: classes.Player, gamemanager: classes.Game
                 options["others"].append(t[0])
 
         if request == "log_user.dcml":
-            responseParameters.append([responseCommand, dcml.logUser(
-                gamemanager, options, IRC_CHAT_ADDRESS, player)])
+            responseParameters.append([responseCommand, dcml.logUser(gamemanager, options, IRC_CHAT_ADDRESS, player)])
 
         elif request == "log_conf_dlg.dcml":
-            responseParameters.append(
-                [responseCommand, common.getFile(request)])
+            responseParameters.append([responseCommand, common.getFile(request)])
 
         elif request == "dbtbl.dcml":
-            responseParameters.append(
-                [responseCommand, browser(options, gamemanager, player)])
+            responseParameters.append([responseCommand, browser(options, gamemanager, player)])
 
         elif request == "cancel.dcml":
-            responseParameters.append(
-                [responseCommand, common.getFile(request)])
+            responseParameters.append([responseCommand, common.getFile(request)])
 
         elif request == "startup.dcml":
-            responseParameters.append(
-                [responseCommand, common.getFile(request)])
+            responseParameters.append([responseCommand, common.getFile(request)])
 
         elif request == "voting.dcml":
             responseParameters.append([responseCommand, voting(options)])
 
         elif request == "games.dcml":
-            responseParameters.append(
-                [responseCommand, browser(options, gamemanager, player)])
+            responseParameters.append([responseCommand, browser(options, gamemanager, player)])
 
         elif request == "joinGame.dcml":
-            responseParameters.append(
-                [responseCommand, joinGame(player, options, gamemanager)])
+            responseParameters.append([responseCommand, joinGame(player, options, gamemanager)])
 
-        elif request == "newGameDlg.dcml":
-            responseParameters.append(
-                [responseCommand, newGameDlg(player, options)])
+        elif request == "new_game_dlg.dcml":
+            responseParameters.append([responseCommand, newGameDlg(player, options)])
 
         elif request == "new_game_dlg_create.dcml":
-            responseParameters.append(
-                [responseCommand, createGame(player, options, gamemanager)])
+            responseParameters.append([responseCommand, createGame(player, options, gamemanager)])
 
         else:
-            responseParameters.append(
-                [responseCommand, common.getFile("cancel.dcml")])
+            responseParameters.append([responseCommand, common.getFile("cancel.dcml")])
 
     else:
         raise ValueError
 
-    return packets.pack(responseParameters, integrity)
+    return responseParameters
 
 
 def createGame(host: classes.Player, options: dict, gamemanager: classes.GameManager):
@@ -210,7 +187,7 @@ def browser(options: dict, gamemanager: classes.GameManager, player: classes.Pla
 
 
 def newGameDlg(player: classes.Player, options: dict):
-    return common.getFile("newGameDlg.dcml")\
+    return common.getFile("new_game_dlg.dcml")\
         .replace("NICKNAME", player.nickname) \
         .replace("//TYPES", "".join([f'{_type.name},' for _type in classes.GameTypes.types]))
 
