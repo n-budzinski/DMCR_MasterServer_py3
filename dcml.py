@@ -21,26 +21,26 @@ def _def_panel(a, element, b, c, d, e, f, g, h, i, j, k):
 def _pan(id, parentID, x, y, width, height, a):
     return f"#pan[%{id}](%{parentID}[x:{x},y:{y},w:{width},h:{height}],{a})"
 
-def _ctxt(id, posX, posY, width, height, command, text):
-    return f"#ctxt[%{id}][x:{posX},y:{posY},w:{width},h:{height}],{{{command}}},\"{text}\")"
+def _ctxt(id, parentID, posX, posY, width, height, command, text):
+    return f"#ctxt[%{id}](%{parentID}[x:{posX},y:{posY},w:{width},h:{height}],{{{command}}},\"{text}\")"
 
 def _def_gp_btn(element, a, b, c, d):
     return f"#def_gp_btn({element},{a},{b},{c},{d})"
 
-def _gpbtn(id, posX, posY, width, height, command, text):
-    return f"#gpbtn[%{id}][x:{posX},y:{posY},w:{width},h:{height}],{{{command}}},\"{text}\")"
+def _gpbtn(id, parentID, posX, posY, width, height, command, text):
+    return f"#gpbtn[%{id}](%{parentID}[x:{posX},y:{posY},w:{width},h:{height}],{{{command}}},\"{text}\")"
 
-def _txt(id, posX, posY, width, height, command, text):
-    return f"#txt[%{id}][x:{posX},y:{posY},w:{width},h:{height}],{{{command}}},\"{text}\")"
+def _txt(id, parentID, posX, posY, width, height, command, text):
+    return f"#txt[%{id}](%{parentID}[x:{posX},y:{posY},w:{width},h:{height}],{{{command}}},\"{text}\")"
 
-def _edit(id, posX, posY, width, height, command, text):
-    return f"#txt[%{id}][x:{posX},y:{posY},w:{width},h:{height}],{{{command}}},\"{text}\")"
+def _edit(id, parentID, posX, posY, width, height, command, text):
+    return f"#edit[%{id}](%{parentID}[x:{posX},y:{posY},w:{width},h:{height}],{{{command}}},\"{text}\")"
 
 def _block(a, b):
     return f"#block({a},{b})"
 
-def _end(a, b):
-    return f"#block({a})"
+def _end(a):
+    return f"#end({a})"
 
 def _hint(parentID, text):
     return f"#hint(%{parentID},\"{text}\")"
@@ -51,9 +51,8 @@ def _mesdlg() -> str:
 
 # player, options, gamemanager
 def logUser(gameManager, options, chatAddress, player) -> str:
-    ve_nick = None
     from common import check_alpha
-    gameManager.leave_lobby(player)
+    gameManager.leaveLobby(player)
     player.nickname = options.get("VE_NICK")
     if len(player.nickname) > 3 and check_alpha(player.nickname):
         return "\n".join((
@@ -181,7 +180,7 @@ def logUser(gameManager, options, chatAddress, player) -> str:
                 _exec("LW_vis", {
                     f"0": "%MTXT0"
                 }),
-                _ctxt("MTXT", "BTABLE2", 306+20, 420-3, 415-40, "%MTXT0" - 310 - 23, "",
+                _ctxt("MTXT", "BTABLE2", 306+20, 420-3, 415-40, "%MTXT0 - 310 - 23", "",
                       "Incorrect nickname! Nickname must begin with a letter\
                           and must not contain other characters than letters and digits in its body.\
                             Press Edit button to check nickname. Press Cancel to exit"),
@@ -272,7 +271,7 @@ def demoLogin() -> str:
                     f"0": "%BF"
                 }),
                 _exec("LW_enbbox", {
-                    f"0": "%BTABLE"
+                    f"0": "%BTABLE2"
                 }),
                 _exec("LW_enbbox", {
                     f"0": "%SB"
@@ -285,18 +284,21 @@ def demoLogin() -> str:
                 _pan("MPN", "BTABLE", 251, 308, 523, 240, 11),
                 _pix("PXT1", "BTABLE", 251-208, 308-189, 50, 70, "Interf3/elements/b02", 18, 18, 18, 18),
                 _pix("PXT2", "BTABLE",566, 308-189, 50, 70, "Interf3/elements/b02", 19, 19, 19, 19),
-                _pix("PX2", "BTABLE", 617+5, 308-5, 50, 70, "Internet/pix/head01", 2, 2, 2, 2),
-                _pix("PX3", "BTABLE", 347+5, 308-5, 50, 70, "Internet/pix/head01", 2, 2, 2, 2),
-                _pix("PX4", "BTABLE", 397+5, 308-5, 50, 70, "Internet/pix/head01", 2, 2, 2, 2),
-                _pix("PX5", "BTABLE", 447+5, 308-5, 50, 70, "Internet/pix/head01", 2, 2, 2, 2),
-                _pix("PX6", "BTABLE", 497+5, 308-5, 50, 70, "Internet/pix/head01", 2, 2, 2, 2),
-                _pix("PX7", "BTABLE", 547+5, 308-5, 50, 70, "Internet/pix/head01", 2, 2, 2, 2),
-                _pix("PX8", "BTABLE", 597+5, 308-5, 50, 70, "Internet/pix/head01", 2, 2, 2, 2),
-                _pix("PX0", "BTABLE", 342, 308-5, 90, 70, "Internet/pix/head01", 0, 0, 0, 0),
-                _pix("PX1", "BTABLE", 672, 308-5, 90, 70, "Internet/pix/head01", 1, 1, 1, 1),
+                _pix("PX2", "BTABLE", 617+5, 308-5, 50, 70, "Interf3/elements/head01", 2, 2, 2, 2),
+                _pix("PX3", "BTABLE", 347+5, 308-5, 50, 70, "Interf3/elements/head01", 2, 2, 2, 2),
+                _pix("PX4", "BTABLE", 397+5, 308-5, 50, 70, "Interf3/elements/head01", 2, 2, 2, 2),
+                _pix("PX5", "BTABLE", 447+5, 308-5, 50, 70, "Interf3/elements/head01", 2, 2, 2, 2),
+                _pix("PX6", "BTABLE", 497+5, 308-5, 50, 70, "Interf3/elements/head01", 2, 2, 2, 2),
+                _pix("PX7", "BTABLE", 547+5, 308-5, 50, 70, "Interf3/elements/head01", 2, 2, 2, 2),
+                _pix("PX8", "BTABLE", 597+5, 308-5, 50, 70, "Interf3/elements/head01", 2, 2, 2, 2),
+                _pix("PX0", "BTABLE", 342, 308-5, 90, 70, "Interf3/elements/head01", 0, 0, 0, 0),
+                _pix("PX1", "BTABLE", 672, 308-5, 90, 70, "Interf3/elements/head01", 1, 1, 1, 1),
                 _font("BG18", "BG18", "RG18"),
-                _ctxt("TTEXT", "BTABLE2", 251+2, 308+4, 523, 20, 0, "Bastet Login"),
+                _ctxt("TTEXT", "BTABLE", 251+2, 308+4, 523, 20, 0, "Bastet Login"),
                 _def_gp_btn("Internet/pix/i_pri0", 49, 50, 0, 0),
+                _def_gp_btn("Internet/pix/i_pri0", 49, 50, 0, 0),
+                _font("WG14", "BG14", "WG14"),
+                _gpbtn("PXBT", "BTABLE", 348-433, 517-16, "100%", 70, "GW|open&log_user.dcml\\00&VE_NICK=<%GV_VE_NICK>\\00|LW_lockall","Login"),
                 _def_gp_btn("Internet/pix/i_pri0", 49, 50, 0, 0),
                 _font("WG14", "BG14", "WG14"),
                 _gpbtn("PXBT", "BTABLE", 519-433, 517-16, "100%", 70, "LW_key&#CANCEL","Cancel"),

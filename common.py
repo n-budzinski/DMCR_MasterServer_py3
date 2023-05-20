@@ -10,7 +10,7 @@ def check_alpha(text: str):
         return True
     return False
 
-def reverse_address(address: str):
+def reverse_address(address):
     address = address[0].split(".")
     address = [octet for octet in address[::-1]]
     address = ".".join(address)
