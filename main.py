@@ -6,13 +6,11 @@ import math
 import packets
 import process
 import classes
-import json
 from common import genID
 import traceback
-from dcml import error
+import config
 
-with open("./settings.json") as file:
-    SETTINGS = json.load(file)
+gamemanager = classes.GameManager()
 
 def sendPacket(writer, response):
     fragment_offset = 0
@@ -20,9 +18,6 @@ def sendPacket(writer, response):
         fragment = response[fragment_offset:fragment_offset + 1440]
         fragment_offset = (fragment_i + 1) * 1440
         writer.write(fragment)
-
-gamemanager = classes.GameManager()
-Lock = threading.Lock()
 
 def udpPunch(recvdata, recvaddr, keepalivesock):
     from struct import pack
@@ -34,7 +29,6 @@ def udpPunch(recvdata, recvaddr, keepalivesock):
         publicaddr.extend(recvdata[:4])
         publicaddr.extend(pack('H', 17))
         octets = recvaddr[0].split(sep=".")
-
         for octet in octets:
             octetint = int(octet)
             octetint = pack("B", octetint)
@@ -47,15 +41,11 @@ def udpPunch(recvdata, recvaddr, keepalivesock):
         hostaddr = recvdata[6:10]
         hostaddr = [str(byte) for byte in hostaddr]
         hostaddr = ".".join(hostaddr)
-
         for lobby in gamemanager.lobbies:
             if hostaddr == gamemanager.lobbies[lobby].host.ipAddress[0]:
                 recvdata = bytearray(recvdata)
                 recvdata[-5:] = [0x25, 0xCD, 0x40, 0x6E, 0x3E]
                 keepalivesock.sendto(recvdata, (hostaddr, 34000))
-
-    else:
-        pass
 
 
 def handleUDP(udpSock: socket.socket):
@@ -72,7 +62,6 @@ async def handleTCP(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         writer.get_extra_info(name='peername'),
         genID()
     )
-    sequenceNumber = 1
     while True:
         try:
             rawData = await asyncio.wait_for(reader.read(1440), timeout=120)
@@ -80,61 +69,47 @@ async def handleTCP(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
             break
         except ConnectionResetError:
             break
-        except Exception as e:
+        except Exception:
             break
         else:
             if rawData:
+                header, data = packets.unpack(rawData)
+                command = data[0][0]
+                parameters = data[0][1]
+                integrity = parameters[len(parameters) - 2].decode()
                 try:
-                    header, data = packets.unpack(rawData)
-                    command = data[0][0]
-                    parameters = data[0][1]
-                    integrity = parameters[len(parameters) - 2].decode()
-                    if sequenceNumber+1 == header.sequenceNumber:
-                        response = process.processRequest(command, parameters, player, gamemanager)
-                        if not response:
-                            sendPacket(writer, bytearray())
-                            sequenceNumber = header.sequenceNumber
-                            continue
+                    response = process.processRequest(
+                        command, parameters, player, gamemanager)
+                    if response:
                         response = packets.pack(response, integrity)
-                        response = packets.addHeader(response, header.sequenceNumber)
+                        response = packets.addHeader(
+                            response, header.sequenceNumber)
+                        sendPacket(writer, response)
                     else:
-                        print("Packet sequence mismatch")
-                        print(player.sequenceNumber)
-                        print(header.sequenceNumber)
-                        player.sequenceNumber = header.sequenceNumber
-                        gamemanager.leaveLobby(player)
-                        response = packets.addHeader(packets.pack([["LW_show", error()]], integrity), header.sequenceNumber)
-                    
-                    sequenceNumber = header.sequenceNumber
-                    sendPacket(writer, response)
-                    
-                except Exception as e:
-                    print(e)
+                        response = bytearray()
+                except Exception as f:
+                    print(f)
                     traceback.print_exc()
-                    break
-            else:
-                writer.write(bytearray())
-                await writer.drain()
-
+            await writer.drain()
     gamemanager.disconnect(player)
     writer.close()
 
 
-async def run_server():
-    server = await asyncio.start_server(handleTCP, SETTINGS["HOST"], SETTINGS["TCP_PORT"])
+async def run():
+    server = await asyncio.start_server(handleTCP,config.HOST, config.TCPPORT)
     async with server:
         await server.serve_forever()
 
 
-def start():
+def main():
     udpsocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    udpsocket.bind((SETTINGS["HOST"], SETTINGS["UDP_PORT"]))
+    udpsocket.bind((config.HOST, config.UDPPORT))
     udpsocket.setblocking(True)
     udpPunchThread = threading.Thread(target=handleUDP, args=(udpsocket,))
     udpPunchThread.daemon = True
     udpPunchThread.start()
-    asyncio.run(run_server())
+    asyncio.run(run())
 
 
 if __name__ == "__main__":
-    start()
+    main()

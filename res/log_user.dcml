@@ -1,3 +1,4 @@
+#exec(LW_cfile&\00&Bastet/%GV_VE_NICK)
 <MESDLG>
 #ebox[%MBG](x:0,y:0,w:1024,h:768)
 #pix[%PX1](%MBG[x:0,y:0,w:1024,h:768],{},Interf3/internet,0,0,0,0)

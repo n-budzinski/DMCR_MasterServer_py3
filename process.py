@@ -3,13 +3,8 @@ import packets
 import common
 import classes
 from classes import getGameType
-from main import SETTINGS as set
+import config
 import dcml
-
-
-HOST = set["HOST"]
-IRC_CHAT_ADDRESS = set["IRC_CHAT_ADDRESS"]
-TCP_PORT = set["TCP_PORT"]
 
 
 class Object():
@@ -58,7 +53,7 @@ def processRequest(command, parameters, player: classes.Player, gamemanager: cla
     elif command == "login":
         gamemanager.leaveLobby(player)
         # responseParameters.append([responseCommand, common.get_file("login.dcml")])
-        responseParameters.append([responseCommand, dcml.demoLogin()])
+        responseParameters.append([responseCommand, dcml.login()])
 
     elif command == "open":
         request = parameters[0].decode()
@@ -71,7 +66,7 @@ def processRequest(command, parameters, player: classes.Player, gamemanager: cla
                 options["others"].append(t[0])
 
         if request == "log_user.dcml":
-            responseParameters.append([responseCommand, dcml.logUser(gamemanager, options, IRC_CHAT_ADDRESS, player)])
+            responseParameters.append([responseCommand, dcml.logUser(gamemanager, options, player)])
 
         elif request == "log_conf_dlg.dcml":
             responseParameters.append([responseCommand, common.getFile(request)])
@@ -87,6 +82,9 @@ def processRequest(command, parameters, player: classes.Player, gamemanager: cla
 
         elif request == "voting.dcml":
             responseParameters.append([responseCommand, voting(options)])
+
+        elif request == "demologin.dcml":
+            responseParameters.append([responseCommand, dcml.login()])
 
         elif request == "games.dcml":
             responseParameters.append([responseCommand, browser(options, gamemanager, player)])
@@ -149,7 +147,7 @@ def joinGame(player: classes.Player, options, gamemanager: classes.GameManager):
                 .replace("MAXPLAYERS", str(lobby.maxPlayers))\
                 .replace("GAMEHOST", lobby.host.nickname)\
                 .replace("IPADDR", lobby.ipAddress[0])\
-                .replace("PORT", str(TCP_PORT))
+                # .replace("PORT", config.TCPPORT)
     return common.getFile("join_game_incorrect.dcml").replace("LOBBY_ID", options["id_room"])
 
 

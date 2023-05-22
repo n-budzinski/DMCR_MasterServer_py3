@@ -1,12 +1,12 @@
 from setuptools import setup
 
 setup(
-    name='alexander',
+    name='Bastet',
     version='',
     packages=[''],
     url='',
     license='',
     author='Norbert Budziński',
-    author_email='dvrt3d@gmail.com',
+    author_email='norbudzinski@outlook.com',
     description=''
 )
