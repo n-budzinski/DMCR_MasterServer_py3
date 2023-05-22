@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-def getGameType(gameType):
+
+def getGameType(gameType: int):
     if gameType in range(0, len(GameTypes.types)):
         return GameTypes.types[gameType]
     return GameTypes.types[0]
+
 
 class GameTypes:
 
@@ -33,13 +35,12 @@ class GameTypes:
         raise StopIteration
 
 
-
 class Lobby:
-    def __init__(self, 
+    def __init__(self,
                  host: Player,
-                 maxPlayers: int, 
-                 lobbyID: str, 
-                 password: str = "", 
+                 maxPlayers: int,
+                 lobbyID: str,
+                 password: str = "",
                  gameTitle: str = "A game lobby",
                  gameType: GameTypes.GameType = GameTypes.NORMAL):
         self.host = host
@@ -92,10 +93,10 @@ class Lobby:
 
 
 class Player:
-    def __init__(self, 
-                 ipAddress, 
-                 sessionID: str, 
-                 lobby = None, 
+    def __init__(self,
+                 ipAddress,
+                 sessionID: str,
+                 lobby=None,
                  nickname: str = 'Player'):
         self.ipAddress = ipAddress
         self.sessionID = sessionID
@@ -108,36 +109,36 @@ class Player:
     def __str__(self):
         return str(self.sessionID) + " " + str(self.ipAddress)
 
+
 class GameManager:
 
     def __init__(self):
         self.lobbies = {}  # LobbyID: Lobby Object
         self.players = {}  # SessionID: Player Object
 
-
     def __contains__(self, LobbyID: str):
         return LobbyID in self.lobbies
 
-    def createLobby(self, 
-                    host: Player, 
-                    maxPlayers: int, 
-                    password: str = "", 
-                    gameTitle: str = "", 
+    def createLobby(self,
+                    host: Player,
+                    maxPlayers: int,
+                    password: str = "",
+                    gameTitle: str = "",
                     gameType: GameTypes.GameType = GameTypes.NORMAL
                     ) -> str:
-        
+
         from common import genID
         lobbyID = genID()
 
         self.lobbies[lobbyID] = Lobby(
             host=host,
-            maxPlayers=maxPlayers, 
-            password=password, 
-            gameTitle=gameTitle, 
+            maxPlayers=maxPlayers,
+            password=password,
+            gameTitle=gameTitle,
             gameType=gameType,
             lobbyID=lobbyID
-            )
-        
+        )
+
         self._joinToLobby(self.lobbies[lobbyID], host)
         return lobbyID
 
@@ -149,8 +150,7 @@ class GameManager:
         except KeyError:
             pass
 
-
-    def _joinToLobby(self,lobby: Lobby, player: Player):
+    def _joinToLobby(self, lobby: Lobby, player: Player):
         if player.lobby is not None:
             self._closeLobby(player.lobby.lobbyID)
         player.lobby = lobby
@@ -169,7 +169,8 @@ class GameManager:
                 if player == player.lobby.host:
                     self._closeLobby(player.lobby.lobbyID)
                 else:
-                    player.lobby._players.pop(player.lobby._players.index(player))
+                    player.lobby._players.pop(
+                        player.lobby._players.index(player))
 
         except IndexError:
             pass
