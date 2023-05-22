@@ -136,10 +136,9 @@ def logUser(gameManager, options, player) -> str:
     player.nickname = options.get("VE_NICK")
     if len(player.nickname) >= 3:
         return "\n".join((
-            f"#exec(LW_cfile&\\00&Cookies/%GV_VE_PASSWD)",
             f"<MESDLG>",
-            f"#ebox[%TB](x:0,y:0,w:1024,h:768)",
-            f"#pix[%PX1](%TB[x:0,y:0,w:1024,h:768],{{}},Interf3/internet,0,0,0,0)",
+            f"#ebox[%MBG](x:0,y:0,w:1024,h:768)",
+            f"#pix[%PX1](%MBG[x:0,y:0,w:1024,h:768],{{}},Interf3/internet,0,0,0,0)",
             f"#exec(LW_key&{player.sessionID})",
             f"#exec(LW_gvar&"\
             f"%PROF&{player.sessionID}&"\
@@ -155,7 +154,7 @@ def logUser(gameManager, options, player) -> str:
         ))
 
     else:
-        return mesError("ERROR", "INCORRECT NICKNAME")
+        return mesError("ERROR", "Your nickname has to be longer than 3 characters!")
 
 # player, options, gamemanager
 
@@ -225,7 +224,11 @@ def login() -> str:
         f"#pix[%PX2](%LBX[x:4,y:157,w:100%,h:100%],{{}},Internet/pix/i_pri0,35,35,35,35)",
         f"<NEWDLG>",
         f"<NEWDLG>",
+        f"<MESDLG>",
+        f"<MESDLG>",
         f"#block(newdlg.cml,CAN)",
+        f"<MESDLG>",
+        f"<MESDLG>",
         f"<NEWDLG>",
         f"<NEWDLG>",
         f"#end(CAN)",

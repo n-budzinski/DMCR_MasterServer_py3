@@ -147,7 +147,7 @@ def joinGame(player: classes.Player, options, gamemanager: classes.GameManager):
                 .replace("MAXPLAYERS", str(lobby.maxPlayers))\
                 .replace("GAMEHOST", lobby.host.nickname)\
                 .replace("IPADDR", lobby.ipAddress[0])\
-                # .replace("PORT", config.TCPPORT)
+                .replace("PORT", str(config.TCPPORT))
     return common.getFile("join_game_incorrect.dcml").replace("LOBBY_ID", options["id_room"])
 
 
