@@ -1,7 +1,7 @@
 
 import common
 import classes
-import dcml.dcml as dcml
+import dcml
 
 class Object():
     pass
@@ -59,10 +59,10 @@ def processRequest(command, parameters, player: classes.Player, gamemanager: cla
             responseParameters.append([responseCommand, dcml.logUser(gamemanager, options, player)])
 
         elif request == "log_conf_dlg.dcml":
-            responseParameters.append([responseCommand, common.getFile(request)])
+            responseParameters.append([responseCommand, dcml.logConfDlg()]) 
 
         elif request == "dbtbl.dcml":
-            responseParameters.append([responseCommand, dcml.browser(gamemanager, player)])
+            responseParameters.append([responseCommand, dcml.dbtbl(gamemanager, player)])
 
         elif request == "cancel.dcml":
             responseParameters.append([responseCommand, dcml.cancel()])
@@ -77,13 +77,13 @@ def processRequest(command, parameters, player: classes.Player, gamemanager: cla
             responseParameters.append([responseCommand, dcml.login()])
 
         elif request == "games.dcml":
-            responseParameters.append([responseCommand, dcml.browser(gamemanager, player)])
+            responseParameters.append([responseCommand, dcml.games()])
 
         elif request == "joinGame.dcml":
             responseParameters.append([responseCommand, dcml.joinGame(player, options, gamemanager)])
 
         elif request == "new_game_dlg.dcml":
-            responseParameters.append([responseCommand, dcml.newGameDlg(player, options)])
+            responseParameters.append([responseCommand, dcml.newGameDlg(player)])
 
         elif request == "new_game_dlg_create.dcml":
             responseParameters.append([responseCommand, dcml.createGame(player, options, gamemanager)])

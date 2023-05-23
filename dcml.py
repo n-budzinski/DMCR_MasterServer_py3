@@ -241,7 +241,7 @@ def login() -> str:
 def voting(options: dict):
     question = options.get("question")
     answer = options.get("answer")
-    return "\n".join((
+    return "".join((
         f"<VOTING>",
         f"#font(GC12,R2C12,RC12)",
         f"#txt[%ANS0](%B_VOTE[x:5,y:3,w:100%-10,h:14],{{}},\"Top donations: \")",
@@ -319,13 +319,13 @@ def mesError(title: str, description: str):
         f"<NEWDLG>",
     ))
 
-def newGameDlg(player: classes.Player, options: dict):
+def newGameDlg(player: classes.Player):
     return "".join((
         f"<NGDLG>",
         f"#ebox[%L0](x:0,y:0,w:100%,h:100%)",
         f"#exec(LW_cfile&{player.nickname}\\00&Bastet/%GV_VE_TITLE)",
         f"#exec(LW_cfile&\\00&Bastet/%GV_VE_PASSWD)",
-        f"#exec(LW_cfile&0\\00&Bastet/%GV_VE_MAX_PL)",
+        f"#exec(LW_cfile&\\00&Bastet/%GV_VE_MAX_PL)",
         f"#table[%TBL](%L0[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&new_game_dlg_create.dcml\\00&max_players=<%GV_VE_MAX_PL>^type=<%GV_VE_TYPE>^password=<%GV_VE_PASSWD>^title=<%GV_VE_TITLE>\\00|LW_lockall}}{{GW|open&cancel.dcml\\00|LW_lockall}},1,0,13,252,\"CREATE NEW GAME\",,26,\"Create\",\"Cancel\")",
         f"#ebox[%L](x:245,y:100,w:450,h:210)",
         f"#font(BC12,RC12,RC12)",
@@ -343,7 +343,8 @@ def newGameDlg(player: classes.Player, options: dict):
         f"#cbb[%E_MAXPL](%L[x:130,y:139,w:273,h:24],{{%GV_VE_MAX_PL}},2,3,4,5,6,7,0)",
         f"#font(BC14,RC14,RC14)",
         f"#txt[%L_MAXPL](%L[x:11,y:175,w:151,h:24],{{}},\"Type:\")",
-        f"#cbb[%E_TYPE](%L[x:130,y:169,w:273,h:24],{{%GV_VE_TYPE}},{''.join([f'{_type.name},' for _type in classes.GameTypes.types])}0)",
+        f"""#cbb[%E_TYPE](%L[x:130,y:169,w:273,h:24],{{%GV_VE_TYPE}},{''.join([f'{_type.name},' for _type in classes.GameTypes.types])},0)""",
+        f"{''.join([f'{_type.name},' for _type in classes.GameTypes.types])}"
         f"<NGDLG>",
     ))
 
@@ -447,7 +448,7 @@ def lobbyFull():
     ))
 
 
-def browser(gamemanager: classes.GameManager, player: classes.Player):
+def dbtbl(gamemanager: classes.GameManager, player: classes.Player):
     lobbies = gamemanager.getLobbies(player.lobbySorting, player.lobbyResort)
     return "".join((
         f"<DBTBL>",
@@ -474,7 +475,8 @@ def browser(gamemanager: classes.GameManager, player: classes.Player):
         [f',21,"{lobby.gameTitle + (lambda : "  *password*  " if lobby.password != "" else "")()}",'\
             f'"{lobby.host.nickname}",'\
             f'"{lobby.gameType.name}",'\
-            f'"{str(lobby.getPlayerCount())}/{str(lobby.maxPlayers)}",'
+            f'"{str(lobby.getPlayerCount())}/{str(lobby.maxPlayers)}",'\
+            f'""'
             for _, lobby in lobbies.items()]),
         f")#font(BC14,WC14,BC14)",
         f"#sbtn[%B_J](%BB[x:521,y:377,w:100,h:305],{{GW|open&dbtbl.dcml\\00&order=r.hbtime^resort=\\00|LW_lockall}},\"Refresh\")",
@@ -499,43 +501,36 @@ def startup():
         f"#ctxt[%TTTEXT](%TB[x:0-62,y:0-32,w:1024,h:20],{{}},\"CUSTOM GAMES\")",
         f"#font(R2C12,R2C12,R2C12)",
         f"#txt[%TMTEXT](%TB[x:0,y:514,w:100,h:20],{{}},\"Message:\")",
-        f"#font(RC12,RC12,RC12)",
-        f"#def_gp_btn(Internet/pix/i_pri0,51,51,0,1)",
-        f"#gpbtn[%BT1](%TB[x:74,y:22,w:-22,h:-18],{{}},\"Custom Games\")",
-        f"#hint(%BT1,\"Play custom games\")",
-        f"#ebox[%B_VOTE](x:5,y:396,w:140,h:103)",
-        f"<VOTING>",
-        f"#exec(GW|open&voting.dcml\\00&question=32\\00)",
-        f"<VOTING>",
+        f"#def_gp_btn(Internet/pix/i_pri0,53,53,0,1) ",
+        f"#font(RC12,R2C12,RC12)",
+        f"#gpbtn[%BT1](%TB[x:74,y:23,w:-22,h:-18],{{GW|open&news.dcml\\00|LW_lockall}},\"Lobbies\")",
+        # f"#def_gp_btn(Internet/pix/i_pri0,53,53,0,1)",
+        # f"#font(RC12,R2C12,RC12)",
+        # f"#gpbtn[%BT1](%TB[x:74,y:23,w:-22,h:-18],{{GW|open&news.dcml\\00|LW_lockall}},\"News & Events\")",
+        # f"#hint(%BT1,\"News, events, forum and punishment list\")",
+        # f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)",
+        # f"#font(RC12,R2C12,RC12)",
+        # f"#gpbtn[%BT2](%TB[x:196,y:23,w:-22,h:-18],{{GW|open&users_list.dcml\\00|LW_lockall}},\"Player List\")",
+        # f"#hint(%BT2,\"Player list, personal mail and clan information\")",
+        # f"#font(RC12,RC12,RC12)",
+        # f"#def_gp_btn(Internet/pix/i_pri0,51,51,0,1)",
+        # f"#gpbtn[%BT4](%TB[x:318,y:22,w:-22,h:-18],{{}},\"Custom Games\")",
+        # f"#hint(%BT4,\"Play custom games\")",
+        # f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)",
+        # f"#font(RC12,R2C12,RC12)",
+        # f"#gpbtn[%BT5](%TB[x:440,y:23,w:-22,h:-18],{{GW|open&scored_games.dcml\\00&player_id=0\\00|LW_lockall}},\"Scored Games\")",
+        # f"#hint(%BT5,\"Played games and their scores\")",
+        f"#ebox[%B_VOTE](x:5,y:396,w:140,h:103)<VOTING>",
+        f"#exec(GW|open&voting.dcml\\00&question=46\\00)<VOTING>",
         f"#ebox[%B](x:0,y:0,w:100%,h:100%)",
-        f"#font(RC14,GC14,RC14)",
-        f"#ctxt[%TIT1](%B[x:0,y:106,w:146,h:24],{{GW|open&games.dcml\\00|LW_lockall}},\"{{Custom Game}}\")",
-        f"#hint(%TIT1,\"Play custom games\")",
+        # f"#font(RC14,GC14,RC14)",
+        # f"#ctxt[%TIT1](%B[x:0,y:106,w:146,h:24],{{GW|open&games.dcml\\00|LW_lockall}},\"{{Custom Games}}\")",
+        # f"#hint(%TIT1,\"Play custom games\")",
+        # f"#ctxt[%LIST33](%B[x:0,y:%TIT1-9,w:146,h:24],{{GW|open&map.dcml\\00|LW_lockall}},\"{{Rating Games}}\")",
         f"#pan[%PAN](%B[x:154,y:42,w:523,h:291],7)",
-        f"#ebox[%BPANEL](x:122,y:10,w:555,h:64)",
-        f"#pix[%LPAN0](%BPANEL[x:0+32,y:0,w:100%,h:20],{{}},Interf3/elements/list,6,6,6,6)",
-        f"#pix[%LPAN1](%BPANEL[x:64+32,y:0,w:100%,h:20],{{}},Interf3/elements/list,6,6,6,6)",
-        f"#pix[%LPAN2](%BPANEL[x:128+32,y:0,w:100%,h:20],{{}},Interf3/elements/list,6,6,6,6)",
-        f"#pix[%LPAN3](%BPANEL[x:192+32,y:0,w:100%,h:20],{{}},Interf3/elements/list,6,6,6,6)",
-        f"#pix[%LPAN4](%BPANEL[x:256+32,y:0,w:100%,h:20],{{}},Interf3/elements/list,6,6,6,6)",
-        f"#pix[%LPAN5](%BPANEL[x:320+32,y:0,w:100%,h:20],{{}},Interf3/elements/list,6,6,6,6)",
-        f"#pix[%LPAN6](%BPANEL[x:384+32,y:0,w:100%,h:20],{{}},Interf3/elements/list,6,6,6,6)",
-        f"#pix[%LPAN7](%BPANEL[x:100%-96,y:0,w:100%,h:20],{{}},Interf3/elements/list,6,6,6,6)",
-        f"#pix[%LPXT](%BPANEL[x:0,y:0,w:100%,h:20],{{}},Interf3/elements/list,7,7,7,7)",
-        f"#pix[%LPXB](%BPANEL[x:100%-32,y:0,w:100%,h:20],{{}},Interf3/elements/list,5,5,5,5)",
         f"#font(BC14,WC14,BC14)",
-        f"#sbtn[%B_C](%B[x:649,y:377,w:85,h:28],{{GW|open&new_game_dlg.dcml\\00&delete_old=true\\00|LW_lockall}},\"Create\")",
-        f"<DBTBL>",
-        f"#exec(GW|open&dbtbl.dcml\\00)",
-        f"<DBTBL>",
-        f"#ebox[%LB](x:0,y:0,w:100%,h:100%)",
-        f"//#pan[%PAN](%LB[x:121,y:336,w:630,h:0],9)",
-        f"#pan[%PAN2](%LB[x:182+173,y:8,w:0,h:359],10)",
-        f"#pan[%PAN3](%LB[x:182+305,y:8,w:0,h:359],10)",
-        f"#pan[%PAN4](%LB[x:182+378,y:8,w:0,h:359],10)",
-        f"#pan[%PAN5](%LB[x:182+452,y:8,w:0,h:359],10)",
-        f"<NGDLG>",
-        f"<NGDLG>",
+        f"#sbtn[%B_C](%B[x:641,y:377,w:100,h:305],{{GW|open&new_game_dlg.dcml\\00&delete_old=true\\00|LW_lockall}},\"Create\")<DBTBL>",
+        f"#exec(GW|open&dbtbl.dcml\\00)<DBTBL><NGDLG><NGDLG>",
         f"#block(cancel.cml,CAN)<NGDLG><NGDLG>",
         f"#end(CAN)",
     ))
@@ -616,3 +611,51 @@ def logConfDlg():
         f"#hint(%L_NICK,\"Enter your nickname\")",
         f"#hint(%Login,\"Join the server\")",
     ))
+
+
+
+def games():
+ return "".join((
+    f"#ebox[%TB](x:0,y:0,w:100%,h:100%)",
+    f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)",
+    f"#pix[%PXT2](%TB[x:0,y:263,w:100%,h:100%],{{}},Internet/pix/i_pri0,13,13,13,13)",
+    f"#pan[%P1](%TB[x:42,y:0-22,w:0,h:80],10)",
+    f"#font(RG18,RG18,RG18)",
+    f"#txt[%PL](%TB[x:737,y:0,w:150,h:20],{{}},\"Players\")",
+    f"#font(BG18,BG18,BG18)",
+    f"#ctxt[%TTTEXT](%TB[x:0-62,y:0-32,w:1024,h:20],{{}},\"CUSTOM GAMES\")",
+    f"#font(R2C12,R2C12,R2C12)",
+    f"#txt[%TMTEXT](%TB[x:0,y:514,w:100,h:20],{{}},\"Message:\")",
+    f"#def_gp_btn(Internet/pix/i_pri0,53,53,0,1) ",
+    f"#font(RC12,R2C12,RC12)",
+    f"#gpbtn[%BT1](%TB[x:74,y:23,w:-22,h:-18],{{GW|open&news.dcml\\00|LW_lockall}},\"Lobbies\")",
+    # f"#def_gp_btn(Internet/pix/i_pri0,53,53,0,1) ",
+    # f"#font(RC12,R2C12,RC12)",
+    # f"#gpbtn[%BT1](%TB[x:74,y:23,w:-22,h:-18],{{GW|open&news.dcml\\00|LW_lockall}},\"News & Events\")",
+    # f"#hint(%BT1,\"News, events, forum and punishment list\")",
+    # f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)",
+    # f"#font(RC12,R2C12,RC12)",
+    # f"#gpbtn[%BT2](%TB[x:196,y:23,w:-22,h:-18],{{GW|open&users_list.dcml\\00|LW_lockall}},\"Player List\")",
+    # f"#hint(%BT2,\"Player list, personal mail and clan information\")",
+    # f"#font(RC12,RC12,RC12)",
+    # f"#def_gp_btn(Internet/pix/i_pri0,51,51,0,1) ",
+    # f"#gpbtn[%BT4](%TB[x:318,y:22,w:-22,h:-18],{{}},\"Custom Games\")",
+    # f"#hint(%BT4,\"Play custom games\")",
+    # f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1) ",
+    # f"#font(RC12,R2C12,RC12)",
+    # f"#gpbtn[%BT5](%TB[x:440,y:23,w:-22,h:-18],{{GW|open&scored_games.dcml\\00&player_id=0\\00|LW_lockall}},\"Scored Games\")",
+    # f"#hint(%BT5,\"Played games and their scores\")",
+    f"#ebox[%B_VOTE](x:5,y:396,w:140,h:103)<VOTING>",
+    f"#exec(GW|open&voting.dcml\\00&question=46\\00)<VOTING>",
+    f"#ebox[%B](x:0,y:0,w:100%,h:100%)",
+    # f"#font(RC14,GC14,RC14)",
+    # f"#ctxt[%TIT1](%B[x:0,y:106,w:146,h:24],{{GW|open&games.dcml\\00|LW_lockall}},\"{{Custom Games}}\")",
+    # f"#hint(%TIT1,\"Play custom games\")",
+    # f"#ctxt[%LIST33](%B[x:0,y:%TIT1-9,w:146,h:24],{{GW|open&map.dcml\\00|LW_lockall}},\"{{Rating Games}}\")",
+    f"#pan[%PAN](%B[x:154,y:42,w:523,h:291],7)",
+    f"#font(BC14,WC14,BC14)",
+    f"#sbtn[%B_C](%B[x:641,y:377,w:100,h:305],{{GW|open&new_game_dlg.dcml\\00&delete_old=true\\00|LW_lockall}},\"Create\")<DBTBL>",
+    f"#exec(GW|open&dbtbl.dcml\\00)<DBTBL><NGDLG><NGDLG>",
+    f"#block(cancel.cml,CAN)<NGDLG><NGDLG>",
+    f"#end(CAN)",
+))
