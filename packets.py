@@ -1,11 +1,6 @@
 from zlib import compress, decompress
+import games.alexander.config as config
 import struct
-
-GGWDSERVER_LANG = 0
-GGWDSERVER_VERS = 16
-
-# TODO Research the behavior when multiple commands are present
-
 
 class Header:
     def __init__(self,
@@ -16,32 +11,29 @@ class Header:
         self.clientLanguage = clientLanguage
         self.clientVersion = clientVersion
 
-
 def unpack(packet):
     header = Header(
         struct.unpack("H", packet[:2])[0],
         struct.unpack("B", packet[2:3])[0],
-        struct.unpack("B", packet[4:5])[0])
+        struct.unpack("B", packet[3:4])[0])
     packetData = decompress(packet[12:])
-    functions = []
-    fun_count = struct.unpack("B", packetData[0:1])[0]
 
-    for function_n in range(0, fun_count):
-        functionLength = struct.unpack_from("B", packetData[2:3], False)[0]
-        cursor = 5 + functionLength
-        functions.append([packetData[3:3 + functionLength].decode(), []])
-        param_n = struct.unpack(
-            "B", packetData[3 + functionLength:4 + functionLength])[0]
-        for _ in range(0, param_n):
-            parameter_length = struct.unpack(
-                "<H", packetData[cursor:cursor+2], )[0]
-            cursor += 4
-            value = packetData[cursor:cursor+parameter_length-1]
-            functions[function_n][1].append(value)
-            cursor += parameter_length
-        packetData = packetData[cursor:]
-    return header, functions
-
+    data = []
+    lsize = struct.unpack('H', packetData[0:2])[0]
+    print(lsize)
+    functionLength = struct.unpack_from("B"*lsize, packetData[2:])[0]
+    cursor = 5 + functionLength
+    data.append(packetData[3:3 + functionLength].decode())
+    param_n = struct.unpack("H", packetData[3 + functionLength:5 + functionLength])[0]
+    for _ in range(0, param_n):
+        parameter_length = struct.unpack(
+            "I", packetData[cursor:cursor+4], )[0]
+        cursor += 4
+        value = packetData[cursor:cursor+parameter_length].rstrip(b'\x00')
+        data.append(value)
+        cursor += parameter_length
+    packetData = packetData[cursor:]
+    return header, data
 
 def pack(data, integrity):
     packet = bytearray()
@@ -52,18 +44,16 @@ def pack(data, integrity):
         packet.extend(data[idx][0].encode())
         packet.extend(struct.pack("H", len(data[idx])-1))
         for parameter in function[1:]:
-            packet.extend(struct.pack("I", len(parameter)))
-            packet.extend(parameter.encode())
+            packet.extend(struct.pack("I", len(parameter) + 1))
+            packet.extend(parameter.encode() + b'\x00')
     return packet
 
 
-def addHeader(packet, sequence):
+def addHeader(packet, sequence, language, version):
     packeddata = compress(packet)
-    finalizedpacket = bytearray()
-    finalizedpacket.extend(struct.pack("H", sequence))
-    finalizedpacket.extend(struct.pack("B", GGWDSERVER_LANG))
-    finalizedpacket.extend(struct.pack("B", GGWDSERVER_VERS))
-    finalizedpacket.extend(struct.pack("I", len(packeddata) + 12))
-    finalizedpacket.extend(struct.pack("I", len(packet)))
-    finalizedpacket.extend(packeddata)
-    return finalizedpacket
+    return bytearray(struct.pack("H", sequence)+
+                                struct.pack("B", language)+
+                                struct.pack("B", version)+
+                                struct.pack("I", len(packeddata) + 12)+
+                                struct.pack("I", len(packet))+
+                                packeddata)

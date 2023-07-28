@@ -1,28 +1,29 @@
 from __future__ import annotations
-
-
-def getGameType(gameType: int):
-    if gameType in range(0, len(GameTypes.types)):
-        return GameTypes.types[gameType]
-    return GameTypes.types[0]
-
+from __future__ import absolute_import
+from .common import genID
 
 class GameTypes:
-
     class GameType:
         def __init__(
             self,
-                name: str) -> None:
+                name: str,
+                aiEnabled: bool = False,
+                allowDesigned: bool = False) -> None:
             self.name = name
+            self.aiEnabled = aiEnabled
+            self.allowDesigned = allowDesigned
 
-    NORMAL = GameType(name="Normal")
-    RANKED = GameType(name="Ranked")
-
-    types = [NORMAL, RANKED]
-
-    def __init__(self) -> None:
+    def __init__(self, gametypes) -> None:
         self._nextcurrent = 0
+        self.types = []
+        for type in gametypes:
+            self.types.append(self.GameType(**type))
         self.typeslen = len(self.types)
+
+    def getGameType(self, gameType: int):
+        if gameType in range(0, len(self.types)):
+            return self.types[gameType]
+        return self.types[0]
 
     def __iter__(self):
         return self
@@ -37,12 +38,12 @@ class GameTypes:
 
 class Lobby:
     def __init__(self,
-                 host: Player,
+                 host,
                  maxPlayers: int,
                  lobbyID: str,
+                 gameType: GameTypes.GameType,
                  password: str = "",
-                 gameTitle: str = "A game lobby",
-                 gameType: GameTypes.GameType = GameTypes.NORMAL):
+                 gameTitle: str = "A game lobby)"):
         self.host = host
         self._players = []
         self.maxPlayers = int(maxPlayers)
@@ -95,26 +96,25 @@ class Lobby:
 class Player:
     def __init__(self,
                  ipAddress,
-                 sessionID: str,
-                 lobby=None,
+                 lobby = None,
                  nickname: str = 'Player'):
         self.ipAddress = ipAddress
-        self.sessionID = sessionID
         self.nickname = nickname
         self.lobby = lobby
-        self.gameVersion = 0
+        self.language = 0
+        self.profileID = "-1"
         self.lobbySorting = ""
         self.lobbyResort = False
 
     def __str__(self):
-        return str(self.sessionID) + " " + str(self.ipAddress)
+        return str(self.profileID) + " " + str(self.ipAddress)
 
 
 class GameManager:
 
     def __init__(self):
         self.lobbies = {}  # LobbyID: Lobby Object
-        self.players = {}  # SessionID: Player Object
+        self.players = {}  # profileID: Player Object
 
     def __contains__(self, LobbyID: str):
         return LobbyID in self.lobbies
@@ -122,12 +122,12 @@ class GameManager:
     def createLobby(self,
                     host: Player,
                     maxPlayers: int,
+                    gameType: GameTypes.GameType,
                     password: str = "",
                     gameTitle: str = "",
-                    gameType: GameTypes.GameType = GameTypes.NORMAL
                     ) -> str:
 
-        from common import genID
+        
         lobbyID = genID()
 
         self.lobbies[lobbyID] = Lobby(
@@ -159,7 +159,7 @@ class GameManager:
     def disconnect(self, player: Player):
         try:
             self.leaveLobby(player)
-            self.players.pop(player.sessionID)
+            self.players.pop(player.profileID)
         except KeyError:
             pass
 

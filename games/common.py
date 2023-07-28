@@ -11,7 +11,7 @@ def checkAlpha(text: str):
     return False
 
 def reverse_address(address):
-    address = address[0].split(".")
+    address = address.split(".")
     address = [octet for octet in address[::-1]]
     address = ".".join(address)
     return str(int(ipaddress.IPv4Address(address)))

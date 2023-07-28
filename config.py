@@ -1,8 +1,0 @@
-HOST = "0.0.0.0"
-TCPPORT = 34001
-UDPPORT = 34000
-IRCADDRESS = "irc.freenode.org"
-IRCCH1 = "#GSP!conquest_m!5"
-IRCCH2 = "#GSP!conquest!3"
-
-SERVERNAME = "WELCOME TO BASTET"
