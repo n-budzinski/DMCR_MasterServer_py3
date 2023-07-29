@@ -1,5 +1,5 @@
 from ...common import genID
-from ....config import ALEX_IRC
+from config import ALEX_IRC
 import sqlalchemy
 
 def log_user(options: dict, database: sqlalchemy.Engine) -> str:
