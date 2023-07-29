@@ -14,7 +14,7 @@ def voting(options: dict, database: sqlalchemy.Engine):
                 f"#font(GC12,R2C12,RC12)",
                 f"#txt[%ANS0](%B_VOTE[x:5,y:3,w:100%-10,h:14],{{}},\"{latest_vote[1]}\")",
                 "".join([
-                f'#apan[%PAN{idx+1}](%B_VOTE[x:0-3,y:%ANS0+{idx*14},w:100%-4,h:13],{{GW|open&voting.dcml\\00&question={latest_vote[1]}^answer={answer[0]}\\00|LW_lockall}},14,\"\")\
+                f'#apan[%PAN{idx+1}](%B_VOTE[x:0-3,y:%ANS0+{idx*14},w:100%-4,h:13],{{GW|open&voting.dcml\\00&question={latest_vote[0]}^answer={answer[0]}\\00|LW_lockall}},14,\"\")\
                 #font(R2C12,R2C12,RC12)\
                 #txt[%ANS{idx+1}](%B_VOTE[x:0,y:%ANS0+{idx*14}+1,w:100%,h:20],{{}},\"{idx+1}. {answer[1]} \")\
                 #ctxt[%RES{idx+1}](%B_VOTE[x:105,y:%ANS0+{idx*14}+1,w:40,h:20],{{}},\"{answer[2]}\")'

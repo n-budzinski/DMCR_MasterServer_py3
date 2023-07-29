@@ -20,7 +20,20 @@ from .dcml.forum import forum
 from .dcml.forum_add import forum_add
 from .dcml.forum_search import forum_search
 from .dcml.forum_view import forum_view
-
+from .dcml.mail_list import mail_list
+from .dcml.mail_new import mail_new
+from .dcml.user_details import user_details
+from .dcml.clans_list import clans_list
+from .dcml.map import map
+from .dcml.mclick import mclick
+from .dcml.rating_help import rating_help
+from .dcml.rating_calculator import rating_calculator
+from .dcml.clan_new import clan_new
+from .dcml.clan_load_image import clan_load_image
+from .dcml.clan_users import clan_users
+from .dcml.clan_admin2 import clan_admin2
+from .dcml.scored_games import scored_games
+from .dcml.scored_games2x2 import scored_games2x2
 
 from .helpers.create_game import create_game
 from .helpers.login import login
@@ -56,6 +69,10 @@ def processRequest(request, database: sqlalchemy.Engine, address):
         return
 
     elif command == "stats":
+        return
+    
+    elif command == "setclan":
+        # signature = parameters[]
         return
 
     elif command == "endgame":
@@ -120,6 +137,9 @@ def processRequest(request, database: sqlalchemy.Engine, address):
                 elif request == "users_list.dcml":
                     responseParameters.append(["LW_show", users_list(opts, database)])
 
+                elif request == "user_details.dcml":
+                    responseParameters.append(["LW_show", user_details(opts, database)])
+
                 elif request == "join_game.dcml":
                     responseParameters.append(["LW_show", join_game(opts, database)])
 
@@ -140,6 +160,45 @@ def processRequest(request, database: sqlalchemy.Engine, address):
 
                 elif request == "forum_view.dcml":
                     responseParameters.append(["LW_show", forum_view(opts, database)])
+
+                elif request == "mail_list.dcml":
+                    responseParameters.append(["LW_show", mail_list(opts, database)])
+
+                elif request == "mail_new.dcml":
+                    responseParameters.append(["LW_show", mail_new(opts, database)])
+
+                elif request == "clans_list.dcml":
+                    responseParameters.append(["LW_show", clans_list(opts, database)])
+
+                elif request == "map.dcml":
+                    responseParameters.append(["LW_show", map(opts, database)])
+
+                elif request == "mclick.dcml":
+                    responseParameters.append(["LW_show", mclick(opts, database)])
+
+                elif request == "rating_help.dcml":
+                    responseParameters.append(["LW_show", rating_help(opts, database)])
+
+                elif request == "rating_calculator.dcml":
+                    responseParameters.append(["LW_show", rating_calculator(opts, database)])
+                
+                elif request == "clan_new.dcml":
+                    responseParameters.append(["LW_show", clan_new(opts, database, player_id)])
+
+                elif request == "clan_load_image.dcml":
+                    responseParameters.append(["LW_show", clan_load_image(opts, database, player_id)])
+
+                elif request == "clan_users.dcml":
+                    responseParameters.append(["LW_show", clan_users(opts, database)])
+
+                elif request == "clan_admin2.dcml":
+                    responseParameters.append(["LW_show", clan_admin2(opts, database)])
+
+                elif request == "scored_games.dcml":
+                    responseParameters.append(["LW_show", scored_games(opts, database)])
+
+                elif request == "scored_games2x2.dcml":
+                    responseParameters.append(["LW_show", scored_games2x2(opts, database)])
 
                 elif request == "new_game_dlg_create.dcml":
                     responseParameters.append(["LW_show", create_game(opts, player_id, address, database)])
