@@ -29,7 +29,7 @@ def forum(options, database: sqlalchemy.Engine, player_id):
                 f"#font(BC12,RC12,RC12)",
                 f"#txt[%TXT{idx+1}](%SB[x:218,y:{'4' if idx == 0 else f'%P{idx}-21'},w:100%-215,h:24],{{}},\"{thread['content']}\")",
                 f"#exec(LW_vis&0&%TXT2)",
-                f"#apan[%PAN{idx+1}](%SB[x:0,y:{'4' if idx == 0 else f'%P{idx}-21'}-10,w:100%,y1:{'4' if idx == 0 else f'%P{idx}-21'}+{'42' if options['mode'] == '1' else '28'}>%TXT{idx+1}+5],{{GW|open&forum_view.dcml\\00&last_view=0^theme=9382\\00|LW_lockall}},14,\"\")",
+                f"#apan[%PAN{idx+1}](%SB[x:0,y:{'4' if idx == 0 else f'%P{idx}-21'}-10,w:100%,y1:{'4' if idx == 0 else f'%P{idx}-21'}+{'42' if options['mode'] == '1' else '28'}>%TXT{idx+1}+5],{{GW|open&forum_view.dcml\\00&last_view=0^theme={thread['id']}\\00|LW_lockall}},14,\"\")",
                 f"#font(BC12,RC12,RC12)",
                 f"#txt[%TEXT{idx+1}](%SB[x:218,y:{'4' if idx == 0 else f'%P{idx}-21'},w:100%-220,h:24],{{}},\"{thread['content']}\")",
                 f"#font(R2C12,R2C12,RC12)",

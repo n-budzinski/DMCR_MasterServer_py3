@@ -5,7 +5,7 @@ def new_game_dlg(database: sqlalchemy.Engine):
     with database.connect() as connection:
         result = connection.execute(sqlalchemy.text(f"SELECT name FROM lobby_types"))
         types = result.fetchall()
-    return "".join((
+    return " ".join((
         f"<NGDLG>",
         f"#ebox[%L0](x:0,y:0,w:100%,h:100%)",
         # f"#exec(LW_cfile&{player.nickname}\\00&Bastet/%GV_VE_TITLE)",
@@ -28,6 +28,6 @@ def new_game_dlg(database: sqlalchemy.Engine):
         f"#cbb[%E_MAXPL](%L[x:130,y:139,w:273,h:24],{{%GV_VE_MAX_PL}},2,3,4,5,6,7,0)",
         f"#font(BC14,RC14,RC14)",
         f"#txt[%L_MAXPL](%L[x:11,y:175,w:151,h:24],{{}},\"Type:\")",
-        f"""#cbb[%E_TYPE](%L[x:130,y:169,w:273,h:24],{{%GV_VE_TYPE}},{''.join([f'{type[0]},' for type in types])})""",
+        f"#cbb[%E_TYPE](%L[x:130,y:169,w:273,h:24],{{%GV_VE_TYPE}},{''.join([f'{type[0]},' for type in types])})",
         # f"{''.join([f'{_type.name},' for _type in gameTypes.types])}"
         f"<NGDLG>"))

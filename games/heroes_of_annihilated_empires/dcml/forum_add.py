@@ -5,6 +5,7 @@ def forum_add(options, database: sqlalchemy.Engine, player_id):
         try:
             with database.connect() as connection:
                 if options['theme']:
+                    print('adding message to thread')
                     connection.execute(sqlalchemy.text(f'INSERT INTO threads_messages (author_id, thread_id, content) VALUES ({player_id}, {options["theme"]}, "{options["add_message"]}")'))
                 else:
                     connection.execute(sqlalchemy.text(f'INSERT INTO threads (author_id, content) VALUES ({player_id}, "{options["add_message"]}")'))
@@ -66,7 +67,7 @@ def forum_add(options, database: sqlalchemy.Engine, player_id):
     f"#pan[%PAN](%B0[x:8,y:60,w:543,h:218],1)",
     f"#edit[%NEWS](%B0[x:13,y:60,w:535,h:218],{{%GV_MESSAGE}},1,0,0,1)",
     f"#font(BC14,WC14,BC14)",
-    f"#sbtn[%BT](%B[x:521,y:377,w:100,h:305],{{GW|open&forum_add.dcml\\00&cansel=true^last_view=^mode=1^add_message=<%GV_MESSAGE>\\00|LW_lockall}},\"Save\")",
+    f"#sbtn[%BT](%B[x:521,y:377,w:100,h:305],{{GW|open&forum_add.dcml\\00&cansel=true^last_view=^mode=1^add_message=<%GV_MESSAGE>^theme={options['theme']}\\00|LW_lockall}},\"Save\")",
     f"#sbtn[%BT](%B[x:641,y:377,w:100,h:305],{{LW_file&Internet/Cash/l_games_btn.cml}},\"Cancel\")<NGDLG><NGDLG>",
     f"#block(cancel.cml,CAN)",
     f"<NGDLG><NGDLG>",

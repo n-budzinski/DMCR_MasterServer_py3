@@ -9,10 +9,6 @@ class Server():
                 ) -> None:
         self.address, self.udp_port, self.tcp_port = address, udp_port, tcp_port
 
-    IRCADDRESS = "irc.freenode.org"
-    IRCCH1 = "#GSP!conquest_m!5"
-    IRCCH2 = "#GSP!conquest!3"
-
 class Irc():
     def __init__(self, address: str, ch1: str, ch2: str) -> None:
         self.address, self.ch1, self.ch2 = address, ch1, ch2

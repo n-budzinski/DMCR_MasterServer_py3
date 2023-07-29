@@ -65,7 +65,6 @@ async def handleTCP(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
                 try:
                     sequence, language, version, data = packets.unpack(rawData)
                     response, game, db = None, None, None
-                    
                     if version == 13:
                         game, db = alexdemo, ALEX_DEMO_DB
                     # elif version == 14:
@@ -74,25 +73,20 @@ async def handleTCP(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
                         game, db = alex, ALEX_DB
                     elif version == 30:
                         game, db = hoae, HOAE_DB
-                    
                     if game and db:
                         response = game.processRequest(data, db, writer.get_extra_info(name='peername')[0])
-
                     if response:
                         response = packets.pack(response, data[-2].decode())
                         response = packets.addHeader(response, sequence, language, version)
                         sendPacket(writer, response)
                     else:
                         sendPacket(writer, bytearray())
-
                 except Exception as f:
                     print(f)
                     traceback.print_exc()
                     break
-
                 finally:
                     await writer.drain()
-
     writer.close()
 
 async def run():

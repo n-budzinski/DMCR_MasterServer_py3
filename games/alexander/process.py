@@ -19,6 +19,8 @@ from .dcml.punishments import punishments
 from .dcml.forum import forum
 from .dcml.forum_add import forum_add
 from .dcml.forum_search import forum_search
+from .dcml.forum_view import forum_view
+
 
 from .helpers.create_game import create_game
 from .helpers.login import login
@@ -135,6 +137,9 @@ def processRequest(request, database: sqlalchemy.Engine, address):
 
                 elif request == "forum_search.dcml":
                     responseParameters.append(["LW_show", forum_search()])
+
+                elif request == "forum_view.dcml":
+                    responseParameters.append(["LW_show", forum_view(opts, database)])
 
                 elif request == "new_game_dlg_create.dcml":
                     responseParameters.append(["LW_show", create_game(opts, player_id, address, database)])
