@@ -34,7 +34,7 @@ from .dcml.clan_users import clan_users
 from .dcml.clan_admin2 import clan_admin2
 from .dcml.scored_games import scored_games
 from .dcml.scored_games2x2 import scored_games2x2
-
+from .dcml.mail_view import mail_view
 
 from .helpers.create_game import create_game
 from .helpers.login import login
@@ -167,6 +167,9 @@ def processRequest(request, database: sqlalchemy.Engine, address):
 
                 elif request == "mail_new.dcml":
                     responseParameters.append(["LW_show", mail_new(opts, database)])
+
+                elif request == "mail_view.dcml":
+                    responseParameters.append(["LW_show", mail_view(opts, database)])
 
                 elif request == "clans_list.dcml":
                     responseParameters.append(["LW_show", clans_list(opts, database)])

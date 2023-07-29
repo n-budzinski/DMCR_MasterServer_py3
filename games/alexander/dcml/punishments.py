@@ -9,23 +9,21 @@ def punishments(database: sqlalchemy.Engine):
             punishment = entry._mapping
             punishment_list.append("".join([
                 f"#font(R2C12,BC12,RC12)",
-                f"#txt[%MSG{idx+1}](%SB[x:8,y:{'4' if idx == 0 else f'%P{idx}-21'},w:570,h:20],{{}},\"Cancelled game ```` (#).\")",
+                f"#txt[%MSG{idx+1}](%SB[x:8,y:{'4' if idx == 0 else f'%P{idx}-21'},w:570,h:20],{{}},\"Cancelled game {punishment['game_id']} (#).\")",
                 f"#font(R2C12,BC12,BC12)",
                 f"#txt[%DAT{idx+1}](%SB[x:8,y:{'4' if idx == 0 else f'%P{idx}-21'}+29,w:90,h:20],{{}},\"Date:\")",
                 f"#font(BC12,BC12,BC12)",
-                f"#txt[%DATE{idx+1}](%SB[x:%DAT{idx+1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'}+29,w:200,h:20],{{}},\"04.04.2005 [07:36]\")",
+                f"#txt[%DATE{idx+1}](%SB[x:%DAT{idx+1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'}+29,w:200,h:20],{{}},\"{punishment['published_at']}\")",
                 f"#font(R2C12,BC12,BC12)",
                 f"#txt[%MD{idx+1}](%SB[x:8,y:{'4' if idx == 0 else f'%P{idx}-21'}+43,w:90,h:20],{{}},\"Moderator:\")",
                 f"#font(R2C12,BC12,RC12)",
-                f"#txt[%MDR{idx+1}](%SB[x:%MD{idx+1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'}+43,w:200,h:20],{{GW|open&user_details.dcml\\00&ID=5436\\00|LW_lockall}},\"{{_5436}}\")",
+                f"#txt[%MDR{idx+1}](%SB[x:%MD{idx+1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'}+43,w:200,h:20],{{GW|open&user_details.dcml\\00&ID=5436\\00|LW_lockall}},\"{{{punishment['moderator_id']}}}\")",
                 f"#font(R2C12,BC12,BC12)",
                 f"#txt[%CM{idx+1}](%SB[x:210,y:{'4' if idx == 0 else f'%P{idx}-21'}+29,w:100,h:20],{{}},\"Comments:\")",
                 f"#font(BC12,BC12,BC12)",
-                f"#txt[%CMT{idx+1}](%SB[x:%CM{idx+1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'}+29,w:256,h:20],{{}},\"ok\")",
+                f"#txt[%CMT{idx+1}](%SB[x:%CM{idx+1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'}+29,w:256,h:20],{{}},\"{punishment['comment']}\")",
                 f"#pan[%P{idx+1}](%SB[x:0-32,y:%MDR{idx+1}>%CMT{idx+1}+38,w:100%+65,h:0],9)",
             ]))
-    print("".join(punishment_list))
-
     return "".join((
     f"#ebox[%TB](x:0,y:0,w:100%,h:100%)",
     f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)",

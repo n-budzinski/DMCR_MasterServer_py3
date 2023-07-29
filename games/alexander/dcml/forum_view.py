@@ -4,15 +4,12 @@ def forum_view(options, database: sqlalchemy.Engine):
     print("fv")
     with database.connect() as connection:
         if options['theme']:
-            print('has theme')
             thread = connection.execute(sqlalchemy.text(f"""SELECT id, created_at, author_id, content FROM threads WHERE id = {options['theme']} LIMIT 1""")).fetchone()
             if thread:
-                print('thread found')
                 thread = thread._mapping
                 messages = connection.execute(sqlalchemy.text(f"""SELECT * FROM thread_messages WHERE thread_id = {thread['id']} ORDER BY id ASC"""))
                 message_list = []
                 for idx, entry in enumerate(messages):
-                        print(entry)
                         message = entry._mapping
                         message_list.append("".join([
                             f"#font(R2C12,R2C12,RC12)",
@@ -21,7 +18,7 @@ def forum_view(options, database: sqlalchemy.Engine):
                             f"#txt[%DATE{idx+1}](%SB[x:%S_DATE{idx+1}+5,y:{'6' if idx == 0 else f'%P{idx}-22'},w:170,h:24],{{}},\"{message['created_at']}\")",
                             f"#font(R2C12,BC12,RC12)",
                             f"#txt[%S_CR{idx+1}](%SB[x:7,y:{'6' if idx == 0 else f'%P{idx}-22'}+14,w:170,h:24],{{}},\"Author:\")",
-                            f"#txt[%CR{idx+1}](%SB[x:%S_CR{idx+1}+5,y:{'6' if idx == 0 else f'%P{idx}-22'}+14,w:170,h:24],{{GW|open&user_details.dcml\\00&ID=38682\\00|LW_lockall}},\"{{{message['author_id']}}}\")",
+                            f"#txt[%CR{idx+1}](%SB[x:%S_CR{idx+1}+5,y:{'6' if idx == 0 else f'%P{idx}-22'}+14,w:170,h:24],{{GW|open&user_details.dcml\\00&ID={message['author_id']}\\00|LW_lockall}},\"{{{message['author_id']}}}\")",
                             f"#font(BC12,RC12,RC12)",
                             f"#txt[%TEXT{idx+1}](%SB[x:215,y:{'6' if idx == 0 else f'%P{idx}-22'},w:100%-220+0,h:24],{{}},\"{message['content']}\")",
                             f"#pan[%P{idx+1}](%SB[x:0-32,y:%CR{idx+1}>%TEXT{idx+1}+37,w:100%+65,h:0],9)",
@@ -81,7 +78,7 @@ def forum_view(options, database: sqlalchemy.Engine):
                 f"#txt[%DATE0](%B01[x:%S_DATE0+5,y:7,w:170,h:24],{{}},\"{thread['created_at']}\")",
                 f"#font(R2C12,BC12,RC12)",
                 f"#txt[%S_CR0](%B01[x:8,y:21,w:170,h:24],{{}},\"Author:\")",
-                f"#txt[%CR0](%B01[x:%S_CR0+5,y:21,w:170,h:24],{{GW|open&user_details.dcml\\00&ID={thread['author_id']}\\00|LW_lockall}},\"{thread['author_id']}\")",
+                f"#txt[%CR0](%B01[x:%S_CR0+5,y:21,w:170,h:24],{{GW|open&user_details.dcml\\00&ID={thread['author_id']}\\00|LW_lockall}},\"{{{thread['author_id']}}}\")",
                 f"#font(GC12,R2C12,RC12)",
                 f"#txt[%TEXT0](%B01[x:220,y:7,w:330+0,h:24],{{}},\"{thread['content']}\")",
                 f"#pan[%PAN](%B01[x:0,y:%PAN_T+10,w:559,y1:D],5)",
