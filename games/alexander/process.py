@@ -1,4 +1,3 @@
-from ..classes import GameManager, Player
 from collections import defaultdict
 from .dcml.log_user import log_user
 from .dcml.log_conf_dlg import log_conf_dlg

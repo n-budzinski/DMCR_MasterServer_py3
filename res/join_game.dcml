@@ -1,6 +1,0 @@
-<NGDLG>
-#exec(LW_cfile&\00&Bastet/%GV_VE_PASSWD)
-#ebox[%BF](x:0,y:0,w:100%,h:100%)
-#table[%TBL](%BF[x:243,y:130,w:415,h:205],{}{}{GW|open&cancel.dcml\00|LW_lockall},2,0,3,13,252,"JOIN","Connecting...\\Please, wait.",26,"Cancel")
-#exec(LW_gvar&%CG_GAMEID&LOBBYID&%CG_MAXPL&MAXPLAYERS&%CG_GAMENAME&GAMEHOST&%COMMAND&JGAME&%CG_IP&IPADDR:PORT)
-<NGDLG>
