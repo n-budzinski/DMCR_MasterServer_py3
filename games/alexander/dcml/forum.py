@@ -1,35 +1,35 @@
 import sqlalchemy
 
-def forum(options, database: sqlalchemy.Engine, player_id):
+def forum(options, database: sqlalchemy.Engine):
     with database.connect() as connection:
         thread_list = []
-
-        if options["mode"] == "1":
-            threads = connection.execute(sqlalchemy.text(f"""SELECT id, author_id, created_at, content, (SELECT COUNT(*) AS count FROM thread_messages WHERE thread_messages.thread_id = threads.id) AS messages\
+        if options['search_nick'] or options['search_text']:
+            threads = connection.execute(sqlalchemy.text(f"""SELECT *\
+            FROM thread_messages\
+            WHERE author_id = (SELECT players.player_id FROM players WHERE players.nick = '{options['search_nick']}' LIMIT 1) OR\
+            INSTR(thread_messages.content, '{options['search_text']}')""")).fetchall()
+        elif options["mode"] == "1":
+            threads = connection.execute(sqlalchemy.text(f"""SELECT id, author_id, created_at, content, (SELECT COUNT(*) AS count FROM thread_messages\
+                WHERE thread_messages.thread_id = threads.id) AS messages\
                 FROM threads ORDER BY id DESC LIMIT 31 OFFSET {int(options["next_message"]) if options["next_message"] else 0}""")).fetchall()
-
         elif options["mode"] == "2":
             threads = connection.execute(sqlalchemy.text(f"""SELECT *\
                 FROM thread_messages ORDER BY id DESC LIMIT 10""")).fetchall()
-
         elif options["mode"] == "3":
             threads = connection.execute(sqlalchemy.text(f"""SELECT *\
                 FROM thread_messages WHERE created_at > now() - interval 1 day ORDER BY id DESC""")).fetchall()
-
         elif options["mode"] == "4":
             threads = connection.execute(sqlalchemy.text(f"""SELECT *\
                 FROM thread_messages WHERE created_at > now() - interval 7 day ORDER BY id DESC""")).fetchall()
-
         else:
             threads = []
-
         for idx, entry in enumerate(threads[:30]):
             thread = entry._mapping
-            thread_list.append("".join([
+            thread_list.append(" ".join([
                 f"#font(BC12,RC12,RC12)",
                 f"#txt[%TXT{idx+1}](%SB[x:218,y:{'4' if idx == 0 else f'%P{idx}-21'},w:100%-215,h:24],{{}},\"{thread['content']}\")",
                 f"#exec(LW_vis&0&%TXT2)",
-                f"#apan[%PAN{idx+1}](%SB[x:0,y:{'4' if idx == 0 else f'%P{idx}-21'}-10,w:100%,y1:{'4' if idx == 0 else f'%P{idx}-21'}+{'42' if options['mode'] == '1' else '28'}>%TXT{idx+1}+5],{{GW|open&forum_view.dcml\\00&last_view=0^theme={thread['id']}\\00|LW_lockall}},14,\"\")",
+                f"#apan[%PAN{idx+1}](%SB[x:0,y:{'4' if idx == 0 else f'%P{idx}-21'}-10,w:100%,y1:{'4' if idx == 0 else f'%P{idx}-21'}+{'42' if options['mode'] == '1' else '28'}>%TXT{idx+1}+5],{{GW|open&forum_view.dcml\\00&last_view=0^theme={thread['id'] if options['mode'] == '1' else thread['thread_id']}\\00|LW_lockall}},14,\"\")",
                 f"#font(BC12,RC12,RC12)",
                 f"#txt[%TEXT{idx+1}](%SB[x:218,y:{'4' if idx == 0 else f'%P{idx}-21'},w:100%-220,h:24],{{}},\"{thread['content']}\")",
                 f"#font(R2C12,R2C12,RC12)",
@@ -39,10 +39,11 @@ def forum(options, database: sqlalchemy.Engine, player_id):
                 f"#font(R2C12,BC12,RC12)",
                 f"#txt[%S_CR{idx+1}](%SB[x:8,y:{'4' if idx == 0 else f'%P{idx}-21'}+14,w:170,h:24],{{}},\"Author:\")",
                 f"#txt[%CR{idx+1}](%SB[x:%S_CR{idx+1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'}+14,w:170,h:24],{{GW|open&user_details.dcml\\00&ID=73858\\00|LW_lockall}},\"{{{thread['author_id']}}}\")",
-                f"#txt[%S_COU{idx+1}](%SB[x:8,y:{'4' if idx == 0 else f'%P{idx}-21'}+28,w:170,h:24],{{}},\"Message:\")#font(BC12,BC12,BC12)#txt[%COU{idx+1}](%SB[x:%S_COU{idx+1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'}+28,w:170,h:24],{{}},\"{thread['messages']}\")" if options["mode"] == "1" else "",
+                f"#txt[%S_COU{idx+1}](%SB[x:8,y:{'4' if idx == 0 else f'%P{idx}-21'}+28,w:170,h:24],{{}},\"Message:\")" if options['mode'] == '1' else '',
+                f"#font(BC12,BC12,BC12)",
+                f"#txt[%COU{idx+1}](%SB[x:%S_COU{idx+1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'}+28,w:170,h:24],{{}},\"{thread['messages']}\")" if options["mode"] == "1" else "",
                 f"#pan[%P{idx+1}](%SB[x:0-32,y:{'4' if idx == 0 else f'%P{idx}-21'}+{'42' if options['mode'] == '1' else '28'}>%TEXT{idx+1}+38,w:100%+65,h:0],9)",
             ]))
-    print(len(thread_list))
     return "".join((
     f"#exec(LW_cfile&20230722144507&Cookies/%GV_FORUM_LAST_TIME)",
     f"#ebox[%TB](x:0,y:0,w:100%,h:100%)",
@@ -99,18 +100,17 @@ def forum(options, database: sqlalchemy.Engine, player_id):
     f"#hint(%LIST9,\"Search a message by author or text\")",
     f"#pan[%PAN](%B[x:154,y:42,w:526-3,h:291],7)",
     f"#sbox[%SB](x:150,y:42+4,w:526+4,h:291-8)",
-    
     "".join(thread_list) if thread_list else "".join([
         f"#ebox[%B1](x:0,y:0,w:100%,h:100%)",
         f"#pan[%PAN0](%B1[x:390,y:8,w:0,h:359],10)",
         f"#font(BC14,WC14,BC14)",
-        f"#sbtn[%BT3](%B[x:684,y:377,w:15,h:305],{{GW|open&forum.dcml\\00&mode=^message_total=3246^next_message={int(options['next_message']) + 30 if options['next_message'] else 0}^last_view=0^search_nick=^search_text=\\00|LW_lockall}},\"Next\")" if len(threads) > 29 else "",
+        f"#sbtn[%BT3](%B[x:684,y:377,w:15,h:305],{{GW|open&forum.dcml\\00&mode=^next_message={int(options['next_message']) + 30 if options['next_message'] else 0}^last_view=0^search_nick=^search_text=\\00|LW_lockall}},\"Next\")" if len(threads) > 29 else "",
     ]) if threads else "".join([
             f"#font(RG18,RG18,RG18) ",
             f"#ctxt[%T0](%B[x:154,y:179,w:523,h:20],{{}},\"No search results\")",
             ]),
-
-    f"<NGDLG><NGDLG>",
+    f"<NGDLG>",
+    f"<NGDLG>",
     f"#block(cancel.cml,CAN)",
     f"<NGDLG>",
     f"<NGDLG>",

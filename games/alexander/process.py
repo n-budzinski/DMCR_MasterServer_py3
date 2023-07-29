@@ -130,7 +130,7 @@ def processRequest(request, database: sqlalchemy.Engine, address):
                     responseParameters.append(["LW_show", punishments(database)])
 
                 elif request == "forum.dcml":
-                    responseParameters.append(["LW_show", forum(opts, database, player_id)])
+                    responseParameters.append(["LW_show", forum(opts, database)])
 
                 elif request == "forum_add.dcml":
                     responseParameters.append(["LW_show", forum_add(opts, database, player_id)])
