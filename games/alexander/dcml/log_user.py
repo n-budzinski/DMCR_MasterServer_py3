@@ -1,5 +1,5 @@
 from ...common import genID
-from ..config import IRCADDRESS, IRCCH1, IRCCH2
+from ....config import ALEX_IRC
 import sqlalchemy
 
 def log_user(options: dict, database: sqlalchemy.Engine) -> str:
@@ -63,9 +63,9 @@ def log_user(options: dict, database: sqlalchemy.Engine) -> str:
         f"%MAIL&{VE_MAIL}&"\
         f"%PASS&{VE_PASS}&"\
         f"%GMID&{VE_GMID}&"\
-        f"%CHAT&{IRCADDRESS}&"\
-        f"%CHNL1&{IRCCH1}\\00&"\
-        f"%CHNL2&{IRCCH2}\\00)",
+        f"%CHAT&{ALEX_IRC.address}&"\
+        f"%CHNL1&{ALEX_IRC.ch1}\\00&"\
+        f"%CHNL2&{ALEX_IRC.ch2}\\00)",
         f"<MESDLG>"))
 
 
