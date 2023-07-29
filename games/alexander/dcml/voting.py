@@ -26,5 +26,9 @@ def voting(options: dict, database: sqlalchemy.Engine):
         else:
             return "".join((
                 f"<VOTING>",
-                f"<VOTING>"
+                f"#font(RG18,RG18,RG18)",
+                f"#ctxt[%T0](%B_VOTE[x:5,y:20,w:100%-10,h:20],{{}},\"No search results\")",
+                f"#font(R2C12,R2C12,RC12)",
+                f"#ctxt[%VIEW](%B_VOTE[x:4,y:100%-19,w:100%-5,h:20],{{GW|open&voting_view.dcml\\00|LW_lockall}},\"{{View all votes}}\") ",
+                f"<VOTING>",
             ))

@@ -5,6 +5,6 @@ IRCCH2 = "#GSP!conquest!3"
 DB = {
   "host": "127.0.0.1",
   "user": "server",
-  "password": "password123",
+  "password": "nickman22",
   "database": "heroes_of_annihilated_empires"
 }

@@ -1,5 +1,4 @@
 import threading
-from games.classes import Player, GameManager
 import asyncio
 import socket
 import math
@@ -9,16 +8,7 @@ import games.alexander.process as alex
 import games.alexander.process as alexdemo
 # import games.c2nw.process as c2nw
 import games.heroes_of_annihilated_empires.process as hoae
-import sqlalchemy
-from games.alexander.config import DB as ADBCONF
-from games.heroes_of_annihilated_empires.config import DB as HOAECONF
-
-alexdb = sqlalchemy.create_engine(f'mysql+pymysql://{ADBCONF["user"]}:{ADBCONF["password"]}@{ADBCONF["host"]}/{ADBCONF["database"]}?charset=utf8mb4')
-hoaedb = sqlalchemy.create_engine(f'mysql+pymysql://{ADBCONF["user"]}:{ADBCONF["password"]}@{ADBCONF["host"]}/{ADBCONF["database"]}?charset=utf8mb4')
-
-
-
-gamemanager = GameManager()
+from config import ALEX_DB, ALEX_DEMO_DB, HOAE_DB, SERVER
 
 def sendPacket(writer, response):
     fragment_offset = 0
@@ -48,12 +38,9 @@ def udpPunch(recvdata, recvaddr, keepalivesock):
         hostaddr = recvdata[6:10]
         hostaddr = [str(byte) for byte in hostaddr]
         hostaddr = ".".join(hostaddr)
-        with alexdb.connect() as connection:
-            lobby = connection.execute(sqlalchemy.text(f"SELECT ip FROM lobbies WHERE ip = '{recvaddr[0]}' LIMIT 1")).fetchone()
-            if lobby:
-                recvdata = bytearray(recvdata)
-                recvdata[-5:] = [0x25, 0xCD, 0x40, 0x6E, 0x3E]
-                keepalivesock.sendto(recvdata, (hostaddr, 34000))
+        recvdata = bytearray(recvdata)
+        recvdata[-5:] = [0x25, 0xCD, 0x40, 0x6E, 0x3E]
+        keepalivesock.sendto(recvdata, (hostaddr, 34000))
 
 def handleUDP(udpSock: socket.socket):
     while True:
@@ -64,7 +51,6 @@ def handleUDP(udpSock: socket.socket):
         keepalivethread.start()
 
 async def handleTCP(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
-    player = Player(writer.get_extra_info(name='peername'))
     while True:
         try:
             rawData = await asyncio.wait_for(reader.read(1440), timeout=120)
@@ -77,25 +63,25 @@ async def handleTCP(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         else:
             if rawData:
                 try:
-                    header, data = packets.unpack(rawData)
-                    player.language = header.clientLanguage
-                    response = None
-                    if header.clientVersion == 14:
-                        # response = c2nw.processRequest(request[0], request[1], request[2], request[4], player, gamemanager)
-                        pass
-                    elif header.clientVersion == 13:
-                        pass
-                        # response = alexdemo.processRequest(request[0], request[1], request[2], request[4], player, gamemanager)
-                    elif header.clientVersion == 16:
-                        response = alex.processRequest(data, alexdb, player, writer.get_extra_info(name='peername')[0])
-                    elif header.clientVersion == 30:
-                        response = hoae.processRequest(data, alexdb, player, writer.get_extra_info(name='peername')[0])
+                    sequence, language, version, data = packets.unpack(rawData)
+                    response, game, db = None, None, None
+                    
+                    if version == 13:
+                        game, db = alexdemo, ALEX_DEMO_DB
+                    # elif version == 14:
+                    #     game, db = c2nw, C2NW_DB
+                    elif version == 16:
+                        game, db = alex, ALEX_DB
+                    elif version == 30:
+                        game, db = hoae, HOAE_DB
+                    
+                    if game and db:
+                        response = game.processRequest(data, db, writer.get_extra_info(name='peername')[0])
 
                     if response:
                         response = packets.pack(response, data[-2].decode())
-                        response = packets.addHeader(response, header.sequenceNumber, header.clientLanguage, header.clientVersion)
+                        response = packets.addHeader(response, sequence, language, version)
                         sendPacket(writer, response)
-
                     else:
                         sendPacket(writer, bytearray())
 
@@ -110,13 +96,13 @@ async def handleTCP(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
     writer.close()
 
 async def run():
-    server = await asyncio.start_server(handleTCP, "0.0.0.0", 34001)
+    server = await asyncio.start_server(handleTCP, SERVER.address, SERVER.tcp_port)
     async with server:
         await server.serve_forever()
 
 def main():
     udpsocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    udpsocket.bind(("0.0.0.0", 34000))
+    udpsocket.bind((SERVER.address, SERVER.udp_port))
     udpsocket.setblocking(True)
     udpPunchThread = threading.Thread(target=handleUDP, args=(udpsocket,))
     udpPunchThread.daemon = True

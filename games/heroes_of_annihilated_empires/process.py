@@ -27,7 +27,7 @@ from .helpers.critical_error import critical_error
 from .helpers.leave_lobby import leave_lobby
 import sqlalchemy
 
-def processRequest(request, database: sqlalchemy.Engine, player: Player, address):
+def processRequest(request, database: sqlalchemy.Engine, address):
     print(request)
     command, parameters, options, player_id = request[0], request[1], request[2], request[-1].decode()
     responseParameters = []
@@ -43,8 +43,8 @@ def processRequest(request, database: sqlalchemy.Engine, player: Player, address
         leave_lobby(player_id, database)
 
     elif command == "start":
-        if player.lobby:
-            player.lobby.hasBegun = True
+        # if player.lobby:
+        #     player.lobby.hasBegun = True
         return
 
     elif command == "url":
@@ -61,8 +61,8 @@ def processRequest(request, database: sqlalchemy.Engine, player: Player, address
         return
 
     elif command == "alive":
-        if player.lobby:
-            player.lobby.setReportedPlayerCount(int.from_bytes(parameters[0:1]))
+        # if player.lobby:
+        #     player.lobby.setReportedPlayerCount(int.from_bytes(parameters[0:1]))
         return
 
     elif command == "login":
@@ -108,7 +108,7 @@ def processRequest(request, database: sqlalchemy.Engine, player: Player, address
                     responseParameters.append(["LW_show", change(opts)])
 
                 elif request == "change_account2.dcml":
-                    responseParameters.append(["LW_show", change_account2(opts)])
+                    responseParameters.append(["LW_show", change_account2()])
 
                 elif request == "log_new_form.dcml":
                     responseParameters.append(["LW_show", log_new_form(opts, database)])
@@ -123,6 +123,7 @@ def processRequest(request, database: sqlalchemy.Engine, player: Player, address
                     responseParameters.append(["LW_show", join_game(opts, database)])
 
                 elif request == "new_game_dlg.dcml":
+                    leave_lobby(player_id, database)
                     responseParameters.append(["LW_show", new_game_dlg(database)])
 
                 elif request == "punishments.dcml":

@@ -67,3 +67,10 @@ def log_user(options: dict, database: sqlalchemy.Engine) -> str:
         f"%CHNL1&{IRCCH1}\\00&"\
         f"%CHNL2&{IRCCH2}\\00)",
         f"<MESDLG>"))
+
+
+# <MESDLG> 
+# #ebox[%MBG](x:0,y:0,w:1024,h:768) 
+# #def_dtbl_button_hotkey(13,27) 
+# #table[%TBL](%MBG[x:287,y:285,w:450,h:200],{}{}{GW|open&log_new_form.dcml\00&up_dat=1^cansel=true^VE_PROF=139671^VE_MODE=edit^VE_NAME=<%GV_VE_NAME>^VE_NICK=hardkode1^VE_MAIL=<%GV_VE_MAIL>^VE_PASS=^VE_RASS=^VE_ICQ=<%GV_VE_ICQ>^VE_HOMP=<%GV_VE_HOMP>^VE_SEX=<%GV_VE_SEX>^VE_CNTRY=<%GV_VE_CNTRY>^VE_PHON=<%GV_VE_PHON>^VE_BIRTH=<%GV_VE_BIRTH>^accounts=139671\00|LW_lockall}{LW_file&Internet/Cash/l_games_btn.cml},1,0,11,362,"ERROR","An invalid Game Box Identifier was entered! Please enter more carefully. The number of attempts is limited. Press Edit button to check Game Box Identifier. Press Cancel to exit",24,"Edit","Cancel") 
+# <MESDLG>

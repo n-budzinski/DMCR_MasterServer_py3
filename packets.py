@@ -1,26 +1,10 @@
 from zlib import compress, decompress
-import games.alexander.config as config
 import struct
 
-class Header:
-    def __init__(self,
-                 sequenceNumber: int,
-                 clientLanguage: int,
-                 clientVersion: int) -> None:
-        self.sequenceNumber = sequenceNumber
-        self.clientLanguage = clientLanguage
-        self.clientVersion = clientVersion
-
 def unpack(packet):
-    header = Header(
-        struct.unpack("H", packet[:2])[0],
-        struct.unpack("B", packet[2:3])[0],
-        struct.unpack("B", packet[3:4])[0])
     packetData = decompress(packet[12:])
-
     data = []
     lsize = struct.unpack('H', packetData[0:2])[0]
-    print(lsize)
     functionLength = struct.unpack_from("B"*lsize, packetData[2:])[0]
     cursor = 5 + functionLength
     data.append(packetData[3:3 + functionLength].decode())
@@ -33,7 +17,7 @@ def unpack(packet):
         data.append(value)
         cursor += parameter_length
     packetData = packetData[cursor:]
-    return header, data
+    return *struct.unpack("HBB", packet[:4]), data
 
 def pack(data, integrity):
     packet = bytearray()
@@ -50,10 +34,5 @@ def pack(data, integrity):
 
 
 def addHeader(packet, sequence, language, version):
-    packeddata = compress(packet)
-    return bytearray(struct.pack("H", sequence)+
-                                struct.pack("B", language)+
-                                struct.pack("B", version)+
-                                struct.pack("I", len(packeddata) + 12)+
-                                struct.pack("I", len(packet))+
-                                packeddata)
+    data = compress(packet)
+    return bytearray(struct.pack("HBBII", sequence, language, version, len(data) + 12, len(packet)) + data)
