@@ -1003,19 +1003,6 @@ def log_conf_dlg(variables: dict, **_):
     ))
 
 def log_new_form(variables: dict, database: sqlalchemy.Engine, **_) -> str:
-    # print(variables)
-    VE_MODE=variables.get("VE_MODE", "creat")
-    VE_NAME=variables.get("VE_NAME", "")
-    VE_NICK=variables.get("VE_NICK", "")
-    VE_MAIL=variables.get("VE_MAIL", "")
-    VE_PROF=variables.get("VE_PROF", "")
-    VE_ICQ=variables.get("VE_ICQ", "n/a")
-    VE_HOMP=variables.get("VE_HOMP", "n/a")
-    VE_SEX=variables.get("VE_SEX", "2")
-    VE_CNTRY=variables.get("VE_CNTRY", "n/a")
-    VE_PHON=variables.get("VE_PHON", "n/a")
-    VE_BIRTH=variables.get("VE_BIRTH", "")
-    accounts=variables.get("accounts", "")
     genders = []
     countries = []
     with database.connect() as connection:
@@ -1030,27 +1017,27 @@ def log_new_form(variables: dict, database: sqlalchemy.Engine, **_) -> str:
             countries.append(f'\"{row[0]}\"')
         countries = ",".join(countries)
 
-    if VE_MODE == "edit":
+    if variables['VE_MODE'] == "edit":
         return " ".join((
             f"#ebox[%EBG](x:0,y:0,w:1024,h:768)",
             f"#edit[%E_LUP](%EBG[x:0,y:0,w:0,h:0],{{%GV_LAST_UPDATE}})",
             f"#block(cancel.cml,l_g):<!goback!>\\00",
             f"#end(l_g)",
             f"#def_dtbl_button_hotkey(13,0,27)",
-            f"#table[%TBL](%EBG[x:251,y:247,w:523,h:381],{{}}{{}}{{GW|open&reg_new_user.dcml\\00&cansel=true^VE_PROF={VE_PROF}^VE_MODE=edit^VE_NAME=<%GV_VE_NAME>^VE_NICK=<%GV_VE_NICK>^VE_MAIL=<%GV_VE_MAIL>^VE_GMID=<%GV_VE_GMID>^VE_PASS=<%GV_VE_PASS>^VE_RASS=<%GV_VE_RASS>^VE_ICQ=<%GV_VE_ICQ>^VE_HOMP=<%GV_VE_HOMP>^VE_SEX=<%GV_VE_SEX>^VE_CNTRY=<%GV_VE_CNTRY>^VE_PHON=<%GV_VE_PHON>^VE_BIRTH=<%GV_VE_BIRTH>^accounts={accounts}\\00|LW_lockall}}{{GW|open&log_new_form.dcml\\00&logs=1^cansel=true^VE_MODE=creat^accounts={accounts}\\00|LW_lockall}}{{LW_file&Internet/Cash/cancel.cml}},0,11,368,EDIT PERSONAL PROFILE,,26,Update,\"New account\",\"Cancel\")",
+            f"#table[%TBL](%EBG[x:251,y:247,w:523,h:381],{{}}{{}}{{GW|open&reg_new_user.dcml\\00&cansel=true^VE_PROF={variables['VE_PROF']}^VE_MODE=edit^VE_NAME=<%GV_VE_NAME>^VE_NICK=<%GV_VE_NICK>^VE_MAIL=<%GV_VE_MAIL>^VE_GMID=<%GV_VE_GMID>^VE_PASS=<%GV_VE_PASS>^VE_RASS=<%GV_VE_RASS>^VE_ICQ=<%GV_VE_ICQ>^VE_HOMP=<%GV_VE_HOMP>^VE_SEX=<%GV_VE_SEX>^VE_CNTRY=<%GV_VE_CNTRY>^VE_PHON=<%GV_VE_PHON>^VE_BIRTH=<%GV_VE_BIRTH>^accounts={variables['accounts']}\\00|LW_lockall}}{{GW|open&log_new_form.dcml\\00&logs=1^cansel=true^VE_MODE=creat^accounts={variables['accounts']}\\00|LW_lockall}}{{LW_file&Internet/Cash/cancel.cml}},0,11,368,EDIT PERSONAL PROFILE,,26,Update,\"New account\",\"Cancel\")",
             f"#ebox[%LBX](x:270,y:210,w:500,h:220)",
             f"#font(BC14,RC14,RC14))",
             f"#txt[%L_NAME](%LBX[x:4,y:56,w:100%,h:20],{{}},\"Full Name\")",
             f"#pan[%P_NAME](%LBX[x:159,y:56,w:317,h:14],1)",
-            f"#exec(LW_cfile&{VE_NAME}\\00&Cookies/%GV_VE_NAME)",
+            f"#exec(LW_cfile&{variables['VE_NAME']}\\00&Cookies/%GV_VE_NAME)",
             f"#edit[%E_NAME](%LBX[x:164,y:53,w:302,h:18],{{%GV_VE_NAME}},0,0,0,1)",
             f"#txt[%L_NICK](%LBX[x:4,y:84,w:100%,h:20],{{}},\"Nickname\")",
             f"#pan[%P_NICK](%LBX[x:159,y:84,w:317,h:14],1)",
-            f"#exec(LW_cfile&{VE_NICK}\\00&Cookies/%GV_VE_NICK)",
+            f"#exec(LW_cfile&{variables['VE_NICK']}\\00&Cookies/%GV_VE_NICK)",
             f"#edit[%E_NICK](%LBX[x:164,y:81,w:302,h:18],{{%GV_VE_NICK}})",
             f"#txt[%L_MAIL](%LBX[x:4,y:112,w:100%,h:20],{{}},\"E-Mail Address\")",
             f"#pan[%P_MAIL](%LBX[x:159,y:112,w:317,h:14],1)",
-            f"#exec(LW_cfile&{VE_MAIL}\\00&Cookies/%GV_VE_MAIL)",
+            f"#exec(LW_cfile&{variables['VE_MAIL']}\\00&Cookies/%GV_VE_MAIL)",
             f"#edit[%E_MAIL](%LBX[x:164,y:109,w:302,h:18],{{%GV_VE_MAIL}})",
             f"#txt[%L_GMID](%LBX[x:4,y:140,w:100%,h:20],{{}},\"Game Box #ID\")",
             f"#pan[%P_GMID](%LBX[x:159,y:140,w:317,h:14],1)",
@@ -1066,25 +1053,25 @@ def log_new_form(variables: dict, database: sqlalchemy.Engine, **_) -> str:
             f"#edit[%E_RASS](%LBX[x:164,y:193,w:302,h:18],{{%GV_VE_RASS}},0,0,1)",
             f"#txt[%L_ICQ](%LBX[x:4,y:224,w:100%,h:20],{{}},\"ICQ #ID\")",
             f"#pan[%P_ICQ](%LBX[x:159,y:224,w:317,h:14],1)",
-            f"#exec(LW_cfile&{VE_ICQ}\\00&Cookies/%GV_VE_ICQ)",
+            f"#exec(LW_cfile&{variables['VE_ICQ']}\\00&Cookies/%GV_VE_ICQ)",
             f"#edit[%E_ICQ](%LBX[x:164,y:221,w:302,h:18],{{%GV_VE_ICQ}})",
             f"#txt[%L_HOMP](%LBX[x:4,y:252,w:100%,h:20],{{}},\"Internet Homepage\")",
             f"#pan[%P_HOMP](%LBX[x:159,y:252,w:317,h:14],1)",
-            f"#exec(LW_cfile&{VE_HOMP}\\00&Cookies/%GV_VE_HOMP)",
+            f"#exec(LW_cfile&{variables['VE_HOMP']}\\00&Cookies/%GV_VE_HOMP)",
             f"#edit[%E_HOMP](%LBX[x:164,y:249,w:302,h:18],{{%GV_VE_HOMP}})",
             f"#txt[%L_SEX](%LBX[x:4,y:280,w:100%,h:20],{{}},\"Gender\")",
-            f"#exec(LW_cfile&{VE_SEX}\\00&Cookies/%GV_VE_SEX)",
+            f"#exec(LW_cfile&{variables['VE_SEX']}\\00&Cookies/%GV_VE_SEX)",
             f"#cbb[%E_SEX](%LBX[x:153,y:273,w:329,h:18],{{%GV_VE_SEX}},{genders},0)",
             f"#txt[%L_CNTRY](%LBX[x:4,y:308,w:100%,h:20],{{}},\"Country\")",
-            f"#exec(LW_cfile&{VE_CNTRY}\\00&Cookies/%GV_VE_CNTRY)",
+            f"#exec(LW_cfile&{variables['VE_CNTRY']}\\00&Cookies/%GV_VE_CNTRY)",
             f"#cbb[%E_CNTRY](%LBX[x:153,y:301,w:329,h:18],{{%GV_VE_CNTRY}},{countries},0)",
             f"#txt[%L_PHON](%LBX[x:4,y:336,w:100%,h:20],{{}},\"Home Phone\")",
             f"#pan[%P_PHON](%LBX[x:159,y:336,w:317,h:14],1)",
-            f"#exec(LW_cfile&{VE_PHON}\\00&Cookies/%GV_VE_PHON)",
+            f"#exec(LW_cfile&{variables['VE_PHON']}\\00&Cookies/%GV_VE_PHON)",
             f"#edit[%E_PHON](%LBX[x:164,y:333,w:302,h:18],{{%GV_VE_PHON}})",
             f"#txt[%L_BIRTH](%LBX[x:4,y:364,w:100%,h:20],{{}},\"Birthday (D/M/Y)\")",
             f"#pan[%P_BIRTH](%LBX[x:159,y:364,w:317,h:14],1)",
-            f"#exec(LW_cfile&{VE_BIRTH}\\00&Cookies/%GV_VE_BIRTH)",
+            f"#exec(LW_cfile&{variables['VE_BIRTH']}\\00&Cookies/%GV_VE_BIRTH)",
             f"#edit[%E_BIRTH](%LBX[x:164,y:361,w:302,h:18],{{%GV_VE_BIRTH}})<MESDLG><MESDLG>",
             f"#block(l_games_btn.cml,CAN)<MESDLG><MESDLG>",
             f"#end(CAN)",
@@ -1103,7 +1090,7 @@ def log_new_form(variables: dict, database: sqlalchemy.Engine, **_) -> str:
             f"#hint(%New account,\"Create a new account\")",
         ))
 
-    elif VE_MODE == "creat":
+    elif variables['VE_MODE'] == "creat":
         return " ".join((
             f"#ebox[%EBG](x:0,y:0,w:1024,h:768)",
             f"#edit[%E_LUP](%EBG[x:0,y:0,w:0,h:0],{{%GV_LAST_UPDATE}})",
@@ -2502,7 +2489,7 @@ def create_game(variables: dict, database: sqlalchemy.Engine, player_id: str | i
         f"#exec(LW_file&Internet/Cash/cancel.cml|LW_gvar&%GOPT&/OPT00 /OPT10 /OPT20 /OPT30 /OPT60 /PAGE{ '1' if allow_designed else '2'} /{'' if allow_ai else 'NO'}COMP&%CG_GAMEID&{gameID}&%CG_MAXPL&{gameMaxPlayers}&%CG_GAMENAME&\"{gameTitle}\"&%COMMAND&CGAME)",
         f"<NGDLG>"))
 
-def get_response_function(filename):
+def get_response(filename):
     return {
     "log_user.dcml": log_user,
     "log_conf_dlg.dcml" : log_conf_dlg,
@@ -2555,20 +2542,18 @@ def extract_variables(destination: defaultdict, variable_string: str) -> None:
         if len(t) == 2:
             destination[t[0]] = t[1] # type: ignore
 
-def command_open(parameters: list[bytes],
-          database: sqlalchemy.Engine,
-          player_id: str | int):
+def command_open(parameters: list[bytes], database: sqlalchemy.Engine, player_id: str | int) -> str:
     filename = parameters[0].decode()
     variables = defaultdict(lambda: None)
     if len(parameters) > 1:
         variable_string = parameters[1].decode()
         extract_variables(variables, variable_string)
-    return get_response_function(filename)(
+    return get_response(filename)(
         variables = variables,
         database = database,
         player_id = player_id) # type: ignore
 
-def command_login(parameters: list[bytes], database: sqlalchemy.Engine):
+def command_login(parameters: list[bytes], database: sqlalchemy.Engine) -> str:
     lgd = parameters[0].decode()
     with database.connect() as connection:
         if lgd:
@@ -2606,34 +2591,49 @@ def command_login(parameters: list[bytes], database: sqlalchemy.Engine):
         f"#block(l_games_btn.cml,l_g):GW|open&log_new_form.dcml\\00&logs=2^VE_MODE=creat^last_update=<%GV_LAST_UPDATE>\\00|LW_lockall",
         f"#end(l_g)"))
 
-def command_url(parameters: list[bytes]):
+def command_url(parameters: list[bytes]) -> str:
     return parameters[0].decode()
+
+def command_alive(parameters: list[bytes], database: sqlalchemy.Engine) -> None:
+    data = bytearray(parameters[0])
+    data.extend(b'\x00'*(4-len(data)%4))
+    values = []
+    for n in range(0, len(data)//4):
+        src = data[n*4:n*4+4]
+        values.append(unpack('<I', src)[0])
+    reported_player_count, host_id = values[0], values[1]
+    with database.connect() as connection:
+        connection.execute(sqlalchemy.text(
+            f"UPDATE lobbies SET players = '{reported_player_count}' WHERE host_id = {host_id}"
+        ))
+        connection.commit()
+
+def command_leave(database: sqlalchemy.Engine, player_id: str | int) -> None:
+    with database.connect() as connection:
+        connection.execute(sqlalchemy.text(f"DELETE FROM lobbies WHERE host_id={player_id};"))
+        connection.commit()
+
+def command_setipaddr(database: sqlalchemy.Engine, lobby_id: str, address: str) -> None:
+    with database.connect() as connection:
+        connection.execute(sqlalchemy.text(f"UPDATE lobbies SET ip = '{address}' WHERE id = {lobby_id}"))
+        connection.commit()
 
 def process_request(request, database, player_id):
     command, parameters, player_id = request[0], request[1:-2], request[-1].decode()
-    # print(parameters)
     response = []
-    if command == "setipaddr":
-        lobby_id, ip, port = request[1].decode(), *request[2].decode().split(':')
 
-        with database.connect() as connection:
-            connection.execute(sqlalchemy.text(f"UPDATE lobbies SET ip = '{ip}' WHERE id = {lobby_id}"))
-            connection.commit()
-        return
+    if command == "setipaddr":
+        command_setipaddr(database, request[1].decode(), request[2].decode().split(':')[0])
 
     elif command == "leave":
-        with database.connect() as connection:
-            connection.execute(sqlalchemy.text(f"DELETE FROM lobbies WHERE host_id={player_id};"))
-            connection.commit()
-        return
-
+        command_leave(database, player_id)
+        
     elif command == "start":
         # if player.lobby:
         #     player.lobby.hasBegun = True
         return
 
     elif command == "url":
-        print(parameters)
         response.append(LW_time(0, command_url(parameters)))
 
     elif command == "gmalive":
@@ -2650,27 +2650,12 @@ def process_request(request, database, player_id):
         return
 
     elif command == "alive":
-        data = bytearray(parameters[0])
-        data.extend(b'\x00'*(4-len(data)%4))
-        values = []
-        for n in range(0, len(data)//4):
-            src = data[n*4:n*4+4]
-            values.append(unpack('<I', src)[0])
-        reported_player_count, host_id = values[0], values[1]
-        with database.connect() as connection:
-            connection.execute(sqlalchemy.text(f"UPDATE lobbies SET players = '{reported_player_count}' WHERE host_id = {host_id}"))
-            connection.commit()
+        command_alive(parameters, database)
 
     elif command == "login":
         response.append(LW_show(command_login(parameters, database)))
 
     elif command == "open":
         response.append(LW_show(command_open(parameters, database, player_id)))
-
-
-
-
-
-
 
     return response
