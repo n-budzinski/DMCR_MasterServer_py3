@@ -1,3 +1,4 @@
+from importlib import reload
 import threading
 import asyncio
 import socket
@@ -46,8 +47,11 @@ def addHeader(packet, sequence, language, version):
     return bytearray(pack("HBBII", sequence, language, version, len(data) + 12, len(packet)) + data)
 
 def send_packet(writer: asyncio.StreamWriter, response: bytearray) -> None:
-    for n in range(0, 1440//len(response)):
-        writer.write(response[1439*n:][:1440])
+    print("Total packet length:", len(response))
+    print("Packet fragments:", len(response)//1440)
+    for n in range(0, len(response)//1440+1):
+        print(f"SENDING {len(response[1440*n:][:1440])} bytes")
+        writer.write(response[1440*n:][:1440])
 
 def udp_punch(recvdata: bytes, recvaddr: tuple, keepalivesock: socket.socket) -> None:
     print(recvaddr)
@@ -78,6 +82,7 @@ def handle_udp(udp_socket: socket.socket) -> None:
 
 async def handle_tcp(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
     while True:
+        reload(alex)
         try:
             raw_data = await asyncio.wait_for(reader.read(1440), timeout=120)
         except asyncio.TimeoutError:
@@ -97,10 +102,11 @@ async def handle_tcp(reader: asyncio.StreamReader, writer: asyncio.StreamWriter)
                     #     game, db = c2nw, C2NW_DB
                     elif version == 16:
                         game, db = alex, ALEX_DB
-                    elif version == 30:
-                        game, db = hoae, HOAE_DB
-                    if game and db:
-                        response = game.process_request(data, db, writer.get_extra_info(name='peername')[0])
+                    # elif version == 30:
+                    #     game, db = hoae, HOAE_DB
+                    else:
+                        game, db = alex, ALEX_DB
+                    response = game.process_request(data, db, writer.get_extra_info(name='peername')[0])
                     if response:
                         response = pack_packet(response, data[-2].decode())
                         response = addHeader(response, sequence, language, version)
