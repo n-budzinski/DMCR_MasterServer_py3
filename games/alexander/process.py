@@ -1719,9 +1719,53 @@ def map_(**_) -> str:
     )
 
 def mclick(**_) -> str:
+# <MCLICK> 
+# #ebox[%M](x:550,y:42,w:164,h:291) 
+# #font(RG18,WF16,WF16) 
+# #pan[%PAN1](%M[x:0,y:0,w:100%,h:100%],7) 
+# #ctxt[%TIT](%M[x:5,y:10,w:100%-10,h:30],{},"Persia") 
+# #font(BC12,RC12,RC12) 
+# #stbl[%TBL](%M[x:5,y:50,w:100%-10,h:100%],{},2,0,70%,0,30%,1,20,"Total wins","615",20,"Total losses","439",20,"Country area","41246",20,"Current area","41189") 
+# #font(BC14,WC14,BC14) 
+# #sbtn[%B_J](%M[x:91,y:335,w:100,h:305],{GW|open&enter_game_dlg.dcml\00&land_id=1\00|LW_lockall},"Fight") 
+# <MCLICK>
+
+
     return (
         f"<MCLICK>"
         f"<MCLICK>"
+    )
+
+
+def enter_game_dlg(database: sqlalchemy.Engine, **_) -> str:
+    #· ·· ·open· ·   enter_game_dlg.dcml 
+    #land_id=2 ·   02     35070762 
+#HOST
+#<NGDLG> 
+##exec(LW_file&Internet/Cash/cancel.cml|LW_gvar&%GOPT&/NAT3 /OPT00 /OPT10 /OPT20 /OPT30 /OPT60 /PAGE2 /NOCOMP&%CG_GAMEID&2852165&%CG_MAXPL&2&%CG_GAMENAME&"Rating Game"&%COMMAND&CGAME) 
+#<NGDLG>
+
+#CLIENT
+# <NGDLG> 
+# #exec(LW_file&Internet/Cash/cancel.cml|LW_gvar&%GOPT&/NAT1&%CG_GAMEID&2852171&%CG_MAXPL&2&%CG_GAMENAME&"Rating Game"&%COMMAND&JGAME&%CG_IP&) 
+# <NGDLG>
+
+    # with database.connect() as connection:
+    #     types = connection.execute(sqlalchemy.text(f"SELECT name FROM lobby_types")).fetchall()
+    return (
+        f"<NGDLG>"
+        f"#exec(LW_time&3000&l_games_btn.cml\\00)"
+        f"#block(l_games_btn.cml,l_g):GW|open&enter_game_dlg.dcml\\00&id_room=2852165^land_id=2^connect=1\\00|LW_lockall"
+        f"#end(l_g)"
+        f"#ebox[%L0](x:0,y:0,w:100%,h:100%)"
+        f"#def_dtbl_button_hotkey(27)"
+        f"#table[%TBL](%L0[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&cancel.dcml\\00|LW_lockall}},2,0,3,13,252,\"ENTER GAME\",,0,\"Cancel\")"
+        f"#ebox[%L](x:242,y:100,w:100%,h:100%)"
+        f"#font(BC14,RC14,RC14)"
+        f"#ctxt[%LIST1](%L[x:0,y:96,w:414,h:24],{{}},\"Please, wait.\")"
+        f"#pix[%PX](%L[x:40,y:112,w:100%,h:100%],{{}},Interf3/elements/delimeter,4,4,4,4)"
+        f"#ctxt[%LIST2](%L[x:0,y:128,w:414,h:24],{{}},\"searching other players...\")"
+        f"<NGDLG>"
     )
 
 def new_game_dlg(database: sqlalchemy.Engine, **_) -> str:
