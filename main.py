@@ -1,15 +1,13 @@
-from importlib import reload
 import threading
 import asyncio
 import socket
 import traceback
 import games.alexander.process as alex
 import games.alexander.process as alexdemo
-import games.heroes_of_annihilated_empires.process as hoae
+# import games.heroes_of_annihilated_empires.process as hoae
 from struct import pack, unpack, unpack_from
 from zlib import compress, decompress
 from config import ALEX_DB, ALEX_DEMO_DB, HOAE_DB, SERVER
-import timeit
 from collections import defaultdict
 
 TCP_MAX_PACKET_SIZE = 1440
@@ -84,18 +82,13 @@ def handle_udp(udp_socket: socket.socket) -> None:
     while True:
         threading.Thread(target=udp_punch, args=(*udp_socket.recvfrom(UDP_MAX_PACKET_SIZE), udp_socket)).start()
 
-async def handle_tcp(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
+async def handle_tcp(reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
     while True:
         try:
             packet = await asyncio.wait_for(reader.read(TCP_MAX_PACKET_SIZE), timeout=TCP_TIMEOUT)
-            start = timeit.default_timer()
-            if packet:
-                sequence, language, version, data = unpack_packet(packet)
-                game, db = game_versions[version]
-                response = game.process_request(data, db, writer.get_extra_info(name='peername')[0])
-                if response:
-                    send_packet(writer, addHeader(pack_packet(response, data[-2].decode()), sequence, language, version))
-            print(f"Responded in {'{:0.2f}'.format((timeit.default_timer() - start)*1000)} miliseconds")
+            if not packet:
+                break
+            await process_packet(packet, writer)
         except asyncio.TimeoutError:
             break
         except ConnectionResetError:
@@ -103,10 +96,16 @@ async def handle_tcp(reader: asyncio.StreamReader, writer: asyncio.StreamWriter)
         except Exception as f:
             print(f)
             traceback.print_exc()
-            break
-        finally:
-            await writer.drain()
     writer.close()
+    await writer.wait_closed()
+
+async def process_packet(packet, writer):
+    sequence, language, version, data = unpack_packet(packet)
+    game, db = game_versions[version]
+    response = game.process_request(data, db, writer.get_extra_info(name='peername')[0])
+    if response:
+        send_packet(writer, addHeader(pack_packet(response, data[-2].decode()), sequence, language, version))
+    await writer.drain()
 
 async def run():
     server = await asyncio.start_server(handle_tcp, SERVER.address, SERVER.tcp_port)
