@@ -1,6 +1,6 @@
 from collections import defaultdict
 from datetime import datetime
-from ..common import *
+from common import *
 from config import ALEX_DBTBL_INTERVAL, ALEX_IRC
 import sqlalchemy
 import sqlalchemy.exc
@@ -1641,7 +1641,6 @@ def mclick(variables : dict, **_) -> str:
         f"<MCLICK>"
     )
 
-
 def enter_game_dlg(database: sqlalchemy.Engine, **_) -> str:
     #· ·· ·open· ·   enter_game_dlg.dcml 
     #land_id=2 ·   02     35070762 
@@ -2233,7 +2232,6 @@ def startup(**_) -> str:
         f"#end(CAN)"
     )
 
-
 def user_details(variables: dict, database: sqlalchemy.Engine, player_id, **_) -> str | None:
     with database.connect() as connection:
         profile = connection.execute(sqlalchemy.text(
@@ -2701,15 +2699,19 @@ def command_login(parameters: list[bytes], database: sqlalchemy.Engine) -> str:
     lgd = parameters[0].decode()
     if lgd:
         with database.connect() as connection:
-            profileid = connection.execute(sqlalchemy.text(f"Select player_id from sessions where session_key = '{lgd}' LIMIT 1")).fetchone()
+            profileid = connection.execute(sqlalchemy.text(f"SELECT player_id "
+                                                           f"FROM sessions "
+                                                           f"WHERE session_key = '{lgd}' "
+                                                           f"LIMIT 1")).fetchone()
             if profileid:
+                profileid = profileid._mapping
                 profile = connection.execute(sqlalchemy.text(
                     f"SELECT "
                     f"player_id, "
                     f"name, "
                     f"CONCAT(COALESCE(clans.signature,''), players.nick) AS nick, "
                     f"mail, "
-                    f"pass, "
+                    f"pass AS password, "
                     f"icq, "
                     f"site, "
                     f"sex, "
@@ -2718,11 +2720,9 @@ def command_login(parameters: list[bytes], database: sqlalchemy.Engine) -> str:
                     f"birthday "
                     f"FROM players "
                     f"LEFT JOIN clans ON clan_id = clans.id "
-                    f"WHERE player_id = '{profileid[0]}' LIMIT 1"
+                    f"WHERE player_id = '{profileid.player_id}' LIMIT 1"
                     )).fetchone()
                 if profile:
-                    VE_PROF, VE_NAME, VE_NICK, VE_MAIL, VE_PASS, VE_ICQ, VE_HOMP, VE_SEX, VE_CNTRY, VE_PHON, VE_BIRTH =\
-                        profile[0], profile[1], profile[2], profile[3], profile[4], profile[5], profile[6], profile[7], profile[8], profile[9], profile[10]
                     return (
                         f"#ebox[%EBG](x:0,y:0,w:1024,h:768)"
                         f"#edit[%E_AC](%EBG[x:0,y:0,w:0,h:0],{{%GV_VE_ACCOUNTS}})"
@@ -2731,7 +2731,19 @@ def command_login(parameters: list[bytes], database: sqlalchemy.Engine) -> str:
                         f"#edit[%E_AC2](%EBG[x:0,y:0,w:0,h:0],{{%GV_VE_AC}})"
                         f"#exec(LW_cfile&&Cookies/%GV_VE_AC)"
                         f"#exec(LW_time&10&l_games_btn.cml\\00)"
-                        f"#block(l_games_btn.cml,l_g):GW|open&log_conf_dlg.dcml\\00&logs=true^last_update=<%GV_LAST_UPDATE>^accounts=<%GV_VE_ACCOUNTS>^VE_PROF={VE_PROF}^VE_NAME={VE_NAME}^VE_NICK={VE_NICK}^VE_MAIL={VE_MAIL}^VE_PASS={VE_PASS}^VE_ICQ={VE_ICQ}^VE_HOMP={VE_HOMP}^VE_SEX={VE_SEX}^VE_CNTRY={VE_CNTRY}^VE_PHON={VE_PHON}^VE_BIRTH={VE_BIRTH}\\00|LW_lockall"
+                        f"#block(l_games_btn.cml,l_g):GW|open&log_conf_dlg.dcml\\00&logs=true^last_update=<%GV_LAST_UPDATE>"
+                        f"^accounts=<%GV_VE_ACCOUNTS>"
+                        f"^VE_PROF={profile.player_id}"
+                        f"^VE_NAME={profile.name}"
+                        f"^VE_NICK={profile.nick}"
+                        f"^VE_MAIL={profile.mail}"
+                        f"^VE_PASS={profile.password}"
+                        f"^VE_ICQ={profile.icq}"
+                        f"^VE_HOMP={profile.site}"
+                        f"^VE_SEX={profile.sex}"
+                        f"^VE_CNTRY={profile.country}"
+                        f"^VE_PHON={profile.phone}"
+                        f"^VE_BIRTH={profile.birthday}\\00|LW_lockall"
                         f"#end(l_g)"
                     )
     return (
@@ -2810,8 +2822,6 @@ def process_request(request, database, player_id) -> list:
         command_leave(database, player_id)
         
     elif command == "start":
-        # if player.lobby:
-        #     player.lobby.hasBegun = True
         pass
 
     elif command == "url":
