@@ -2,6 +2,7 @@ import threading
 import asyncio
 import socket
 import traceback
+import signal
 import games.alexander.process as alex
 import games.alexander.process as alexdemo
 # import games.heroes_of_annihilated_empires.process as hoae
@@ -122,4 +123,7 @@ def main():
     asyncio.run(run())
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("Shutting down...")
