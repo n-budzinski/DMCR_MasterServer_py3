@@ -1,26 +1,10 @@
-import threading
-import asyncio
-import socket
-import traceback
-import signal
-import games.alexander.process as alex
-import games.alexander.process as alexdemo
-# import games.heroes_of_annihilated_empires.process as hoae
+from threading import Thread
+from asyncio import StreamReader, StreamWriter, wait_for, TimeoutError, run, start_server
+from socket import socket, AF_INET, SOCK_DGRAM
+from traceback import print_exc
 from struct import pack, unpack, unpack_from
 from zlib import compress, decompress
-from config import ALEX_DB, ALEX_DEMO_DB, HOAE_DB, SERVER
-from collections import defaultdict
-
-TCP_MAX_PACKET_SIZE = 1440
-TCP_TIMEOUT = 120
-UDP_MAX_PACKET_SIZE = 64
-
-game_versions = defaultdict(lambda: (alex, ALEX_DB),{
-    13: (alexdemo, ALEX_DEMO_DB),
-    #'14': (c2nw, C2NWDB)
-    16: (alex, ALEX_DB),
-    #'30': (hoae, HOAEDB)
-})
+from config import SERVER, TCP_MAX_PACKET_SIZE, TCP_TIMEOUT, UDP_MAX_PACKET_SIZE, GAME_VERSIONS
 
 def unpack_packet(packet: bytes) -> tuple[int, int, int, list]:
     packetData = decompress(packet[12:])
@@ -57,11 +41,11 @@ def addHeader(packet, sequence, language, version):
     data = compress(packet)
     return bytearray(pack("HBBII", sequence, language, version, len(data) + 12, len(packet)) + data)
 
-def send_packet(writer: asyncio.StreamWriter, response: bytearray) -> None:
+def send_packet(writer: StreamWriter, response: bytearray) -> None:
     for n in range(0, len(response)//TCP_MAX_PACKET_SIZE+1):
         writer.write(response[TCP_MAX_PACKET_SIZE*n:][:TCP_MAX_PACKET_SIZE])
 
-def udp_punch(recvdata: bytes, recvaddr: tuple, keepalivesock: socket.socket) -> None:
+def udp_punch(recvdata: bytes, recvaddr: tuple, keepalivesock: socket) -> None:
     action_id = recvdata[4]
     if action_id == 22:
         publicaddr = bytearray()
@@ -79,48 +63,48 @@ def udp_punch(recvdata: bytes, recvaddr: tuple, keepalivesock: socket.socket) ->
         recvdata[-5:] = [0x25, 0xCD, 0x40, 0x6E, 0x3E]
         keepalivesock.sendto(recvdata, (hostaddr, 34000))
 
-def handle_udp(udp_socket: socket.socket) -> None:
+def handle_udp(udp_socket: socket) -> None:
     while True:
-        threading.Thread(target=udp_punch, args=(*udp_socket.recvfrom(UDP_MAX_PACKET_SIZE), udp_socket)).start()
+        Thread(target=udp_punch, args=(*udp_socket.recvfrom(UDP_MAX_PACKET_SIZE), udp_socket)).start()
 
-async def handle_tcp(reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
+async def handle_tcp(reader: StreamReader, writer: StreamWriter) -> None:
     while True:
         try:
-            packet = await asyncio.wait_for(reader.read(TCP_MAX_PACKET_SIZE), timeout=TCP_TIMEOUT)
+            packet = await wait_for(reader.read(TCP_MAX_PACKET_SIZE), timeout=TCP_TIMEOUT)
             if not packet:
                 break
             await process_packet(packet, writer)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             break
         except ConnectionResetError:
             break
         except Exception as f:
             print(f)
-            traceback.print_exc()
+            print_exc()
     writer.close()
     await writer.wait_closed()
 
 async def process_packet(packet, writer):
     sequence, language, version, data = unpack_packet(packet)
-    game, db = game_versions[version]
+    game, db = GAME_VERSIONS[version]
     response = game.process_request(data, db, writer.get_extra_info(name='peername')[0])
     if response:
         send_packet(writer, addHeader(pack_packet(response, data[-2].decode()), sequence, language, version))
     await writer.drain()
 
-async def run():
-    server = await asyncio.start_server(handle_tcp, SERVER.address, SERVER.tcp_port)
+async def run_tcp():
+    server = await start_server(handle_tcp, SERVER.address, SERVER.tcp_port)
     async with server:
         await server.serve_forever()
 
 def main():
-    udpsocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    udpsocket = socket(AF_INET, SOCK_DGRAM)
     udpsocket.bind((SERVER.address, SERVER.udp_port))
     udpsocket.setblocking(True)
-    udpPunchThread = threading.Thread(target=handle_udp, args=(udpsocket,))
+    udpPunchThread = Thread(target=handle_udp, args=(udpsocket,))
     udpPunchThread.daemon = True
     udpPunchThread.start()
-    asyncio.run(run())
+    run(run_tcp())
 
 if __name__ == "__main__":
     try:

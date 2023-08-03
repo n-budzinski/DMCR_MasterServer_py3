@@ -1,5 +1,20 @@
 import os
 from sqlalchemy import create_engine
+from config import ALEX_DB, ALEX_DEMO_DB
+from collections import defaultdict
+import alexander.process as alex
+import alexander.process as alexdemo
+
+TCP_MAX_PACKET_SIZE = 1440
+TCP_TIMEOUT = 120
+UDP_MAX_PACKET_SIZE = 64
+
+GAME_VERSIONS = defaultdict(lambda: (alex, ALEX_DB),{
+    13: (alexdemo, ALEX_DEMO_DB),
+    #'14': (c2nw, C2NWDB)
+    16: (alex, ALEX_DB),
+    #'30': (hoae, HOAEDB)
+})
 
 class Server():
     def __init__(self, 

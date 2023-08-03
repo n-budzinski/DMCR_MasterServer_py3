@@ -1,17 +1,11 @@
 from collections import defaultdict
 from datetime import datetime
 from ..common import *
-from config import *
+from config import ALEX_DBTBL_INTERVAL, ALEX_IRC
 import sqlalchemy
 import sqlalchemy.exc
 from math import floor, ceil
 from struct import unpack
-
-def clip_string(string:str, limit: int) -> str:
-    return string if len(string) <= limit else string[:limit]
-
-def clip(value, lower, upper) -> int | float:
-    return lower if value < lower else upper if value > upper else value
 
 def cancel(**_) -> str:
     return (
@@ -2266,7 +2260,6 @@ def user_details(variables: dict, database: sqlalchemy.Engine, player_id, **_) -
             f"WHERE players.player_id = {variables['ID']} "
             )).fetchone()
         if profile:
-            print("profile found")
             profile = profile._mapping
             can_be_excluded = connection.execute(sqlalchemy.text(
             f"SELECT "
