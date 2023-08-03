@@ -400,9 +400,7 @@ def clans_list(variables: dict, **_) -> str:
 def dbtbl(database: sqlalchemy.Engine, **_) -> str:
     with database.connect() as connection:
         lobbies = connection.execute(sqlalchemy.text(
-            f"SELECT id, title, host_id, (SELECT name FROM lobby_types WHERE name = type)\
-                AS type, max_players, players, password, ip, (SELECT nick FROM players WHERE players.player_id = host_id)\
-                AS nick FROM lobbies WHERE ip IS NOT NULL")).fetchall()
+            f"CALL get_lobbies()")).fetchall()
     ping_list = "".join(
         [f"#apan[%APAN{idx}](%SB[x:0,y:{idx*21}-2,w:100%,h:20],"\
         f"{{GW|open&join_game.dcml\\00&delete_old=true^id_room={str(lobby[0])}\\00|LW_lockall}},8)"\
@@ -441,7 +439,6 @@ def forum_add(variables: dict, database: sqlalchemy.Engine, player_id: str | int
         try:
             with database.connect() as connection:
                 if variables['theme']:
-                    print('adding message to thread')
                     connection.execute(sqlalchemy.text(f'INSERT INTO threads_messages (author_id, thread_id, content) VALUES ({player_id}, {variables["theme"]}, "{variables["add_message"]}")'))
                 else:
                     connection.execute(sqlalchemy.text(f'INSERT INTO threads (author_id, content) VALUES ({player_id}, "{variables["add_message"]}")'))
@@ -1208,26 +1205,10 @@ def log_user(variables: dict, database: sqlalchemy.Engine, **_) -> str:
     with database.connect() as connection:
         if relogin == "true":
             profile = connection.execute(sqlalchemy.text(
-                    f"SELECT "
-                    f"player_id, "
-                    f"CONCAT(COALESCE(clans.signature,''), players.nick) as nick, "
-                    f"pass, "
-                    f"gmid "
-                    f"FROM players "
-                    f"LEFT JOIN clans ON clan_id = clans.id "
-                    f"WHERE CONCAT(COALESCE(clans.signature,''), players.nick) = '{VE_NICK}' AND pass = '{VE_PASS}' "
-                    f"LIMIT 1")).fetchone()
+                    f"CALL relogin(\'{variables['VE_NICK']}\',\'{variables['VE_PASS']}\')")).fetchone()
         else:
             profile = connection.execute(sqlalchemy.text(
-                    f"SELECT "
-                    f"player_id, "
-                    f"CONCAT(COALESCE(clans.signature,''), players.nick) as nick, "
-                    f"pass, "
-                    f"gmid "
-                    f"FROM players "
-                    f"LEFT JOIN clans ON clan_id = clans.id "
-                    f"WHERE CONCAT(COALESCE(clans.signature,''), players.nick) = '{VE_NICK}' AND pass = '{VE_PASS}' AND gmid = '{VE_GMID}' "
-                    f"LIMIT 1")).fetchone()
+                    f"CALL login(\'{variables['VE_NICK']}\',\'{variables['VE_PASS']}\', \'{variables['VE_GMID']}\')")).fetchone()
         if profile:
             sessionid = genID()
             connection.execute(sqlalchemy.text(f"REPLACE INTO sessions \
@@ -1270,80 +1251,20 @@ def log_user(variables: dict, database: sqlalchemy.Engine, **_) -> str:
 def mail_list(variables: dict, database: sqlalchemy.Engine, player_id, **_) -> str:
     with database.connect() as connection:
         summary = connection.execute(sqlalchemy.text(
-        "SELECT"
-        f"(SELECT COUNT(*) FROM mail_messages WHERE (id_from = \"{player_id}\" AND NOT removed_by_sender) OR (id_to = \"{player_id}\" AND NOT removed_by_recipient)) AS messages_total,"
-        f"(SELECT COUNT(*) FROM mail_messages WHERE id_from = \"{player_id}\") AS messages_sent,"
-        f"(SELECT COUNT(*) FROM mail_messages WHERE id_to = \"{player_id}\" AND status = 1 AND NOT removed_by_recipient) AS messages_unread,"
-        f"(SELECT COUNT(*) FROM mail_messages WHERE id_to = \"{player_id}\" AND status = 2 AND NOT removed_by_recipient) AS messages_read"
+        f"CALL mail_stats({player_id}) "
         )).fetchone()
         if summary:
             summary = summary._mapping
             if variables['sent'] == 'true':
-                query = (
-                    f"SELECT "
-                    f"mail_messages.id, "
-                    f"subject, "
-                    f"content, "
-                    f"sent_at, "
-                    f"status, "
-                    f"id_to, "
-                    f"CONCAT(COALESCE(clans.signature,''), players.nick) AS name "
-                    f"FROM mail_messages "
-                    f"INNER JOIN players ON players.player_id = id_to "
-                    f"LEFT JOIN clans ON clan_id = clans.id "
-                    f"WHERE "
-                    f"(id_from = '{player_id}' AND NOT removed_by_sender) "
-                )
+                mode = "1"
             elif variables['readable'] == '2':
-                query = (
-                    f"SELECT "
-                    f"mail_messages.id, "
-                    f"subject, "
-                    f"content, "
-                    f"sent_at, "
-                    f"status, "
-                    f"id_from, "
-                    f"CONCAT(COALESCE(clans.signature,''), players.nick) AS name "
-                    f"FROM mail_messages "
-                    f"INNER JOIN players ON players.player_id = id_from "
-                    f"LEFT JOIN clans ON clan_id = clans.id "
-                    f"WHERE "
-                    f"(id_to = '{player_id}' AND NOT removed_by_recipient AND status = 1) "
-                )
+                mode = "2"
             elif variables['readable'] == '3':
-                query = (
-                    f"SELECT "
-                    f"mail_messages.id, "
-                    f"subject, "
-                    f"content, "
-                    f"sent_at, "
-                    f"status, "
-                    f"id_from, "
-                    f"CONCAT(COALESCE(clans.signature,''), players.nick) AS name "
-                    f"FROM mail_messages "
-                    f"INNER JOIN players ON players.player_id = id_from "
-                    f"LEFT JOIN clans ON clan_id = clans.id "
-                    f"WHERE "
-                    f"(id_to = '{player_id}' AND NOT removed_by_recipient AND status = 2) "
-                )
+                mode = "3"
             else:
-                query = (
-                    f"SELECT "
-                    f"mail_messages.id, "
-                    f"subject, "
-                    f"content, "
-                    f"sent_at, "
-                    f"status, "
-                    f"id_from, "
-                    f"CONCAT(COALESCE(clans.signature,''), players.nick) AS name "
-                    f"FROM mail_messages "
-                    f"INNER JOIN players ON players.player_id = id_from "
-                    f"LEFT JOIN clans ON clan_id = clans.id "
-                    f"WHERE "
-                    f"(id_to = '{player_id}' AND NOT removed_by_recipient ) "
-                )
+                mode = "4"
 
-            messages = connection.execute(sqlalchemy.text(query)).fetchall()
+            messages = connection.execute(sqlalchemy.text(f"CALL get_mail({mode}, {player_id}) ")).fetchall()
 
             panel_list = []
             message_list = []
@@ -1555,11 +1476,7 @@ def mail_new(variables: dict, database: sqlalchemy.Engine, player_id, **_) -> st
 def mail_view(variables: dict, database: sqlalchemy.Engine, player_id, **_) -> str:
     with database.connect() as connection:
         summary = connection.execute(sqlalchemy.text(
-        "SELECT"
-        f"(SELECT COUNT(*) FROM mail_messages WHERE (id_from = \"{player_id}\" AND NOT removed_by_sender) OR (id_to = \"{player_id}\" AND NOT removed_by_recipient)) AS messages_total,"
-        f"(SELECT COUNT(*) FROM mail_messages WHERE id_from = \"{player_id}\") AS messages_sent,"
-        f"(SELECT COUNT(*) FROM mail_messages WHERE id_to = \"{player_id}\" AND status = 1 AND NOT removed_by_recipient) AS messages_unread,"
-        f"(SELECT COUNT(*) FROM mail_messages WHERE id_to = \"{player_id}\" AND status = 2 AND NOT removed_by_recipient) AS messages_read"
+        f"CALL mail_stats({player_id}) "
         )).fetchone()
         if summary:
             summary = summary._mapping
@@ -1714,7 +1631,6 @@ def map_(**_) -> str:
     )
 
 def mclick(variables : dict, **_) -> str:
-    print(variables)
 
     # <MCLICK> 
     # #ebox[%M](x:550,y:42,w:164,h:291) 
@@ -2349,27 +2265,29 @@ def user_details(variables: dict, database: sqlalchemy.Engine, player_id, **_) -
             f"LEFT JOIN sexes ON sexes.id = players.sex "
             f"WHERE players.player_id = {variables['ID']} "
             )).fetchone()
-    if profile:
-        profile = profile._mapping
-        can_be_excluded = connection.execute(sqlalchemy.text(
-        f"SELECT "
-        f"(CASE  "
-            f"WHEN clan_id = {profile.clan_id} "
-            f"AND clans.creator != {profile.player_id}  "
-            f"AND clans.creator = {player_id} "
-            f"AND {profile.player_id} != {player_id} "
-            f"THEN 'true' "
-            f"ELSE 'false' "
-        f"END) AS result "
-        f"FROM players "
-        f"INNER JOIN clans ON clan_id = {profile.clan_id} "
-        f"WHERE players.player_id = {profile.player_id} "
-        )).fetchone()
-        if can_be_excluded:
-            can_be_excluded = can_be_excluded._mapping
-            exclude_button = \
-            "#sbtn[%BTXT3](%B[x:521,y:377,w:100,h:305],{GW|open&clan_users.dcml\\00&clanID=6854^exclude_from_clan=81917\\00|LW_lockall},\"Exclude from clan\")" \
-            if can_be_excluded.result else ""
+        if profile:
+            print("profile found")
+            profile = profile._mapping
+            can_be_excluded = connection.execute(sqlalchemy.text(
+            f"SELECT "
+            f"(CASE  "
+                f"WHEN clan_id = {profile.clan_id} "
+                f"AND clans.creator != {profile.player_id}  "
+                f"AND clans.creator = {player_id} "
+                f"AND {profile.player_id} != {player_id} "
+                f"THEN 'true' "
+                f"ELSE 'false' "
+            f"END) AS result "
+            f"FROM players "
+            f"INNER JOIN clans ON clan_id = {profile.clan_id} "
+            f"WHERE players.player_id = {profile.player_id} "
+            )).fetchone()
+            exclude_button = ""
+            if can_be_excluded == 'true':
+                can_be_excluded = can_be_excluded._mapping
+                exclude_button = \
+                "#sbtn[%BTXT3](%B[x:521,y:377,w:100,h:305],{GW|open&clan_users.dcml\\00&clanID=6854^exclude_from_clan=81917\\00|LW_lockall},\"Exclude from clan\")" \
+                if can_be_excluded.result else ""
             clan_str = f"{{GW|open&clan_users.dcml\\00&clanID={profile.clan_id}\\00|LW_lockall}},\"{{{profile.signature}\")" if profile.clan_id else "{},\"\")"
             return (
                 f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"

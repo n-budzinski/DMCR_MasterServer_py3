@@ -9,8 +9,21 @@ import games.heroes_of_annihilated_empires.process as hoae
 from struct import pack, unpack, unpack_from
 from zlib import compress, decompress
 from config import ALEX_DB, ALEX_DEMO_DB, HOAE_DB, SERVER
+import timeit
+from collections import defaultdict
 
-def unpack_packet(packet):
+TCP_MAX_PACKET_SIZE = 1440
+TCP_TIMEOUT = 120
+UDP_MAX_PACKET_SIZE = 64
+
+game_versions = defaultdict(lambda: (alex, ALEX_DB),{
+    13: (alexdemo, ALEX_DEMO_DB),
+    #'14': (c2nw, C2NWDB)
+    16: (alex, ALEX_DB),
+    #'30': (hoae, HOAEDB)
+})
+
+def unpack_packet(packet: bytes) -> tuple[int, int, int, list]:
     packetData = decompress(packet[12:])
     data = []
     lsize = unpack('H', packetData[0:2])[0]
@@ -28,10 +41,9 @@ def unpack_packet(packet):
     packetData = packetData[cursor:]
     return *unpack("HBB", packet[:4]), data
 
-def pack_packet(data, integrity):
+def pack_packet(data, integrity: bytes):
     packet = bytearray()
     packet.extend(pack("H", len(data)))
-    # print(data)
     for idx,function in enumerate(data):
         data[idx].append(integrity)
         packet.extend(pack("B", len(data[idx][0])))
@@ -47,14 +59,10 @@ def addHeader(packet, sequence, language, version):
     return bytearray(pack("HBBII", sequence, language, version, len(data) + 12, len(packet)) + data)
 
 def send_packet(writer: asyncio.StreamWriter, response: bytearray) -> None:
-    print("Total packet length:", len(response))
-    print("Packet fragments:", len(response)//1440)
-    for n in range(0, len(response)//1440+1):
-        print(f"SENDING {len(response[1440*n:][:1440])} bytes")
-        writer.write(response[1440*n:][:1440])
+    for n in range(0, len(response)//TCP_MAX_PACKET_SIZE+1):
+        writer.write(response[TCP_MAX_PACKET_SIZE*n:][:TCP_MAX_PACKET_SIZE])
 
 def udp_punch(recvdata: bytes, recvaddr: tuple, keepalivesock: socket.socket) -> None:
-    print(recvaddr)
     action_id = recvdata[4]
     if action_id == 22:
         publicaddr = bytearray()
@@ -74,51 +82,30 @@ def udp_punch(recvdata: bytes, recvaddr: tuple, keepalivesock: socket.socket) ->
 
 def handle_udp(udp_socket: socket.socket) -> None:
     while True:
-        recvdata, recvaddr = udp_socket.recvfrom(64)
-        keepalivethread = threading.Thread(
-            target=udp_punch,
-            args=(recvdata, recvaddr, udp_socket))
-        keepalivethread.start()
+        threading.Thread(target=udp_punch, args=(*udp_socket.recvfrom(UDP_MAX_PACKET_SIZE), udp_socket)).start()
 
 async def handle_tcp(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
     while True:
-        reload(alex)
         try:
-            raw_data = await asyncio.wait_for(reader.read(1440), timeout=120)
+            packet = await asyncio.wait_for(reader.read(TCP_MAX_PACKET_SIZE), timeout=TCP_TIMEOUT)
+            start = timeit.default_timer()
+            if packet:
+                sequence, language, version, data = unpack_packet(packet)
+                game, db = game_versions[version]
+                response = game.process_request(data, db, writer.get_extra_info(name='peername')[0])
+                if response:
+                    send_packet(writer, addHeader(pack_packet(response, data[-2].decode()), sequence, language, version))
+            print(f"Responded in {'{:0.2f}'.format((timeit.default_timer() - start)*1000)} miliseconds")
         except asyncio.TimeoutError:
             break
         except ConnectionResetError:
             break
-        except Exception:
+        except Exception as f:
+            print(f)
+            traceback.print_exc()
             break
-        else:
-            if raw_data:
-                try:
-                    sequence, language, version, data = unpack_packet(raw_data)
-                    response, game, db = None, None, None
-                    if version == 13:
-                        game, db = alexdemo, ALEX_DEMO_DB
-                    # elif version == 14:
-                    #     game, db = c2nw, C2NW_DB
-                    elif version == 16:
-                        game, db = alex, ALEX_DB
-                    # elif version == 30:
-                    #     game, db = hoae, HOAE_DB
-                    else:
-                        game, db = alex, ALEX_DB
-                    response = game.process_request(data, db, writer.get_extra_info(name='peername')[0])
-                    if response:
-                        response = pack_packet(response, data[-2].decode())
-                        response = addHeader(response, sequence, language, version)
-                        send_packet(writer, response)
-                    # else:
-                    #     send_packet(writer, bytearray())
-                except Exception as f:
-                    print(f)
-                    traceback.print_exc()
-                    break
-                finally:
-                    await writer.drain()
+        finally:
+            await writer.drain()
     writer.close()
 
 async def run():
