@@ -333,6 +333,12 @@ def clan_users(**_) -> str:
     )
 
 def clans_list(variables: dict, **_) -> str:
+    icon_dialog = ""
+    if variables['create_icon'] == "true":
+        icon_dialog = (
+            f"#ebox[%L0](x:0,y:0,w:100%,h:100%)"
+            f"#table[%TBL](%L0[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&clan_load_image.dcml\\00&help=true^signature=SAM\\00|LW_lockall}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"CLAN ICON\",\"You are recommended to use a .jpg or .png 32x24 file as a clan icon.If the resolution of the file is greater, then it will be automatically miniaturized to 32x24 resolution saving the proportions. Size must be smaller than 16 KB. It is restricted to use pornographic or erotic images, nazi symbols and obscenities. The icon will be displayed in chat window within a day.\",26,\"OK\",\"Cancel\")"
+        )
     return (
         f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
         f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)"
@@ -383,9 +389,7 @@ def clans_list(variables: dict, **_) -> str:
         f"#font(BC12,BC12,BC12)"
         f"#stbl[%CLA_LST](%SB[x:4,y:0,w:526-3,h:588],{{}},7,0,16,1,15,1,12,1,20,1,10,1,13,1,14,1,21,\"AnubisLegion\",\"[AL]\",\"01.04.2005\",\"[AL]TheGOLDskull\",\"8\",\"402\",\"50\",21,\"-PITER-Sankt-Pete\",\"[PITER]\",\"11.01.2005\",\"[PITER]GADOSTb\",\"6\",\"311\",\"51\")"
         f"<NGDLG>"
-            f"#ebox[%L0](x:0,y:0,w:100%,h:100%)\
-            #table[%TBL](%L0[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&clan_load_image.dcml\\00&help=true^signature=SAM\\00|LW_lockall}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"CLAN ICON\",\"You are recommended to use a .jpg or .png 32x24 file as a clan icon.If the resolution of the file is greater, then it will be automatically miniaturized to 32x24 resolution saving the proportions. Size must be smaller than 16 KB. It is restricted to use pornographic or erotic images, nazi symbols and obscenities. The icon will be displayed in chat window within a day.\",26,\"OK\",\"Cancel\")"
-            if variables['create_icon'] == "true" else ""
+        f"{icon_dialog}"
         f"<NGDLG>"
         f"#block(cancel.cml,CAN)"
         f"<NGDLG>"
@@ -1203,17 +1207,27 @@ def log_user(variables: dict, database: sqlalchemy.Engine, **_) -> str:
     ))
     with database.connect() as connection:
         if relogin == "true":
-            profile = connection.execute(sqlalchemy.text(f"\
-                    SELECT player_id, nick, pass, gmid\
-                    FROM players\
-                    WHERE nick = '{VE_NICK}' AND pass = '{VE_PASS}'\
-                    LIMIT 1")).fetchone()
+            profile = connection.execute(sqlalchemy.text(
+                    f"SELECT "
+                    f"player_id, "
+                    f"CONCAT(COALESCE(clans.signature,''), players.nick) AS nick, "
+                    f"pass, "
+                    f"gmid "
+                    f"FROM players "
+                    f"LEFT JOIN clans ON clan_id = clans.id "
+                    f"WHERE CONCAT(COALESCE(clans.signature,''), players.nick) = '{VE_NICK}' AND pass = '{VE_PASS}' "
+                    f"LIMIT 1")).fetchone()
         else:
-            profile = connection.execute(sqlalchemy.text(f"\
-                    SELECT player_id, nick, pass, gmid\
-                    FROM players\
-                    WHERE nick = '{VE_NICK}' AND pass = '{VE_PASS}' AND gmid = '{VE_GMID}'\
-                    LIMIT 1")).fetchone()
+            profile = connection.execute(sqlalchemy.text(
+                    f"SELECT "
+                    f"player_id, "
+                    f"CONCAT(COALESCE(clans.signature,''), players.nick) AS nick, "
+                    f"pass, "
+                    f"gmid "
+                    f"FROM players "
+                    f"LEFT JOIN clans ON clan_id = clans.id "
+                    f"WHERE CONCAT(COALESCE(clans.signature,''), players.nick) = '{VE_NICK}' AND pass = '{VE_PASS}' AND gmid = '{VE_GMID}' "
+                    f"LIMIT 1")).fetchone()
         if profile:
             sessionid = genID()
             connection.execute(sqlalchemy.text(f"REPLACE INTO sessions \
@@ -1253,86 +1267,205 @@ def log_user(variables: dict, database: sqlalchemy.Engine, **_) -> str:
     # #table[%TBL](%MBG[x:287,y:285,w:450,h:200],{}{}{GW|open&log_new_form.dcml\00&up_dat=1^cansel=true^VE_PROF=139671^VE_MODE=edit^VE_NAME=<%GV_VE_NAME>^VE_NICK=hardkode1^VE_MAIL=<%GV_VE_MAIL>^VE_PASS=^VE_RASS=^VE_ICQ=<%GV_VE_ICQ>^VE_HOMP=<%GV_VE_HOMP>^VE_SEX=<%GV_VE_SEX>^VE_CNTRY=<%GV_VE_CNTRY>^VE_PHON=<%GV_VE_PHON>^VE_BIRTH=<%GV_VE_BIRTH>^accounts=139671\00|LW_lockall}{LW_file&Internet/Cash/l_games_btn.cml},1,0,11,362,"ERROR","An invalid Game Box Identifier was entered! Please enter more carefully. The number of attempts is limited. Press Edit button to check Game Box Identifier. Press Cancel to exit",24,"Edit","Cancel") 
     # <MESDLG>
 
-def mail_list(**_) -> str:
-    return (
-        f"#ebox[%TB](x:0,y:0,w:100%,h:100%) "
-        f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12) "
-        f"#pix[%PXT2](%TB[x:0,y:263,w:100%,h:100%],{{}},Internet/pix/i_pri0,13,13,13,13) "
-        f"#pan[%P1](%TB[x:42,y:0-22,w:0,h:80],10) "
-        f"#font(RG18,RG18,RG18) "
-        f"#txt[%PL](%TB[x:737,y:0,w:150,h:20],{{}},\"Players\")"
-        f"#font(BG18,BG18,BG18) "
-        f"#ctxt[%TTTEXT](%TB[x:0-62,y:0-32,w:1024,h:20],{{}},\"PLAYER LIST\") "
-        f"#font(R2C12,R2C12,R2C12) "
-        f"#txt[%TMTEXT](%TB[x:0,y:514,w:100,h:20],{{}},\"Message:\") "
-        f"#def_gp_btn(Internet/pix/i_pri0,53,53,0,1)"
-        f"#font(RC12,R2C12,RC12) "
-        f"#gpbtn[%BT1](%TB[x:74,y:23,w:-22,h:-18],{{GW|open&news.dcml\\00|LW_lockall}},\"News & Events\")"
-        f"#hint(%BT1,\"News, events, forum and punishment list\")"
-        f"#font(RC12,RC12,RC12) "
-        f"#def_gp_btn(Internet/pix/i_pri0,51,51,0,1) "
-        f"#gpbtn[%BT2](%TB[x:196,y:22,w:-22,h:-18],{{GW|open&users_list.dcml\\00&language=\\00|LW_lockall}},\"Player List\")"
-        f"#hint(%BT2,\"Player list, personal mail and clan information\")"
-        f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)"
-        f"#font(RC12,R2C12,RC12) "
-        f"#gpbtn[%BT4](%TB[x:318,y:23,w:-22,h:-18],{{GW|open&games.dcml\\00|LW_lockall}},\"Custom Games\")"
-        f"#hint(%BT4,\"Play custom games\")"
-        f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)"
-        f"#font(RC12,R2C12,RC12) "
-        f"#gpbtn[%BT5](%TB[x:440,y:23,w:-22,h:-18],{{GW|open&scored_games.dcml\\00&player_id=0\\00|LW_lockall}},\"Scored Games\")"
-        f"#hint(%BT5,\"Played games and their scores\")"
-        f"#ebox[%B_VOTE](x:5,y:396,w:140,h:103) "
-        f"<VOTING> "
-        f"#exec(GW|open&voting.dcml\\00&question=46\\00) "
-        f"<VOTING> "
-        f"<MAILBUTTONS> "
-        f"#ebox[%MB](x:0,y:0,w:100%,h:100%) "
-        f"#font(RC14,GC14,RC14) "
-        f"#ctxt[%LIST1](%MB[x:0,y:106,w:146,h:24],{{GW|open&users_list.dcml\\00|LW_lockall}},\"{{Player List}}\") "
-        f"#hint(%LIST1,\"Player list, personal mail and clan information\") "
-        f"#font(RC12,GC12,RC12) "
-        f"#ctxt[%LIST2](%MB[x:0,y:%LIST1-10,w:146,h:24],{{GW|open&mail_list.dcml\\00|LW_lockall}},\"{{Mail}}\") "
-        f"#hint(%LIST2,\"Manage your personal mail\") "
-        f"#font(R2C14,R2C14,RC14) "
-        f"#ctxt[%LIST3](%MB[x:0,y:%LIST2+7,w:146,h:24],{{GW|open&clans_list.dcml\\00|LW_lockall}},\"{{Clan List}}\") "
-        f"#hint(%LIST3,\"Clans, their members and details\") "
-        f"#ebox[%B1](x:154,y:40,w:559,h:45) "
-        f"#pan[%P1](%B1[x:0,y:0,w:100%,h:100%],7) "
-        f"#font(GC12,BC12,GC12)"
-        f"#txt[%TITRE1](%B1[x:4,y:0+8,w:150,h:20],{{}},\"Mail Inbox total: 3\")"
-        f"#apan[%APAN0](%B1[x:4,y:%TITRE1-18,x1:%TITRE1,h:16],{{GW|open&mail_list.dcml\\00|LW_lockall}},15)"
-        f"#font(BC12,BC12,GC12)#txt[%TITRE2](%B1[x:4,y:18+8,w:150,h:20],{{}},\"Sent: 3\")"
-        f"#apan[%APAN1](%B1[x:4,y:%TITRE2-18,x1:%TITRE2,h:16],{{GW|open&mail_list.dcml\\00&sent=true\\00|LW_lockall}},15)"
-        f"#font(BC12,BC12,GC12)#txt[%TITRE3](%B1[x:292,y:0+8,w:150,h:20],{{}},\"Unread: 2\")"
-        f"#apan[%APAN2](%B1[x:292,y:%TITRE3-18,x1:%TITRE3,h:16],{{GW|open&mail_list.dcml\\00&readable=2\\00|LW_lockall}},15)"
-        f"#font(BC12,BC12,GC12)#txt[%TITRE4](%B1[x:292,y:18+8,w:150,h:20],{{}},\"Read: 1\")"
-        f"#apan[%APAN3](%B1[x:292,y:%TITRE4-18,x1:%TITRE4,h:16],{{GW|open&mail_list.dcml\\00&readable=3\\00|LW_lockall}},15)"
-        f"#pan[%P2](%B1[x:314,y:0-34,w:0,h:100%+68],10) "
-        f"<MAILBUTTONS>"
-        f"#ebox[%B](x:0,y:0,w:100%,h:100%) "
-        f"#ebox[%LB](x:0,y:0,w:100%,h:100%) "
-        f"#font(R2C12,R2C12,RC12) "
-        f"#stbl[%TIT_TBL](%LB[x:154,y:95,w:523,h:238],{{GW|open&mail_list.dcml\\00&sent=^order=nick^resort=1^readable=\\00|LW_lockall}}{{GW|open&mail_list.dcml\\00&sent=^order=subject^resort=1^readable=\\00|LW_lockall}}{{GW|open&mail_list.dcml\\00&sent=^order=m.send^resort=1^readable=\\00|LW_lockall}},3,7,20,1,40,1,40,1,18,\"{{From\",\"{{Subject\",\"{{Date\") "
-        f"#def_sbox(Internet/pix/i_pri%d,-1,-1,-1,-1,-1,-1,-1,-1,0,0,0,0,6,-21,27) "
-        f"#sbox[%SB](x:150,y:114,w:526+4,h:216) "
-        f"#apan[%APAN0](%SB[x:0,y:0-2,w:100%,h:20],{{GW|open&mail_view.dcml\\00&messageID=52996^sent=\\00|LW_lockall}},8) "
-        f"#apan[%APAN1](%SB[x:0,y:21-2,w:100%,h:20],{{GW|open&mail_view.dcml\\00&messageID=52995^sent=\\00|LW_lockall}},8) "
-        f"#apan[%APAN2](%SB[x:0,y:42-2,w:100%,h:20],{{GW|open&mail_view.dcml\\00&messageID=52994^sent=\\00|LW_lockall}},8) "
-        f"#font(BC12,RC12,BC12) "
-        f"#stbl[%MESS](%SB[x:4,y:0,w:523,h:100%],{{}},3,0,20,1,40,1,40,1,21,\"hardkode1\",\"hello\",\"09.03.2023 [17:48]\",21,\"hardkode1\",\"123123\",\"09.03.2023 [17:47]\",21,\"hardkode1\",\"123\",\"09.03.2023 [17:45]\")"
-        f"#font(BC14,WC14,BC14) "
-        f"#sbtn[%BTXT1](%B[x:641,y:377,w:100,h:305],{{GW|open&mail_new.dcml\\00|LW_lockall}},\"New Mail\") "
-        f"<NGDLG> "
-        f"<NGDLG> "
-        f"#block(cancel.cml,CAN)<NGDLG> "
-        f"<NGDLG> "
-        f"#end(CAN)"
-    )
+def mail_list(variables: dict, database: sqlalchemy.Engine, player_id, **_) -> str:
+    with database.connect() as connection:
+        summary = connection.execute(sqlalchemy.text(
+        "SELECT"
+        f"(SELECT COUNT(*) FROM mail_messages WHERE (id_from = \"{player_id}\" AND NOT removed_by_sender) OR (id_to = \"{player_id}\" AND NOT removed_by_recipient)) AS messages_total,"
+        f"(SELECT COUNT(*) FROM mail_messages WHERE id_from = \"{player_id}\") AS messages_sent,"
+        f"(SELECT COUNT(*) FROM mail_messages WHERE id_to = \"{player_id}\" AND status = 1 AND NOT removed_by_recipient) AS messages_unread,"
+        f"(SELECT COUNT(*) FROM mail_messages WHERE id_to = \"{player_id}\" AND status = 2 AND NOT removed_by_recipient) AS messages_read"
+        )).fetchone()
+        if summary:
+            summary = summary._mapping
+            if variables['sent'] == 'true':
+                query = (
+                    f"SELECT "
+                    f"mail_messages.id, "
+                    f"subject, "
+                    f"content, "
+                    f"sent_at, "
+                    f"status, "
+                    f"id_to, "
+                    f"CONCAT(COALESCE(clans.signature,''), players.nick) AS name "
+                    f"FROM mail_messages "
+                    f"INNER JOIN players ON players.player_id = id_to "
+                    f"LEFT JOIN clans ON clan_id = clans.id "
+                    f"WHERE "
+                    f"(id_from = '{player_id}' AND NOT removed_by_sender) "
+                )
+            elif variables['readable'] == '2':
+                query = (
+                    f"SELECT "
+                    f"mail_messages.id, "
+                    f"subject, "
+                    f"content, "
+                    f"sent_at, "
+                    f"status, "
+                    f"id_from, "
+                    f"CONCAT(COALESCE(clans.signature,''), players.nick) AS name "
+                    f"FROM mail_messages "
+                    f"INNER JOIN players ON players.player_id = id_from "
+                    f"LEFT JOIN clans ON clan_id = clans.id "
+                    f"WHERE "
+                    f"(id_to = '{player_id}' AND NOT removed_by_recipient AND status = 1) "
+                )
+            elif variables['readable'] == '3':
+                query = (
+                    f"SELECT "
+                    f"mail_messages.id, "
+                    f"subject, "
+                    f"content, "
+                    f"sent_at, "
+                    f"status, "
+                    f"id_from, "
+                    f"CONCAT(COALESCE(clans.signature,''), players.nick) AS name "
+                    f"FROM mail_messages "
+                    f"INNER JOIN players ON players.player_id = id_from "
+                    f"LEFT JOIN clans ON clan_id = clans.id "
+                    f"WHERE "
+                    f"(id_to = '{player_id}' AND NOT removed_by_recipient AND status = 2) "
+                )
+            else:
+                query = (
+                    f"SELECT "
+                    f"mail_messages.id, "
+                    f"subject, "
+                    f"content, "
+                    f"sent_at, "
+                    f"status, "
+                    f"id_from, "
+                    f"CONCAT(COALESCE(clans.signature,''), players.nick) AS name "
+                    f"FROM mail_messages "
+                    f"INNER JOIN players ON players.player_id = id_from "
+                    f"LEFT JOIN clans ON clan_id = clans.id "
+                    f"WHERE "
+                    f"(id_to = '{player_id}' AND NOT removed_by_recipient) "
+                )
 
-def mail_new(**_) -> str:
-    ##exec(GW|open&mail_list.dcml\00&sent=true\00|LW_lockall)  if sent
+            messages = connection.execute(sqlalchemy.text(query)).fetchall()
+
+            panel_list = []
+            message_list = []
+            for idx, entry in enumerate(messages):
+                message = entry._mapping
+                highlight = "{" if message.status else ""
+                panel_list.append(
+                    f"#apan[%APAN{idx}](%SB[x:0,y:{21*idx}-2,w:100%,h:20],{{GW|open&mail_view.dcml\\00&messageID={message.id}^sent=\\00|LW_lockall}},8)"
+                )
+                message_list.append(
+                    f",21,\"{message.name}\",\"{highlight}{message.subject}\",\"{message.sent_at}\""
+                )
+            panel_list = "".join(panel_list)
+            message_list = "".join(message_list)
+            selection = 0
+            if variables['sent'] == 'true':
+                selection = 1
+            elif variables['readable'] == '2':
+                selection = 2
+            elif variables['readable'] == '3':
+                selection = 3
+            return (
+                f"#ebox[%TB](x:0,y:0,w:100%,h:100%) "
+                f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12) "
+                f"#pix[%PXT2](%TB[x:0,y:263,w:100%,h:100%],{{}},Internet/pix/i_pri0,13,13,13,13) "
+                f"#pan[%P1](%TB[x:42,y:0-22,w:0,h:80],10) "
+                f"#font(RG18,RG18,RG18) "
+                f"#txt[%PL](%TB[x:737,y:0,w:150,h:20],{{}},\"Players\")"
+                f"#font(BG18,BG18,BG18) "
+                f"#ctxt[%TTTEXT](%TB[x:0-62,y:0-32,w:1024,h:20],{{}},\"PLAYER LIST\") "
+                f"#font(R2C12,R2C12,R2C12) "
+                f"#txt[%TMTEXT](%TB[x:0,y:514,w:100,h:20],{{}},\"Message:\") "
+                f"#def_gp_btn(Internet/pix/i_pri0,53,53,0,1)"
+                f"#font(RC12,R2C12,RC12) "
+                f"#gpbtn[%BT1](%TB[x:74,y:23,w:-22,h:-18],{{GW|open&news.dcml\\00|LW_lockall}},\"News & Events\")"
+                f"#hint(%BT1,\"News, events, forum and punishment list\")"
+                f"#font(RC12,RC12,RC12) "
+                f"#def_gp_btn(Internet/pix/i_pri0,51,51,0,1) "
+                f"#gpbtn[%BT2](%TB[x:196,y:22,w:-22,h:-18],{{GW|open&users_list.dcml\\00&language=\\00|LW_lockall}},\"Player List\")"
+                f"#hint(%BT2,\"Player list, personal mail and clan information\")"
+                f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)"
+                f"#font(RC12,R2C12,RC12) "
+                f"#gpbtn[%BT4](%TB[x:318,y:23,w:-22,h:-18],{{GW|open&games.dcml\\00|LW_lockall}},\"Custom Games\")"
+                f"#hint(%BT4,\"Play custom games\")"
+                f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)"
+                f"#font(RC12,R2C12,RC12) "
+                f"#gpbtn[%BT5](%TB[x:440,y:23,w:-22,h:-18],{{GW|open&scored_games.dcml\\00&player_id=0\\00|LW_lockall}},\"Scored Games\")"
+                f"#hint(%BT5,\"Played games and their scores\")"
+                f"#ebox[%B_VOTE](x:5,y:396,w:140,h:103) "
+                f"<VOTING> "
+                f"#exec(GW|open&voting.dcml\\00&question=46\\00) "
+                f"<VOTING> "
+                f"<MAILBUTTONS> "
+                f"#ebox[%MB](x:0,y:0,w:100%,h:100%) "
+                f"#font(RC14,GC14,RC14) "
+                f"#ctxt[%LIST1](%MB[x:0,y:106,w:146,h:24],{{GW|open&users_list.dcml\\00|LW_lockall}},\"{{Player List}}\") "
+                f"#hint(%LIST1,\"Player list, personal mail and clan information\") "
+                f"#font(RC12,GC12,RC12) "
+                f"#ctxt[%LIST2](%MB[x:0,y:%LIST1-10,w:146,h:24],{{GW|open&mail_list.dcml\\00|LW_lockall}},\"{{Mail}}\") "
+                f"#hint(%LIST2,\"Manage your personal mail\") "
+                f"#font(R2C14,R2C14,RC14) "
+                f"#ctxt[%LIST3](%MB[x:0,y:%LIST2+7,w:146,h:24],{{GW|open&clans_list.dcml\\00|LW_lockall}},\"{{Clan List}}\") "
+                f"#hint(%LIST3,\"Clans, their members and details\") "
+                f"#ebox[%B1](x:154,y:40,w:559,h:45) "
+                f"#pan[%P1](%B1[x:0,y:0,w:100%,h:100%],7) "
+                f"#font({'G' if selection == 0 else 'B'}C12,BC12,GC12)"
+                f"#txt[%TITRE1](%B1[x:4,y:0+8,w:150,h:20],{{}},\"Mail Inbox total: {summary.messages_total}\")"
+                f"#apan[%APAN0](%B1[x:4,y:%TITRE1-18,x1:%TITRE1,h:16],{{GW|open&mail_list.dcml\\00|LW_lockall}},15)"
+                f"#font({'G' if selection == 1 else 'B'}C12,BC12,GC12)"
+                f"#txt[%TITRE2](%B1[x:4,y:18+8,w:150,h:20],{{}},\"Sent: {summary.messages_sent}\")"
+                f"#apan[%APAN1](%B1[x:4,y:%TITRE2-18,x1:%TITRE2,h:16],{{GW|open&mail_list.dcml\\00&sent=true\\00|LW_lockall}},15)"
+                f"#font({'G' if selection == 2 else 'B'}C12,BC12,GC12)"
+                f"#txt[%TITRE3](%B1[x:292,y:0+8,w:150,h:20],{{}},\"Unread: {summary.messages_unread}\")"
+                f"#apan[%APAN2](%B1[x:292,y:%TITRE3-18,x1:%TITRE3,h:16],{{GW|open&mail_list.dcml\\00&readable=2\\00|LW_lockall}},15)"
+                f"#font({'G' if selection == 3 else 'B'}C12,BC12,GC12)"
+                f"#txt[%TITRE4](%B1[x:292,y:18+8,w:150,h:20],{{}},\"Read: {summary.messages_read}\")"
+                f"#apan[%APAN3](%B1[x:292,y:%TITRE4-18,x1:%TITRE4,h:16],{{GW|open&mail_list.dcml\\00&readable=3\\00|LW_lockall}},15)"
+                f"#pan[%P2](%B1[x:314,y:0-34,w:0,h:100%+68],10) "
+                f"<MAILBUTTONS>"
+                f"#ebox[%B](x:0,y:0,w:100%,h:100%) "
+                f"#ebox[%LB](x:0,y:0,w:100%,h:100%) "
+                f"#font(R2C12,R2C12,RC12) "
+                f"#stbl[%TIT_TBL](%LB[x:154,y:95,w:523,h:238],{{GW|open&mail_list.dcml\\00&sent=^order=nick^resort=1^readable=\\00|LW_lockall}}{{GW|open&mail_list.dcml\\00&sent=^order=subject^resort=1^readable=\\00|LW_lockall}}{{GW|open&mail_list.dcml\\00&sent=^order=m.send^resort=1^readable=\\00|LW_lockall}},3,7,20,1,40,1,40,1,18,\"{{From\",\"{{Subject\",\"{{Date\") "
+                f"#def_sbox(Internet/pix/i_pri%d,-1,-1,-1,-1,-1,-1,-1,-1,0,0,0,0,6,-21,27) "
+                f"#sbox[%SB](x:150,y:114,w:526+4,h:216) "
+                f"{panel_list}"
+                f"#font(BC12,RC12,BC12) "
+                f"#stbl[%MESS](%SB[x:4,y:0,w:523,h:100%],{{}},3,0,20,1,40,1,40,1{message_list})"
+                f"#font(BC14,WC14,BC14) "
+                f"#sbtn[%BTXT1](%B[x:641,y:377,w:100,h:305],{{GW|open&mail_new.dcml\\00|LW_lockall}},\"New Mail\") "
+                f"<NGDLG> "
+                f"<NGDLG> "
+                f"#block(cancel.cml,CAN)<NGDLG> "
+                f"<NGDLG> "
+                f"#end(CAN)"
+            )
+    return ""
+
+def mail_new(variables: dict, database: sqlalchemy.Engine, player_id, **_) -> str:
+    if variables['send']:
+        print("sending")
+        with database.connect() as connection:
+            id = connection.execute(sqlalchemy.text(
+                "SELECT players.player_id AS id FROM players "
+                "LEFT JOIN clans on players.clan_id = clans.id "
+                f"WHERE CONCAT(COALESCE(clans.signature,''),players.nick) = '{variables['send_to']}'"
+            )).fetchone()
+            if id:
+                print("id found")
+                connection.execute(sqlalchemy.text(
+                    "INSERT INTO mail_messages ("
+                    "id_from, id_to, subject, content "
+                    ") "
+                    "VALUES "
+                    "( "
+                    f"{player_id}, {id._mapping.id}, \"{variables['subject']}\", \"{variables['message']}\""
+                    ")"
+                ))
+                connection.commit()
+                print("sent")
+                return f"#exec(GW|open&mail_list.dcml\\00&sent=true\\00|LW_lockall)"
     not_found = False
-
     return " ".join((
     f"#block(l_games_btn.cml,l_g):<!goback!>\\00",
     f"#end(l_g) ",
@@ -1391,8 +1524,8 @@ def mail_new(**_) -> str:
     f"<MAILBUTTONS>",
     f"#ebox[%B](x:0,y:0,w:100%,h:100%) ",
     f"#exec(LW_cfile&\\00&Cookies/%GV_SEND_TO) ",
-    f"#exec(LW_cfile&\\00&Cookies/%GV_SUBJECT) ",
-    f"#exec(LW_cfile&\\00&Cookies/%GV_TEXT) ",
+    f"#exec(LW_cfile&{variables['subject'] if variables['subject'] else ''}\\00&Cookies/%GV_SUBJECT) ",
+    f"#exec(LW_cfile&{variables['message'] if variables['message'] else ''}\\00&Cookies/%GV_TEXT) ",
     f"#ebox[%B0](x:154,y:95,w:559,h:238) ",
     f"#pan[%P1](%B0[x:0,y:0,w:100%,h:100%],5) ",
     f"#font(R2C12,RC12,RC12) ",
@@ -1422,91 +1555,119 @@ def mail_new(**_) -> str:
     f"#end(CAN)",
     ))
 
-def mail_view(**_) -> str:
-    #· ·open· ·   mail_view.dcml ·   messageID=52996^sent= ·   02     35070973 
-    return " ".join((
-        f"#ebox[%TB](x:0,y:0,w:100%,h:100%) ",
-        f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12) ",
-        f"#pix[%PXT2](%TB[x:0,y:263,w:100%,h:100%],{{}},Internet/pix/i_pri0,13,13,13,13) ",
-        f"#pan[%P1](%TB[x:42,y:0-22,w:0,h:80],10) ",
-        f"#font(RG18,RG18,RG18) ",
-        f"#txt[%PL](%TB[x:737,y:0,w:150,h:20],{{}},\"Players\")",
-        f"#font(BG18,BG18,BG18) ",
-        f"#ctxt[%TTTEXT](%TB[x:0-62,y:0-32,w:1024,h:20],{{}},\"PLAYER LIST\") ",
-        f"#font(R2C12,R2C12,R2C12) ",
-        f"#txt[%TMTEXT](%TB[x:0,y:514,w:100,h:20],{{}},\"Message:\") ",
-        f"#def_gp_btn(Internet/pix/i_pri0,53,53,0,1)",
-        f"#font(RC12,R2C12,RC12) ",
-        f"#gpbtn[%BT1](%TB[x:74,y:23,w:-22,h:-18],{{GW|open&news.dcml\\00|LW_lockall}},\"News & Events\")",
-        f"#hint(%BT1,\"News, events, forum and punishment list\")",
-        f"#font(RC12,RC12,RC12) ",
-        f"#def_gp_btn(Internet/pix/i_pri0,51,51,0,1) ",
-        f"#gpbtn[%BT2](%TB[x:196,y:22,w:-22,h:-18],{{GW|open&users_list.dcml\\00&language=\\00|LW_lockall}},\"Player List\")",
-        f"#hint(%BT2,\"Player list, personal mail and clan information\")",
-        f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)     ",
-        f"#font(RC12,R2C12,RC12) ",
-        f"#gpbtn[%BT4](%TB[x:318,y:23,w:-22,h:-18],{{GW|open&games.dcml\\00|LW_lockall}},\"Custom Games\")",
-        f"#hint(%BT4,\"Play custom games\")",
-        f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)",
-        f"#font(RC12,R2C12,RC12) ",
-        f"#gpbtn[%BT5](%TB[x:440,y:23,w:-22,h:-18],{{GW|open&scored_games.dcml\\00&player_id=0\\00|LW_lockall}},\"Scored Games\")",
-        f"#hint(%BT5,\"Played games and their scores\")",
-        f"#ebox[%B_VOTE](x:5,y:396,w:140,h:103) ",
-        f"<VOTING> ",
-        f"#exec(GW|open&voting.dcml\\00&question=46\\00) ",
-        f"<VOTING> ",
-        f"<MAILBUTTONS> ",
-        f"#ebox[%MB](x:0,y:0,w:100%,h:100%) ",
-        f"#font(RC14,GC14,RC14) ",
-        f"#ctxt[%LIST1](%MB[x:0,y:106,w:146,h:24],{{GW|open&users_list.dcml\\00|LW_lockall}},\"{{Player List}}\") ",
-        f"#hint(%LIST1,\"Player list, personal mail and clan information\") ",
-        f"#font(RC12,GC12,RC12) ",
-        f"#ctxt[%LIST2](%MB[x:0,y:%LIST1-10,w:146,h:24],{{GW|open&mail_list.dcml\\00|LW_lockall}},\"{{Mail}}\") ",
-        f"#hint(%LIST2,\"Manage your personal mail\") ",
-        f"#font(R2C14,R2C14,RC14) ",
-        f"#ctxt[%LIST3](%MB[x:0,y:%LIST2+7,w:146,h:24],{{GW|open&clans_list.dcml\\00|LW_lockall}},\"{{Clan List}}\") ",
-        f"#hint(%LIST3,\"Clans, their members and details\") ",
-        f"#ebox[%B1](x:154,y:40,w:559,h:45) ",
-        f"#pan[%P1](%B1[x:0,y:0,w:100%,h:100%],7) ",
-        f"#font(BC12,BC12,GC12)",
-        f"#txt[%TITRE1](%B1[x:4,y:0+8,w:150,h:20],{{}},\"Mail Inbox total: 3\")",
-        f"#apan[%APAN0](%B1[x:4,y:%TITRE1-18,x1:%TITRE1,h:16],{{GW|open&mail_list.dcml\\00|LW_lockall}},15)",
-        f"#font(BC12,BC12,GC12)",
-        f"#txt[%TITRE2](%B1[x:4,y:18+8,w:150,h:20],{{}},\"Sent: 4\")",
-        f"#apan[%APAN1](%B1[x:4,y:%TITRE2-18,x1:%TITRE2,h:16],{{GW|open&mail_list.dcml\\00&sent=true\\00|LW_lockall}},15)",
-        f"#font(BC12,BC12,GC12)",
-        f"#txt[%TITRE3](%B1[x:292,y:0+8,w:150,h:20],{{}},\"Unread: 0\")",
-        f"#apan[%APAN2](%B1[x:292,y:%TITRE3-18,x1:%TITRE3,h:16],{{GW|open&mail_list.dcml\\00&readable=2\\00|LW_lockall}},15)",
-        f"#font(BC12,BC12,GC12)",
-        f"#txt[%TITRE4](%B1[x:292,y:18+8,w:150,h:20],{{}},\"Read: 3\")",
-        f"#apan[%APAN3](%B1[x:292,y:%TITRE4-18,x1:%TITRE4,h:16],{{GW|open&mail_list.dcml\\00&readable=3\\00|LW_lockall}},15)",
-        f"#pan[%P2](%B1[x:314,y:0-34,w:0,h:100%+68],10) ",
-        f"<MAILBUTTONS>",
-        f"#ebox[%B](x:0,y:0,w:100%,h:100%) ",
-        f"#ebox[%B2](x:154,y:95,w:559,h:238) ",
-        f"#pan[%P1](%B2[x:0,y:0,w:100%,h:100%],7) ",
-        f"#pan[%P1](%B2[x:0-35,y:74,w:100%+71,h:0],9) ",
-        f"#font(R2C12,BC12,RC12) ",
-        f"#txt[%T1](%B2[x:4,y:6,w:100,h:24],{{}},\"From:\") ",
-        f"#font(BC12,BC12,RC12) ",
-        f"#txt[%T2](%B2[x:%T1+5,y:6,w:270,h:24],{{GW|open&user_details.dcml\\00&ID=136995\\00|LW_lockall}},\"{{hardkode1\") ",
-        f"#font(R2C12,BC12,BC12) ",
-        f"#txt[%T3](%B2[x:4,y:24,w:100,h:24],{{}},\"Subject:\") ",
-        f"#font(BC12,BC12,RC12) ",
-        f"#txt[%T4](%B2[x:%T3+5,y:24,w:380,h:24],{{}},\"hello\") ",
-        f"#font(BC12,R2C12,R2C12) ",
-        f"#txt[%T5](%B2[x:292,y:6,w:250,h:24],{{}},\"{{Date: }}09.03.2023 [17:48]\") ",
-        f"#txt[%T7](%B2[x:4,y:50,w:100%-20,h:100%-57],{{}},\"123123\") ",
-        f"#font(BC14,WC14,BC14) ",
-        f"#sbtn[%del](%B[x:401,y:377,w:100,h:305],{{GW|open&mail_list.dcml\\00&messageID=52996^delete=1\\00|LW_lockall}},\"Delete\") ",
-        f"#sbtn[%rep](%B[x:521,y:377,w:100,h:305],{{GW|open&mail_new.dcml\\00&send_to=hardkode1^subject=Re: hello\\00|LW_lockall}},\"Reply\") ",
-        f"#sbtn[%for](%B[x:641,y:377,w:100,h:305],{{GW|open&mail_new.dcml\\00&subject=hello^message=123123\\00|LW_lockall}},\"Forward\") ",
-        f"<NGDLG> ",
-        f"<NGDLG> ",
-        f"#block(cancel.cml,CAN)<NGDLG> ",
-        f"<NGDLG> ",
-        f"#end(CAN)"
-    ))
+def mail_view(variables: dict, database: sqlalchemy.Engine, player_id, **_) -> str:
+    with database.connect() as connection:
+        summary = connection.execute(sqlalchemy.text(
+        "SELECT"
+        f"(SELECT COUNT(*) FROM mail_messages WHERE (id_from = \"{player_id}\" AND NOT removed_by_sender) OR (id_to = \"{player_id}\" AND NOT removed_by_recipient)) AS messages_total,"
+        f"(SELECT COUNT(*) FROM mail_messages WHERE id_from = \"{player_id}\") AS messages_sent,"
+        f"(SELECT COUNT(*) FROM mail_messages WHERE id_to = \"{player_id}\" AND status = 1 AND NOT removed_by_recipient) AS messages_unread,"
+        f"(SELECT COUNT(*) FROM mail_messages WHERE id_to = \"{player_id}\" AND status = 2 AND NOT removed_by_recipient) AS messages_read"
+        )).fetchone()
+        if summary:
+            print("summary")
+            summary = summary._mapping
+            message = connection.execute(sqlalchemy.text(
+                f"SELECT "
+                f"subject "
+                f"content, "
+                f"id_from, "
+                f"sent_at, "
+                f"subject, "
+                f"player_id, "
+                f"CONCAT(COALESCE(clans.signature,''), players.nick) AS name "
+                f"FROM mail_messages "
+                f"INNER JOIN players ON players.player_id = id_to "
+                f"LEFT JOIN clans ON clan_id = clans.id "
+                f"WHERE mail_messages.id = {variables['messageID']} "
+            )).fetchone()
+            if message:
+                print("message")
+                message = message._mapping
+                return (
+                    f"#ebox[%TB](x:0,y:0,w:100%,h:100%) "
+                    f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12) "
+                    f"#pix[%PXT2](%TB[x:0,y:263,w:100%,h:100%],{{}},Internet/pix/i_pri0,13,13,13,13) "
+                    f"#pan[%P1](%TB[x:42,y:0-22,w:0,h:80],10) "
+                    f"#font(RG18,RG18,RG18) "
+                    f"#txt[%PL](%TB[x:737,y:0,w:150,h:20],{{}},\"Players\")"
+                    f"#font(BG18,BG18,BG18) "
+                    f"#ctxt[%TTTEXT](%TB[x:0-62,y:0-32,w:1024,h:20],{{}},\"PLAYER LIST\") "
+                    f"#font(R2C12,R2C12,R2C12) "
+                    f"#txt[%TMTEXT](%TB[x:0,y:514,w:100,h:20],{{}},\"Message:\") "
+                    f"#def_gp_btn(Internet/pix/i_pri0,53,53,0,1)"
+                    f"#font(RC12,R2C12,RC12) "
+                    f"#gpbtn[%BT1](%TB[x:74,y:23,w:-22,h:-18],{{GW|open&news.dcml\\00|LW_lockall}},\"News & Events\")"
+                    f"#hint(%BT1,\"News, events, forum and punishment list\")"
+                    f"#font(RC12,RC12,RC12) "
+                    f"#def_gp_btn(Internet/pix/i_pri0,51,51,0,1) "
+                    f"#gpbtn[%BT2](%TB[x:196,y:22,w:-22,h:-18],{{GW|open&users_list.dcml\\00&language=\\00|LW_lockall}},\"Player List\")"
+                    f"#hint(%BT2,\"Player list, personal mail and clan information\")"
+                    f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)     "
+                    f"#font(RC12,R2C12,RC12) "
+                    f"#gpbtn[%BT4](%TB[x:318,y:23,w:-22,h:-18],{{GW|open&games.dcml\\00|LW_lockall}},\"Custom Games\")"
+                    f"#hint(%BT4,\"Play custom games\")"
+                    f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)"
+                    f"#font(RC12,R2C12,RC12) "
+                    f"#gpbtn[%BT5](%TB[x:440,y:23,w:-22,h:-18],{{GW|open&scored_games.dcml\\00&player_id=0\\00|LW_lockall}},\"Scored Games\")"
+                    f"#hint(%BT5,\"Played games and their scores\")"
+                    f"#ebox[%B_VOTE](x:5,y:396,w:140,h:103) "
+                    f"<VOTING> "
+                    f"#exec(GW|open&voting.dcml\\00&question=46\\00) "
+                    f"<VOTING> "
+                    f"<MAILBUTTONS> "
+                    f"#ebox[%MB](x:0,y:0,w:100%,h:100%) "
+                    f"#font(RC14,GC14,RC14) "
+                    f"#ctxt[%LIST1](%MB[x:0,y:106,w:146,h:24],{{GW|open&users_list.dcml\\00|LW_lockall}},\"{{Player List}}\") "
+                    f"#hint(%LIST1,\"Player list, personal mail and clan information\") "
+                    f"#font(RC12,GC12,RC12) "
+                    f"#ctxt[%LIST2](%MB[x:0,y:%LIST1-10,w:146,h:24],{{GW|open&mail_list.dcml\\00|LW_lockall}},\"{{Mail}}\") "
+                    f"#hint(%LIST2,\"Manage your personal mail\") "
+                    f"#font(R2C14,R2C14,RC14) "
+                    f"#ctxt[%LIST3](%MB[x:0,y:%LIST2+7,w:146,h:24],{{GW|open&clans_list.dcml\\00|LW_lockall}},\"{{Clan List}}\") "
+                    f"#hint(%LIST3,\"Clans, their members and details\") "
+                    f"#ebox[%B1](x:154,y:40,w:559,h:45) "
+                    f"#pan[%P1](%B1[x:0,y:0,w:100%,h:100%],7) "
+                    f"#font(BC12,BC12,GC12)"
+                    f"#txt[%TITRE1](%B1[x:4,y:0+8,w:150,h:20],{{}},\"Mail Inbox total: {summary.messages_total}\")"
+                    f"#apan[%APAN0](%B1[x:4,y:%TITRE1-18,x1:%TITRE1,h:16],{{GW|open&mail_list.dcml\\00|LW_lockall}},15)"
+                    f"#font(BC12,BC12,GC12)"
+                    f"#txt[%TITRE2](%B1[x:4,y:18+8,w:150,h:20],{{}},\"Sent: {summary.messages_sent}\")"
+                    f"#apan[%APAN1](%B1[x:4,y:%TITRE2-18,x1:%TITRE2,h:16],{{GW|open&mail_list.dcml\\00&sent=true\\00|LW_lockall}},15)"
+                    f"#font(BC12,BC12,GC12)"
+                    f"#txt[%TITRE3](%B1[x:292,y:0+8,w:150,h:20],{{}},\"Unread: {summary.messages_unread}\")"
+                    f"#apan[%APAN2](%B1[x:292,y:%TITRE3-18,x1:%TITRE3,h:16],{{GW|open&mail_list.dcml\\00&readable=2\\00|LW_lockall}},15)"
+                    f"#font(BC12,BC12,GC12)"
+                    f"#txt[%TITRE4](%B1[x:292,y:18+8,w:150,h:20],{{}},\"Read: {summary.messages_read}\")"
+                    f"#apan[%APAN3](%B1[x:292,y:%TITRE4-18,x1:%TITRE4,h:16],{{GW|open&mail_list.dcml\\00&readable=3\\00|LW_lockall}},15)"
+                    f"#pan[%P2](%B1[x:314,y:0-34,w:0,h:100%+68],10) "
+                    f"<MAILBUTTONS>"
+                    f"#ebox[%B](x:0,y:0,w:100%,h:100%) "
+                    f"#ebox[%B2](x:154,y:95,w:559,h:238) "
+                    f"#pan[%P1](%B2[x:0,y:0,w:100%,h:100%],7) "
+                    f"#pan[%P1](%B2[x:0-35,y:74,w:100%+71,h:0],9) "
+                    f"#font(R2C12,BC12,RC12) "
+                    f"#txt[%T1](%B2[x:4,y:6,w:100,h:24],{{}},\"From:\") "
+                    f"#font(BC12,BC12,RC12) "
+                    f"#txt[%T2](%B2[x:%T1+5,y:6,w:270,h:24],{{GW|open&user_details.dcml\\00&ID={message.player_id}\\00|LW_lockall}},\"{{{message.name}\") "
+                    f"#font(R2C12,BC12,BC12) "
+                    f"#txt[%T3](%B2[x:4,y:24,w:100,h:24],{{}},\"Subject:\") "
+                    f"#font(BC12,BC12,RC12) "
+                    f"#txt[%T4](%B2[x:%T3+5,y:24,w:380,h:24],{{}},\"{message.subject}\") "
+                    f"#font(BC12,R2C12,R2C12) "
+                    f"#txt[%T5](%B2[x:292,y:6,w:250,h:24],{{}},\"{{Date: }}{message.sent_at}\") "
+                    f"#txt[%T7](%B2[x:4,y:50,w:100%-20,h:100%-57],{{}},\"{message.content}\") "
+                    f"#font(BC14,WC14,BC14) "
+                    f"#sbtn[%del](%B[x:401,y:377,w:100,h:305],{{GW|open&mail_list.dcml\\00&messageID={variables['messageID']}^delete=1\\00|LW_lockall}},\"Delete\") "
+                    f"#sbtn[%rep](%B[x:521,y:377,w:100,h:305],{{GW|open&mail_new.dcml\\00&send_to={message.name}^subject=Re: {message.subject}\\00|LW_lockall}},\"Reply\") "
+                    f"#sbtn[%for](%B[x:641,y:377,w:100,h:305],{{GW|open&mail_new.dcml\\00&subject={message.subject}^message={message.content}\\00|LW_lockall}},\"Forward\") "
+                    f"<NGDLG> "
+                    f"<NGDLG> "
+                    f"#block(cancel.cml,CAN)<NGDLG> "
+                    f"<NGDLG> "
+                    f"#end(CAN)"
+                )
+    return ""
 
 def map_(**_) -> str:
     return (
@@ -1917,7 +2078,7 @@ def reg_new_user(variables: dict, database: sqlalchemy.Engine, **_) -> str:
                 connection.execute(sqlalchemy.text(
                     f'INSERT INTO players (nick, name, mail, gmid, pass, icq, site, sex, country, phone, birthday) VALUES '
                     f'("{variables["VE_NICK"]}", "{variables["VE_NAME"]}", "{variables["VE_MAIL"]}", "{variables["VE_GMID"]}",'
-                    f'"{variables["VE_PASS"]}", "{variables["VE_ICQ"]}", "{variables["VE_HOMP"]}", "{variables["VE_SEX"]}",'
+                    f'"{variables["VE_PASS"]}", "{variables["VE_ICQ"]}", "{variables["VE_HOMP"]}", "{int(variables["VE_SEX"])+1}",'
                     f'"{variables["VE_CNTRY"]}", "{variables["VE_PHON"]}", "{variables["VE_BIRTH"]}")'))
 
         connection.commit()
@@ -2123,34 +2284,35 @@ def startup(**_) -> str:
         f"#end(CAN)"
     )
 
+
 def user_details(variables: dict, database: sqlalchemy.Engine, **_) -> str | None:
     with database.connect() as connection:
         profile = connection.execute(sqlalchemy.text(
             f"SELECT "
             f"player_id, "
-            f"players.name, "
+            f"COALESCE(players.name, ' - ') AS name, "
             f"clan_id ,"
-            f"CONCAT(clans.signature,players.nick) AS nick, "
-            f"gmid, "
+            f"CONCAT(COALESCE(clans.signature,''),players.nick) AS nick, "
             f"clans.signature, "
             f"mail, "
             f"icq, "
             f"site, "
             f"sexes.name AS sex, "
             f"countries.name AS country, "
-            f"phone,"
+            f"phone, "
             f"birthday, "
             f"score, "
             f"ranks.name AS rank_name "
             f"FROM players "
-            f"INNER JOIN clans ON clans.creator = players.player_id "
-            f"INNER JOIN countries ON countries.id = players.country "
-            f"INNER JOIN ranks ON ranks.id = get_rank(players.score) "
-            f"INNER JOIN sexes ON sexes.id = players.sex "
+            f"LEFT JOIN clans ON clans.creator = players.player_id "
+            f"LEFT JOIN countries ON countries.id = players.country "
+            f"LEFT JOIN ranks ON ranks.id = get_rank(players.score) "
+            f"LEFT JOIN sexes ON sexes.id = players.sex "
             f"WHERE players.player_id = {variables['ID']} "
             )).fetchone()
     if profile:
         profile = profile._mapping
+        clan_str = f"{{GW|open&clan_users.dcml\\00&clanID={profile.clan_id}\\00|LW_lockall}},\"{{{profile.signature}\")" if profile.clan_id else "{},\"\")"
         return (
             f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
             f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)"
@@ -2210,7 +2372,8 @@ def user_details(variables: dict, database: sqlalchemy.Engine, **_) -> str | Non
             f"#font(R2C12,BC12,RC12)"
             f"#txt[%SIGN2](%B1[x:8,y:%VAL1+4,w:140,h:20],{{}},\"Clan\")"
             f"#font(BC12,BC12,RC12)"
-            f"#txt[%VAL2](%B1[x:138,y:%VAL1+4,w:135,h:20],{{GW|open&clan_users.dcml\\00&clanID={profile.clan_id}\\00|LW_lockall}},\"{{{profile.signature}\")"
+            f"#txt[%VAL2](%B1[x:138,y:%VAL1+4,w:135,h:20],"
+            f"{clan_str}"
             f"#font(R2C12,BC12,RC12)"
             f"#txt[%SIGN3](%B1[x:8,y:%VAL2+4,w:140,h:20],{{}},\"E-Mail Address\")"
             f"#font(RC12,BC12,RC12)"
@@ -2273,24 +2436,24 @@ def users_list(variables: dict, database: sqlalchemy.Engine, **_) -> str:
     resort=variables.get("resort", "1")
     order = variables.get("order", "score")
     if order == 'nick':
-        order = 'players.nick'
+        order_by = 'players.nick'
     elif order == 'name':
-        order = 'players.name'
+        order_by = 'players.name'
     elif order == 'id':
-        order = 'players.player_id'
+        order_by = 'players.player_id'
     elif order == 'country':
-        order = 'players.country'
+        order_by = 'players.country'
     else:
-        order = 'players.score'
-    
+        order_by = 'players.score'
+    order = 'DESC' if resort == '1' else 'ASC'
     players = None
     with database.connect() as connection:
         players = connection.execute(sqlalchemy.text(f"SELECT players.nick, players.name, players.player_id, countries.name, players.score, ranks.name, row_number()\
-                        OVER ( order by players.score {'DESC' if order == 'players.score' and resort == '0' else 'ASC'} ) AS 'pos'\
+                        OVER ( order by {order_by} {order} ) AS 'pos'\
                         FROM players\
                         INNER JOIN ranks ON players.clan_rank = ranks.id\
                         LEFT JOIN countries ON players.country = countries.id - 1\
-                        ORDER BY {order} DESC LIMIT 14 OFFSET {13*page};")).fetchall()
+                        ORDER BY {order_by} {order} LIMIT 14 OFFSET {13*page};")).fetchall()
     return "".join((
         f"#ebox[%TB](x:0,y:0,w:100%,h:100%)",
         f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)",
@@ -2340,13 +2503,13 @@ def users_list(variables: dict, database: sqlalchemy.Engine, **_) -> str:
         f"#ebox[%BB](x:0,y:0,w:100%,h:100%)",
         f"#font(RC12,R2C12,RC12)",
         f"#stbl[%TIT](%BB[x:154,y:42,w:559,h:291],",
-        f"{{GW|open&users_list.dcml\\00&users_total=^order=score^resort={'1' if order == 'players.score' and resort == '0' else '0'}\\00|LW_lockall}}",
-        f"{{GW|open&users_list.dcml\\00&users_total=^order=nick^resort={'0' if order == 'players.nick' and resort == '1' else '1'}\\00|LW_lockall}}",
-        f"{{GW|open&users_list.dcml\\00&users_total=^order=name^resort={'0' if order == 'players.name' and resort == '1' else '1'}\\00|LW_lockall}}",
-        f"{{GW|open&users_list.dcml\\00&users_total=^order=id^resort={'0' if order == 'players.player_id' and resort == '1' else '1'}\\00|LW_lockall}}",
-        f"{{GW|open&users_list.dcml\\00&users_total=^order=country^resort={'0' if order == 'players.country' and resort == '1' else '1'}\\00|LW_lockall}}",
-        f"{{GW|open&users_list.dcml\\00&users_total=^order=score^resort={'0' if order == 'players.score' and resort == '1' else '1'}\\00|LW_lockall}}",
-        f"{{GW|open&users_list.dcml\\00&users_total=^order=score^resort={'0' if order == 'players.score' and resort == '1' else '1'}\\00|LW_lockall}},7,7,7,1,21,1,25,1,6,1,15,1,7,1,19,1,20,\"{{Pos\",\"{{Nickname\",\"{{Full Name\",\"{{#\",\"{{Country\",\"{{Scores\",\"{{Rank\")",
+        f"{{GW|open&users_list.dcml\\00&users_total=^order=score^resort={'1' if order_by == 'players.score' and resort == '0' else '0'}\\00|LW_lockall}}",
+        f"{{GW|open&users_list.dcml\\00&users_total=^order=nick^resort={'1' if order_by == 'players.nick' and resort == '0' else '0'}\\00|LW_lockall}}",
+        f"{{GW|open&users_list.dcml\\00&users_total=^order=name^resort={'1' if order_by == 'players.name' and resort == '0' else '0'}\\00|LW_lockall}}",
+        f"{{GW|open&users_list.dcml\\00&users_total=^order=id^resort={'1' if order_by == 'players.player_id' and resort == '0' else '0'}\\00|LW_lockall}}",
+        f"{{GW|open&users_list.dcml\\00&users_total=^order=country^resort={'1' if order_by == 'players.country' and resort == '0' else '0'}\\00|LW_lockall}}",
+        f"{{GW|open&users_list.dcml\\00&users_total=^order=score^resort={'1' if order_by == 'players.score' and resort == '0' else '0'}\\00|LW_lockall}}",
+        f"{{GW|open&users_list.dcml\\00&users_total=^order=score^resort={'1' if order_by == 'players.score' and resort == '0' else '0'}\\00|LW_lockall}},7,7,7,1,21,1,25,1,6,1,15,1,7,1,19,1,20,\"{{Pos\",\"{{Nickname\",\"{{Full Name\",\"{{#\",\"{{Country\",\"{{Scores\",\"{{Rank\")",
         "".join([f"#apan[%APAN0](%BB[x:150,y:{60+(21*idx)}-1,w:100%-161,h:20],{{GW|open&user_details.dcml\\00&ID={player[2]}\\00|LW_lockall}},8)" for idx, player in enumerate(players[:13])]),
         f"#font(BC12,BC12,BC12)",
         f"#stbl[%TBL](%BB[x:154,y:42+18,w:559,h:270],{{}},7,0,7,1,21,1,25,1,6,1,15,1,7,1,19,1,",
@@ -2569,8 +2732,21 @@ def command_login(parameters: list[bytes], database: sqlalchemy.Engine) -> str:
             profileid = connection.execute(sqlalchemy.text(f"Select player_id from sessions where session_key = '{lgd}' LIMIT 1")).fetchone()
             if profileid:
                 profile = connection.execute(sqlalchemy.text(
-                    f"SELECT player_id, name, nick, mail, pass, icq, site, sex, country, phone, birthday\
-                    FROM players where player_id = '{profileid[0]}' LIMIT 1"
+                    f"SELECT "
+                    f"player_id, "
+                    f"name, "
+                    f"CONCAT(COALESCE(clans.signature,''), players.nick) AS nick, "
+                    f"mail, "
+                    f"pass, "
+                    f"icq, "
+                    f"site, "
+                    f"sex, "
+                    f"country, "
+                    f"phone, "
+                    f"birthday "
+                    f"FROM players "
+                    f"LEFT JOIN clans ON clan_id = clans.id "
+                    f"WHERE player_id = '{profileid[0]}' LIMIT 1"
                     )).fetchone()
                 if profile:
                     VE_PROF, VE_NAME, VE_NICK, VE_MAIL, VE_PASS, VE_ICQ, VE_HOMP, VE_SEX, VE_CNTRY, VE_PHON, VE_BIRTH =\
