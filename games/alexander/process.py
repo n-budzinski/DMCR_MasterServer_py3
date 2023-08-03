@@ -1340,7 +1340,7 @@ def mail_list(variables: dict, database: sqlalchemy.Engine, player_id, **_) -> s
                     f"INNER JOIN players ON players.player_id = id_from "
                     f"LEFT JOIN clans ON clan_id = clans.id "
                     f"WHERE "
-                    f"(id_to = '{player_id}' AND NOT removed_by_recipient) "
+                    f"(id_to = '{player_id}' AND NOT removed_by_recipient ) "
                 )
 
             messages = connection.execute(sqlalchemy.text(query)).fetchall()
