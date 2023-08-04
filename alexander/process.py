@@ -142,7 +142,7 @@ def clan_new(variables: dict, database: sqlalchemy.Engine, player_id: str | int,
     if variables['title'] and variables['signature']:
         try:
             with database.connect() as connection:
-                connection.execute(sqlalchemy.text(f'INSERT INTO clans (creator, title, signature, info) VALUES ({player_id}, "{variables["title"]}", "{variables["signature"]}", "{variables["info"]}")'))
+                connection.execute(sqlalchemy.text(f'CALL create_clan({player_id}, "{variables["title"]}", "{variables["signature"]}", "{variables["info"]}")'))
                 connection.commit()
         except:
             pass
@@ -326,13 +326,30 @@ def clan_users(**_) -> str:
         f"#end(CAN)"
     )
 
-def clans_list(variables: dict, **_) -> str:
+def clans_list(variables: dict, database: sqlalchemy.Engine, **_) -> str:
+    button_list = []
+    clan_list = []
     icon_dialog = ""
     if variables['create_icon'] == "true":
         icon_dialog = (
             f"#ebox[%L0](x:0,y:0,w:100%,h:100%)"
             f"#table[%TBL](%L0[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&clan_load_image.dcml\\00&help=true^signature=SAM\\00|LW_lockall}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"CLAN ICON\",\"You are recommended to use a .jpg or .png 32x24 file as a clan icon.If the resolution of the file is greater, then it will be automatically miniaturized to 32x24 resolution saving the proportions. Size must be smaller than 16 KB. It is restricted to use pornographic or erotic images, nazi symbols and obscenities. The icon will be displayed in chat window within a day.\",26,\"OK\",\"Cancel\")"
         )
+    with database.connect() as connection:
+        clans = connection.execute(sqlalchemy.text(
+            "CALL get_clans()"
+        )).fetchall()
+        if clans:
+            for idx, entry in enumerate(clans):
+                clans = entry._mapping
+                button_list.append(
+                    f"#apan[%BT{idx}](%SB[x:0,y:{idx*21}-2,w:100%,h:20],{{GW|open&clan_users.dcml\\00&clanID={clans.id}\\00|LW_lockall}},8)"
+                )
+                clan_list.append(
+                    f",21,\"{clans.title}\",\"{clans.signature}\",\"{clans.created_at}\",\"{clans.nick}\",\"{clans.members}\",\"{clans.score}\",\"{clans.average_score}\""
+                )
+    button_list = "".join(button_list)
+    clan_list = "".join(clan_list)
     return (
         f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
         f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)"
@@ -378,10 +395,9 @@ def clans_list(variables: dict, **_) -> str:
         f"#stbl[%TBL](%B[x:154,y:42,w:526-3,h:291],{{GW|open&clans_list.dcml\\00&order=title^resort=1\\00|LW_lockall}}{{GW|open&clans_list.dcml\\00&order=sign^resort=1\\00|LW_lockall}}{{GW|open&clans_list.dcml\\00&order=c.birthday^resort=\\00|LW_lockall}}{{GW|open&clans_list.dcml\\00&order=father^resort=1\\00|LW_lockall}}{{GW|open&clans_list.dcml\\00&order=count^resort=\\00|LW_lockall}}{{GW|open&clans_list.dcml\\00&order=score^resort=1\\00|LW_lockall}}{{GW|open&clans_list.dcml\\00&order=avg^resort=\\00|LW_lockall}},7,7,16,1,15,1,12,1,20,1,10,1,13,1,14,1,20,\"{{Title\",\"{{Signature\",\"{{Birthday\",\"{{Creator\",\"{{Members\",\"{{Total score\",\"{{Avg(score)\")"
         f"#def_sbox(Internet/pix/i_pri%d,-1,-1,-1,-1,-1,-1,-1,-1,0,0,0,0,6,-21,25)"
         f"#sbox[%SB](x:150,y:60,w:526+4,h:271)"
-        f"#apan[%BT0](%SB[x:0,y:0-2,w:100%,h:20],{{GW|open&clan_users.dcml\\00&clanID=542\\00|LW_lockall}},8)"
-        f"#apan[%BT1](%SB[x:0,y:21-2,w:100%,h:20],{{GW|open&clan_users.dcml\\00&clanID=333\\00|LW_lockall}},8)"
+        f"{button_list}"
         f"#font(BC12,BC12,BC12)"
-        f"#stbl[%CLA_LST](%SB[x:4,y:0,w:526-3,h:588],{{}},7,0,16,1,15,1,12,1,20,1,10,1,13,1,14,1,21,\"AnubisLegion\",\"[AL]\",\"01.04.2005\",\"[AL]TheGOLDskull\",\"8\",\"402\",\"50\",21,\"-PITER-Sankt-Pete\",\"[PITER]\",\"11.01.2005\",\"[PITER]GADOSTb\",\"6\",\"311\",\"51\")"
+        f"#stbl[%CLA_LST](%SB[x:4,y:0,w:526-3,h:588],{{}},7,0,16,1,15,1,12,1,20,1,10,1,13,1,14,1{clan_list})"
         f"<NGDLG>"
         f"{icon_dialog}"
         f"<NGDLG>"
@@ -432,11 +448,13 @@ def forum_add(variables: dict, database: sqlalchemy.Engine, player_id: str | int
     if variables['add_message']:
         try:
             with database.connect() as connection:
-                if variables['theme']:
-                    connection.execute(sqlalchemy.text(f'INSERT INTO threads_messages (author_id, thread_id, content) VALUES ({player_id}, {variables["theme"]}, "{variables["add_message"]}")'))
+                if variables['theme'] != 'None':
+                    connection.execute(sqlalchemy.text(f'INSERT INTO thread_messages (author_id, thread_id, content) VALUES ({player_id}, {variables["theme"]}, "{variables["add_message"]}")'))
                 else:
                     connection.execute(sqlalchemy.text(f'INSERT INTO threads (author_id, content) VALUES ({player_id}, "{variables["add_message"]}")'))
                 connection.commit()
+        except Exception as ex:
+            print(ex)
         finally:
             return "#exec(GW|open&forum.dcml\\00&mode=1^last_view=^noback=true\\00|LW_lockall)"
     return (
@@ -619,34 +637,27 @@ def forum(variables: dict, database: sqlalchemy.Engine, **_) -> str:
     with database.connect() as connection:
         thread_list = []
         search = False
+        mode = '1'
+        print(f"{variables['search_nick']} {variables['search_text']}")
         if variables['search_nick'] or variables['search_text']:
             search = True
-            threads = connection.execute(sqlalchemy.text(f"""SELECT *\
-            FROM thread_messages\
-            WHERE author_id = (SELECT players.player_id FROM players WHERE players.nick = '{variables['search_nick']}' LIMIT 1) OR\
-            INSTR(thread_messages.content, '{variables['search_text']}')""")).fetchall()
+            threads = connection.execute(sqlalchemy.text(f'CALL forum_search(\"{variables["search_nick"]}\", \"{variables["search_text"]}\" )')).fetchall()
         elif variables["mode"] == "1":
-            threads = connection.execute(sqlalchemy.text(f"""SELECT id, author_id, created_at, content, (SELECT COUNT(*) AS count FROM thread_messages\
-                WHERE thread_messages.thread_id = threads.id) AS messages\
-                FROM threads ORDER BY id DESC LIMIT 31 OFFSET {int(variables["next_message"]) if variables["next_message"] else 0}""")).fetchall()
+            mode = '1'
         elif variables["mode"] == "2":
-            threads = connection.execute(sqlalchemy.text(f"""SELECT *\
-                FROM thread_messages ORDER BY id DESC LIMIT 10""")).fetchall()
+            mode = '2'
         elif variables["mode"] == "3":
-            threads = connection.execute(sqlalchemy.text(f"""SELECT *\
-                FROM thread_messages WHERE created_at > now() - interval 1 day ORDER BY id DESC""")).fetchall()
+            mode = '3'
         elif variables["mode"] == "4":
-            threads = connection.execute(sqlalchemy.text(f"""SELECT *\
-                FROM thread_messages WHERE created_at > now() - interval 7 day ORDER BY id DESC""")).fetchall()
-        else:
-            threads = []
+            mode = '4'
+        threads = connection.execute(sqlalchemy.text(f"CALL get_threads({mode}, {int(variables['next_message']) if variables['next_message'] else 0})")).fetchall()
         for idx, entry in enumerate(threads[:30]):
             thread = entry._mapping
             thread_list.append(" ".join([
                 # f"#font(BC12,RC12,RC12)",
                 # f"""#txt[%TXT{idx+1}](%SB[x:218,y:{'4' if idx == 0 else f'%P{idx}-21'},w:100%-215,h:24],{{}},\"{thread['content'].replace(variables['search_text'], '{'+variables['search_text']+'}') if search else thread['content']}\")""",
                 f"#exec(LW_vis&0&%TXT2)",
-                f"#apan[%PAN{idx+1}](%SB[x:0,y:{'4' if idx == 0 else f'%P{idx}-21'}-10,w:100%,y1:{'4' if idx == 0 else f'%P{idx}-21'}+{'42' if variables['mode'] == '1' else '28'}>%TXT{idx+1}+5],{{GW|open&forum_view.dcml\\00&last_view=0^theme={thread['id'] if variables['mode'] == '1' else thread['thread_id']}\\00|LW_lockall}},14,\"\")",
+                f"#apan[%PAN{idx+1}](%SB[x:0,y:{'4' if idx == 0 else f'%P{idx}-21'}-10,w:100%,y1:{'4' if idx == 0 else f'%P{idx}-21'}+{'42' if variables['mode'] == '1' else '28'}>%TXT{idx+1}+5],{{GW|open&forum_view.dcml\\00&last_view=0^theme={thread['id'] if variables['mode'] == '1' else thread['id']}\\00|LW_lockall}},14,\"\")",
                 f"#font(BC12,RC12,RC12)",
                 f"#txt[%TEXT{idx+1}](%SB[x:218,y:{'4' if idx == 0 else f'%P{idx}-21'},w:100%-220,h:24],{{}},\"{thread['content'].replace(variables['search_text'], '{'+variables['search_text']+'}') if search else thread['content']}\")",
                 f"#font(R2C12,R2C12,RC12)",
@@ -655,7 +666,7 @@ def forum(variables: dict, database: sqlalchemy.Engine, **_) -> str:
                 f"#txt[%DATE{idx+1}](%SB[x:%S_DATE{idx+1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'},w:170,h:24],{{}},\"{thread['created_at']}\")",
                 f"#font(R2C12,BC12,RC12)",
                 f"#txt[%S_CR{idx+1}](%SB[x:8,y:{'4' if idx == 0 else f'%P{idx}-21'}+14,w:170,h:24],{{}},\"Author:\")",
-                f"#txt[%CR{idx+1}](%SB[x:%S_CR{idx+1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'}+14,w:170,h:24],{{GW|open&user_details.dcml\\00&ID={thread['author_id']}\\00|LW_lockall}},\"{{{thread['author_id']}}}\")",
+                f"#txt[%CR{idx+1}](%SB[x:%S_CR{idx+1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'}+14,w:170,h:24],{{GW|open&user_details.dcml\\00&ID={thread['author_id']}\\00|LW_lockall}},\"{{{thread['nick']}}}\")",
                 f"#txt[%S_COU{idx+1}](%SB[x:8,y:{'4' if idx == 0 else f'%P{idx}-21'}+28,w:170,h:24],{{}},\"Message:\")" if variables['mode'] == '1' else '',
                 f"#font(BC12,BC12,BC12)",
                 f"#txt[%COU{idx+1}](%SB[x:%S_COU{idx+1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'}+28,w:170,h:24],{{}},\"{thread['messages']}\")" if variables["mode"] == "1" else "",
@@ -1269,7 +1280,7 @@ def mail_list(variables: dict, database: sqlalchemy.Engine, player_id, **_) -> s
                     f"#apan[%APAN{idx}](%SB[x:0,y:{21*idx}-2,w:100%,h:20],{{GW|open&mail_view.dcml\\00&messageID={message.id}^sent=\\00|LW_lockall}},8)"
                 )
                 message_list.append(
-                    f",21,\"{message.name}\",\"{highlight}{message.subject}\",\"{message.sent_at}\""
+                    f",21,\"{message.nick}\",\"{highlight}{message.subject}\",\"{message.sent_at}\""
                 )
             panel_list = "".join(panel_list)
             message_list = "".join(message_list)
@@ -1777,25 +1788,26 @@ def news(database: sqlalchemy.Engine, **_) -> str:
 def punishments(database: sqlalchemy.Engine, **_) -> str:
     with database.connect() as connection:
         punishment_list = []
-        punishments = connection.execute(sqlalchemy.text("SELECT *\
-                            FROM punishments ORDER BY id DESC")).fetchall()
+        punishments = connection.execute(sqlalchemy.text(
+            "CALL get_punishments()"
+            )).fetchall()
         for idx, entry in enumerate(punishments):
             punishment = entry._mapping
             punishment_list.append(
                 f"#font(R2C12,BC12,RC12)"
-                f"#txt[%MSG{idx+1}](%SB[x:8,y:{'4' if idx == 0 else f'%P{idx}-21'},w:570,h:20],{{}},\"Cancelled game {punishment['game_id']} (#).\")"
+                f"#txt[%MSG{idx+1}](%SB[x:8,y:{'4' if idx == 0 else f'%P{idx}-21'},w:570,h:20],{{}},\"Cancelled game {punishment.game_id} (#).\")"
                 f"#font(R2C12,BC12,BC12)"
                 f"#txt[%DAT{idx+1}](%SB[x:8,y:{'4' if idx == 0 else f'%P{idx}-21'}+29,w:90,h:20],{{}},\"Date:\")"
                 f"#font(BC12,BC12,BC12)"
-                f"#txt[%DATE{idx+1}](%SB[x:%DAT{idx+1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'}+29,w:200,h:20],{{}},\"{punishment['published_at']}\")"
+                f"#txt[%DATE{idx+1}](%SB[x:%DAT{idx+1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'}+29,w:200,h:20],{{}},\"{punishment.published_at}\")"
                 f"#font(R2C12,BC12,BC12)"
                 f"#txt[%MD{idx+1}](%SB[x:8,y:{'4' if idx == 0 else f'%P{idx}-21'}+43,w:90,h:20],{{}},\"Moderator:\")"
                 f"#font(R2C12,BC12,RC12)"
-                f"#txt[%MDR{idx+1}](%SB[x:%MD{idx+1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'}+43,w:200,h:20],{{GW|open&user_details.dcml\\00&ID=5436\\00|LW_lockall}},\"{{{punishment['moderator_id']}}}\")"
+                f"#txt[%MDR{idx+1}](%SB[x:%MD{idx+1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'}+43,w:200,h:20],{{GW|open&user_details.dcml\\00&ID=5436\\00|LW_lockall}},\"{{{punishment.nick}}}\")"
                 f"#font(R2C12,BC12,BC12)"
                 f"#txt[%CM{idx+1}](%SB[x:210,y:{'4' if idx == 0 else f'%P{idx}-21'}+29,w:100,h:20],{{}},\"Comments:\")"
                 f"#font(BC12,BC12,BC12)"
-                f"#txt[%CMT{idx+1}](%SB[x:%CM{idx+1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'}+29,w:256,h:20],{{}},\"{punishment['comment']}\")"
+                f"#txt[%CMT{idx+1}](%SB[x:%CM{idx+1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'}+29,w:256,h:20],{{}},\"{punishment.comment}\")"
                 f"#pan[%P{idx+1}](%SB[x:0-32,y:%MDR{idx+1}>%CMT{idx+1}+38,w:100%+65,h:0],9)"
             )
     punishment_list = "".join(punishment_list)
