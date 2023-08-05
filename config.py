@@ -25,7 +25,7 @@ ALEX_HOST = os.environ.get("DCMLEMU_ALEX_URL", DB_HOST)
 ALEX_SCHEME = os.environ.get("DCMLEMU_ALEX_SCHEME", "alexander")
 ALEX_USERNAME = os.environ.get("DCMLEMU_ALEX_USERNAME", DB_USERNAME)
 ALEX_PASSWORD = os.environ.get("DCMLEMU_ALEX_PASSWORD", DB_PASSWORD)
-ALEX_IRC = Irc(address = "192.168.1.200", ch1 = "#GSP!conquest_m!5", ch2 = "#GSP!conquest!3")
+ALEX_IRC = Irc(address = "192.168.0.200", ch1 = "#GSP!conquest_m!5", ch2 = "#GSP!conquest!3")
 ALEX_DBTBL_INTERVAL = 15
 
 ALEX_DEMO_HOST = os.environ.get("DCMLEMU_ALEX_DEMO_URL", DB_HOST)
