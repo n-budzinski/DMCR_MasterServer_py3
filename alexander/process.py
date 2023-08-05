@@ -140,14 +140,9 @@ def clan_load_image(variables: dict, **_) -> str:
 
 def clan_new(variables: dict, database: sqlalchemy.Engine, player_id: str | int, **_) -> str:
     if variables['title'] and variables['signature']:
-        try:
             with database.connect() as connection:
                 connection.execute(sqlalchemy.text(f'CALL create_clan({player_id}, "{variables["title"]}", "{variables["signature"]}", "{variables["info"]}")'))
                 connection.commit()
-        except:
-            pass
-        
-        else:
             return (
                 f'#ebox[%TB](x:0,y:0,w:100%,h:100%)'
                 f'#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)'
@@ -543,10 +538,10 @@ def forum_search(**_) -> str:
 def forum_view(variables: dict, database: sqlalchemy.Engine, **_) -> str:
     with database.connect() as connection:
         if variables['theme']:
-            thread = connection.execute(sqlalchemy.text(f"""SELECT id, created_at, author_id, content FROM threads WHERE id = {variables['theme']} LIMIT 1""")).fetchone()
+            thread = connection.execute(sqlalchemy.text(f"""CALL get_thread({variables['theme']})""")).fetchone()
             if thread:
                 thread = thread._mapping
-                messages = connection.execute(sqlalchemy.text(f"""SELECT * FROM thread_messages WHERE thread_id = {thread['id']} ORDER BY id ASC"""))
+                messages = connection.execute(sqlalchemy.text(f"""CALL get_thread_messages({thread['id']})"""))
                 message_list = []
                 for idx, entry in enumerate(messages):
                         message = entry._mapping
@@ -557,7 +552,7 @@ def forum_view(variables: dict, database: sqlalchemy.Engine, **_) -> str:
                             f"#txt[%DATE{idx+1}](%SB[x:%S_DATE{idx+1}+5,y:{'6' if idx == 0 else f'%P{idx}-22'},w:170,h:24],{{}},\"{message['created_at']}\")",
                             f"#font(R2C12,BC12,RC12)",
                             f"#txt[%S_CR{idx+1}](%SB[x:7,y:{'6' if idx == 0 else f'%P{idx}-22'}+14,w:170,h:24],{{}},\"Author:\")",
-                            f"#txt[%CR{idx+1}](%SB[x:%S_CR{idx+1}+5,y:{'6' if idx == 0 else f'%P{idx}-22'}+14,w:170,h:24],{{GW|open&user_details.dcml\\00&ID={message['author_id']}\\00|LW_lockall}},\"{{{message['author_id']}}}\")",
+                            f"#txt[%CR{idx+1}](%SB[x:%S_CR{idx+1}+5,y:{'6' if idx == 0 else f'%P{idx}-22'}+14,w:170,h:24],{{GW|open&user_details.dcml\\00&ID={message['author_id']}\\00|LW_lockall}},\"{{{message['nick']}}}\")",
                             f"#font(BC12,RC12,RC12)",
                             f"#txt[%TEXT{idx+1}](%SB[x:215,y:{'6' if idx == 0 else f'%P{idx}-22'},w:100%-220+0,h:24],{{}},\"{message['content']}\")",
                             f"#pan[%P{idx+1}](%SB[x:0-32,y:%CR{idx+1}>%TEXT{idx+1}+37,w:100%+65,h:0],9)",
@@ -617,7 +612,7 @@ def forum_view(variables: dict, database: sqlalchemy.Engine, **_) -> str:
                     f"#txt[%DATE0](%B01[x:%S_DATE0+5,y:7,w:170,h:24],{{}},\"{thread['created_at']}\")"
                     f"#font(R2C12,BC12,RC12)"
                     f"#txt[%S_CR0](%B01[x:8,y:21,w:170,h:24],{{}},\"Author:\")"
-                    f"#txt[%CR0](%B01[x:%S_CR0+5,y:21,w:170,h:24],{{GW|open&user_details.dcml\\00&ID={thread['author_id']}\\00|LW_lockall}},\"{{{thread['author_id']}}}\")"
+                    f"#txt[%CR0](%B01[x:%S_CR0+5,y:21,w:170,h:24],{{GW|open&user_details.dcml\\00&ID={thread['author_id']}\\00|LW_lockall}},\"{{{thread['nick']}}}\")"
                     f"#font(GC12,R2C12,RC12)"
                     f"#txt[%TEXT0](%B01[x:220,y:7,w:330+0,h:24],{{}},\"{thread['content']}\")"
                     f"#pan[%PAN](%B01[x:0,y:%PAN_T+10,w:559,y1:D],5)"
@@ -634,6 +629,7 @@ def forum_view(variables: dict, database: sqlalchemy.Engine, **_) -> str:
         return ""
 
 def forum(variables: dict, database: sqlalchemy.Engine, **_) -> str:
+    print(variables)
     with database.connect() as connection:
         thread_list = []
         search = False
@@ -650,14 +646,14 @@ def forum(variables: dict, database: sqlalchemy.Engine, **_) -> str:
             mode = '3'
         elif variables["mode"] == "4":
             mode = '4'
-        threads = connection.execute(sqlalchemy.text(f"CALL get_threads({mode}, {int(variables['next_message']) if variables['next_message'] else 0})")).fetchall()
+        threads = connection.execute(sqlalchemy.text(f"CALL get_thread_list({mode}, {int(variables['next_message']) if variables['next_message'] else 0})")).fetchall()
         for idx, entry in enumerate(threads[:30]):
             thread = entry._mapping
             thread_list.append(" ".join([
                 # f"#font(BC12,RC12,RC12)",
                 # f"""#txt[%TXT{idx+1}](%SB[x:218,y:{'4' if idx == 0 else f'%P{idx}-21'},w:100%-215,h:24],{{}},\"{thread['content'].replace(variables['search_text'], '{'+variables['search_text']+'}') if search else thread['content']}\")""",
                 f"#exec(LW_vis&0&%TXT2)",
-                f"#apan[%PAN{idx+1}](%SB[x:0,y:{'4' if idx == 0 else f'%P{idx}-21'}-10,w:100%,y1:{'4' if idx == 0 else f'%P{idx}-21'}+{'42' if variables['mode'] == '1' else '28'}>%TXT{idx+1}+5],{{GW|open&forum_view.dcml\\00&last_view=0^theme={thread['id'] if variables['mode'] == '1' else thread['id']}\\00|LW_lockall}},14,\"\")",
+                f"#apan[%PAN{idx+1}](%SB[x:0,y:{'4' if idx == 0 else f'%P{idx}-21'}-10,w:100%,y1:{'4' if idx == 0 else f'%P{idx}-21'}+{'42' if variables['mode'] == '1' else '28'}>%TXT{idx+1}+5],{{GW|open&forum_view.dcml\\00&last_view=0^theme={thread['id']}\\00|LW_lockall}},14,\"\")",
                 f"#font(BC12,RC12,RC12)",
                 f"#txt[%TEXT{idx+1}](%SB[x:218,y:{'4' if idx == 0 else f'%P{idx}-21'},w:100%-220,h:24],{{}},\"{thread['content'].replace(variables['search_text'], '{'+variables['search_text']+'}') if search else thread['content']}\")",
                 f"#font(R2C12,R2C12,RC12)",
@@ -2430,7 +2426,7 @@ def users_list(variables: dict, database: sqlalchemy.Engine, **_) -> str:
     order = 'DESC' if resort == '1' else 'ASC'
     players = None
     with database.connect() as connection:
-        players = connection.execute(sqlalchemy.text(f"SELECT players.nick, players.name, players.player_id, countries.name, players.score, ranks.name, row_number()\
+        players = connection.execute(sqlalchemy.text(f"SELECT get_display_nick(player_id), players.name, players.player_id, countries.name, players.score, ranks.name, row_number()\
                         OVER ( order by {order_by} {order} ) AS 'pos'\
                         FROM players\
                         INNER JOIN ranks ON players.clan_rank = ranks.id\
