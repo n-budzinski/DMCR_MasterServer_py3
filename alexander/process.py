@@ -2789,24 +2789,26 @@ def command_setipaddr(database: sqlalchemy.Engine, lobby_id: str, address: str) 
         connection.execute(sqlalchemy.text(f"UPDATE lobbies SET ip = '{address}' WHERE id = {lobby_id}"))
         connection.commit()
 
-def verbose_sql_error(requested_file: str, error_message: sqlalchemy.exc.SQLAlchemyError) -> str:
+sqlalchemy.exc.SQLAlchemyError()
+
+def verbose_sql_error(requested_file: str, error_message: str) -> str:
         
-        if error_message._message == "ERR_NICK_EXISTS":
+        if error_message == "ERR_NICK_EXISTS":
             message = "User with that nickname already exists! Press Edit button to change nickname. Press Cancel button to exit"
 
-        elif error_message._message == "ERR_NICK_LENGTH":
+        elif error_message == "ERR_NICK_LENGTH":
             message = "Nickname too short. Press Cancel button to exit"
 
-        elif error_message._message == "ERR_BIRTH_FORMAT":
+        elif error_message == "ERR_BIRTH_FORMAT":
             message = "Incorrect birthday date! Birthday must be in DD/MM/YYYY or DD.MM.YYYY format. Where DD - day (1-31), MM - month (1-12), YYYY - year. Press Edit button to check birthday date. Press Cancel to exit"
 
-        elif error_message._message == "ERR_GMID_INVALID":
+        elif error_message == "ERR_GMID_INVALID":
             message = "An invalid Game Box Identifier was entered! Please enter more carefully. The number of attempts is limited. Press Edit button to check Game Box Identifier. Press Cancel to exit"
 
-        elif error_message._message == "ERR_GMID_USED":
+        elif error_message == "ERR_GMID_USED":
             message = "The provided Game Box Identifier has already been used. The number of attempts is limited. Press Edit button to check Game Box Identifier. Press Cancel to exit"
 
-        elif error_message._message == "ERR_EMAIL_USED":
+        elif error_message == "ERR_EMAIL_USED":
             message = "The provided E-Mail address has already been used. Press Edit button to check E-Mail address. Press Cancel to exit"
 
         else:
@@ -2859,7 +2861,7 @@ def process_request(request, database, player_id) -> list:
             response.append(LW_show(command_open(parameters, database, player_id)))
 
         except sqlalchemy.exc.SQLAlchemyError as error:
-            response.append(LW_show(verbose_sql_error(parameters[0].decode(), error)))
+            response.append(LW_show(verbose_sql_error(parameters[0].decode(), error._message())))
             
         except Exception as exception: 
             print(exception)
