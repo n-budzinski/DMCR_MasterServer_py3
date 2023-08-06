@@ -72,7 +72,7 @@ def change(variables: dict, **_) -> str:
         f'<MESDLG>'
         )
 
-# TODO: PLACEHOLDER. 
+# TODO: PLACEHOLDER
 def clan_admin2(variables: dict, **_) -> str:
     # · ·open· ·   clan_admin2.dcml -   clanID=288^signature=GOTT^new_jointer=136995
     # clan_admin2.dcml ·   clanID=288^leaver=136995
@@ -254,7 +254,6 @@ def clan_new(variables: dict, database: Engine, player_id: str | int, **_) -> st
     )
 
 def clan_users(variables: dict, database: Engine, player_id, **_) -> str:
-    # variables['clanID']
     members_list = []
     members_buttons = []
     with database.connect() as connection:
@@ -676,63 +675,7 @@ def forum(variables: dict, database: Engine, **_) -> str:
                 f"#txt[%COU{idx+1}](%SB[x:%S_COU{idx+1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'}+28,w:170,h:24],{{}},\"{thread['messages']}\")" if variables["mode"] == "1" else "",
                 f"#pan[%P{idx+1}](%SB[x:0-32,y:{'4' if idx == 0 else f'%P{idx}-21'}+{'42' if variables['mode'] == '1' else '28'}>%TEXT{idx+1}+38,w:100%+65,h:0],9)",
             ]))
-    return " ".join((
-    f"#exec(LW_cfile&20230722144507&Cookies/%GV_FORUM_LAST_TIME)",
-    f"#ebox[%TB](x:0,y:0,w:100%,h:100%)",
-    f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)",
-    f"#pix[%PXT2](%TB[x:0,y:263,w:100%,h:100%],{{}},Internet/pix/i_pri0,13,13,13,13)",
-    f"#pan[%P1](%TB[x:42,y:0-22,w:0,h:80],10)",
-    f"#font(RG18,RG18,RG18)",
-    f"#txt[%PL](%TB[x:737,y:0,w:150,h:20],{{}},\"Players\")",
-    f"#font(BG18,BG18,BG18)",
-    f"#ctxt[%TTTEXT](%TB[x:0-62,y:0-32,w:1024,h:20],{{}},\"NEWS & EVENTS\")",
-    f"#font(R2C12,R2C12,R2C12)",
-    f"#txt[%TMTEXT](%TB[x:0,y:514,w:100,h:20],{{}},\"Message:\")",
-    f"#font(RC12,RC12,RC12)",
-    f"#def_gp_btn(Internet/pix/i_pri0,51,51,0,1)",
-    f"#gpbtn[%BT1](%TB[x:74,y:22,w:-22,h:-18],{{GW|open&news.dcml\\00&language=\\00|LW_lockall}},\"News & Events\")",
-    f"#hint(%BT1,\"News, events, forum and punishment list\")",
-    f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)",
-    f"#font(RC12,R2C12,RC12)",
-    f"#gpbtn[%BT2](%TB[x:196,y:23,w:-22,h:-18],{{GW|open&users_list.dcml\\00|LW_lockall}},\"Player List\")",
-    f"#hint(%BT2,\"Player list, personal mail and clan information\")",
-    f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)",
-    f"#font(RC12,R2C12,RC12)",
-    f"#gpbtn[%BT4](%TB[x:318,y:23,w:-22,h:-18],{{GW|open&games.dcml\\00|LW_lockall}},\"Custom Games\")",
-    f"#hint(%BT4,\"Play custom games\")",
-    f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)",
-    f"#font(RC12,R2C12,RC12)",
-    f"#gpbtn[%BT5](%TB[x:440,y:23,w:-22,h:-18],{{GW|open&scored_games.dcml\\00&player_id=0\\00|LW_lockall}},\"Scored Games\")",
-    f"#hint(%BT5,\"Played games and their scores\")",
-    f"#ebox[%B_VOTE](x:5,y:396,w:140,h:103)",
-    f"<VOTING>",
-    f"#exec(GW|open&voting.dcml\\00&question=46\\00)",
-    f"<VOTING>",
-    f"#ebox[%B](x:0,y:0,w:100%,h:10%)",
-    f"#font(R2C14,R2C14,RC14)",
-    f"#ctxt[%LIST1](%B[x:0,y:106,w:146,h:24],{{GW|open&news.dcml\\00|LW_lockall}},\"{{News & Events}}\")",
-    f"#ctxt[%LIST2](%B[x:0,y:%LIST1-9,w:146,h:24],{{GW|open&punishments.dcml\\00|LW_lockall}},\"{{Punishments}}\")",
-    f"#hint(%LIST2,\"List of punished players\")",
-    f"#font(RC14,GC14,RC14)",
-    f"#ctxt[%LIST3](%B[x:0,y:%LIST2-9,w:146,h:24],{{GW|open&forum.dcml\\00&last_view=0\\00|LW_lockall}},\"{{Forum}}\")",
-    f"#hint(%LIST3,\"Read and write forum messages\")",
-    f"#font(RC12,GC12,RC12)" if variables['mode'] == "1" else "#font(RC12,R2C12,RC12)",
-    f"#ctxt[%LIST4](%B[x:0,y:%LIST3-10,w:146,h:24],{{GW|open&forum.dcml\\00&mode=1^last_view=0\\00|LW_lockall}},\"{{All themes}}\")",
-    f"#font(RC12,GC12,RC12)" if variables['mode'] == "2" else "#font(RC12,R2C12,RC12)",
-    f"#ctxt[%LIST5](%B[x:0,y:%LIST4-1,w:146,h:24],{{GW|open&forum.dcml\\00&mode=2^last_view=0\\00|LW_lockall}},\"{{Last 10 messages}}\")",
-    f"#font(RC12,GC12,RC12)" if variables['mode'] == "3" else "#font(RC12,R2C12,RC12)",
-    f"#ctxt[%LIST6](%B[x:0,y:%LIST5-1,w:146,h:24],{{GW|open&forum.dcml\\00&mode=3^last_view=0\\00|LW_lockall}},\"{{Messages for this day}}\")",
-    f"#font(RC12,GC12,RC12)" if variables['mode'] == "4" else "#font(RC12,R2C12,RC12)",
-    f"#ctxt[%LIST7](%B[x:0,y:%LIST6-1,w:146,h:24],{{GW|open&forum.dcml\\00&mode=4^last_view=0\\00|LW_lockall}},\"{{Messages for this week}}\")",
-    f"#font(RC12,R2C12,RC12)",
-    f"#ctxt[%LIST8](%B[x:0,y:%LIST7-1,w:146,h:24],{{GW|open&forum_add.dcml\\00&last_view=0\\00|LW_lockall}},\"{{Add theme}}\")",
-    f"#hint(%LIST8,\"Create a new forum theme\")",
-    f"#font(RC12,R2C12,RC12)",
-    f"#ctxt[%LIST9](%B[x:0,y:%LIST8-1,w:146,h:24],{{GW|open&forum_search.dcml\\00&last_view=0\\00|LW_lockall}},\"{{Search}}\")",
-    f"#hint(%LIST9,\"Search a message by author or text\")",
-    f"#pan[%PAN](%B[x:154,y:42,w:526-3,h:291],7)",
-    f"#sbox[%SB](x:150,y:42+4,w:526+4,h:291-8)",
-    "".join(thread_list) + \
+    thread_strings = "".join(thread_list) + \
         f"#ebox[%B1](x:0,y:0,w:100%,h:100%)\
         #pan[%PAN0](%B1[x:390,y:8,w:0,h:359],10)" if thread_list else "".join([
         f"#font(BC14,WC14,BC14)",
@@ -741,12 +684,70 @@ def forum(variables: dict, database: Engine, **_) -> str:
             f"#font(RG18,RG18,RG18) ",
             f"#ctxt[%T0](%B[x:154,y:179,w:523,h:20],{{}},\"{{No search results}}\")",
             ]),
-    f"<NGDLG>",
-    f"<NGDLG>",
-    f"#block(cancel.cml,CAN)",
-    f"<NGDLG>",
-    f"<NGDLG>",
-    f"#end(CAN)"))
+    return (
+        f"#exec(LW_cfile&20230722144507&Cookies/%GV_FORUM_LAST_TIME)"
+        f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
+        f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)"
+        f"#pix[%PXT2](%TB[x:0,y:263,w:100%,h:100%],{{}},Internet/pix/i_pri0,13,13,13,13)"
+        f"#pan[%P1](%TB[x:42,y:0-22,w:0,h:80],10)"
+        f"#font(RG18,RG18,RG18)"
+        f"#txt[%PL](%TB[x:737,y:0,w:150,h:20],{{}},\"Players\")"
+        f"#font(BG18,BG18,BG18)"
+        f"#ctxt[%TTTEXT](%TB[x:0-62,y:0-32,w:1024,h:20],{{}},\"NEWS & EVENTS\")"
+        f"#font(R2C12,R2C12,R2C12)"
+        f"#txt[%TMTEXT](%TB[x:0,y:514,w:100,h:20],{{}},\"Message:\")"
+        f"#font(RC12,RC12,RC12)"
+        f"#def_gp_btn(Internet/pix/i_pri0,51,51,0,1)"
+        f"#gpbtn[%BT1](%TB[x:74,y:22,w:-22,h:-18],{{GW|open&news.dcml\\00&language=\\00|LW_lockall}},\"News & Events\")"
+        f"#hint(%BT1,\"News, events, forum and punishment list\")"
+        f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)"
+        f"#font(RC12,R2C12,RC12)"
+        f"#gpbtn[%BT2](%TB[x:196,y:23,w:-22,h:-18],{{GW|open&users_list.dcml\\00|LW_lockall}},\"Player List\")"
+        f"#hint(%BT2,\"Player list, personal mail and clan information\")"
+        f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)"
+        f"#font(RC12,R2C12,RC12)"
+        f"#gpbtn[%BT4](%TB[x:318,y:23,w:-22,h:-18],{{GW|open&games.dcml\\00|LW_lockall}},\"Custom Games\")"
+        f"#hint(%BT4,\"Play custom games\")"
+        f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)"
+        f"#font(RC12,R2C12,RC12)"
+        f"#gpbtn[%BT5](%TB[x:440,y:23,w:-22,h:-18],{{GW|open&scored_games.dcml\\00&player_id=0\\00|LW_lockall}},\"Scored Games\")"
+        f"#hint(%BT5,\"Played games and their scores\")"
+        f"#ebox[%B_VOTE](x:5,y:396,w:140,h:103)"
+        f"<VOTING>"
+        f"#exec(GW|open&voting.dcml\\00&question=46\\00)"
+        f"<VOTING>"
+        f"#ebox[%B](x:0,y:0,w:100%,h:10%)"
+        f"#font(R2C14,R2C14,RC14)"
+        f"#ctxt[%LIST1](%B[x:0,y:106,w:146,h:24],{{GW|open&news.dcml\\00|LW_lockall}},\"{{News & Events}}\")"
+        f"#ctxt[%LIST2](%B[x:0,y:%LIST1-9,w:146,h:24],{{GW|open&punishments.dcml\\00|LW_lockall}},\"{{Punishments}}\")"
+        f"#hint(%LIST2,\"List of punished players\")"
+        f"#font(RC14,GC14,RC14)"
+        f"#ctxt[%LIST3](%B[x:0,y:%LIST2-9,w:146,h:24],{{GW|open&forum.dcml\\00&last_view=0\\00|LW_lockall}},\"{{Forum}}\")"
+        f"#hint(%LIST3,\"Read and write forum messages\")"
+        f"#font(RC12,GC12,RC12)" if variables['mode'] == "1" else "#font(RC12,R2C12,RC12)"
+        f"#ctxt[%LIST4](%B[x:0,y:%LIST3-10,w:146,h:24],{{GW|open&forum.dcml\\00&mode=1^last_view=0\\00|LW_lockall}},\"{{All themes}}\")"
+        f"#font(RC12,GC12,RC12)" if variables['mode'] == "2" else "#font(RC12,R2C12,RC12)"
+        f"#ctxt[%LIST5](%B[x:0,y:%LIST4-1,w:146,h:24],{{GW|open&forum.dcml\\00&mode=2^last_view=0\\00|LW_lockall}},\"{{Last 10 messages}}\")"
+        f"#font(RC12,GC12,RC12)" if variables['mode'] == "3" else "#font(RC12,R2C12,RC12)"
+        f"#ctxt[%LIST6](%B[x:0,y:%LIST5-1,w:146,h:24],{{GW|open&forum.dcml\\00&mode=3^last_view=0\\00|LW_lockall}},\"{{Messages for this day}}\")"
+        f"#font(RC12,GC12,RC12)" if variables['mode'] == "4" else "#font(RC12,R2C12,RC12)"
+        f"#ctxt[%LIST7](%B[x:0,y:%LIST6-1,w:146,h:24],{{GW|open&forum.dcml\\00&mode=4^last_view=0\\00|LW_lockall}},\"{{Messages for this week}}\")"
+        f"#font(RC12,R2C12,RC12)"
+        f"#ctxt[%LIST8](%B[x:0,y:%LIST7-1,w:146,h:24],{{GW|open&forum_add.dcml\\00&last_view=0\\00|LW_lockall}},\"{{Add theme}}\")"
+        f"#hint(%LIST8,\"Create a new forum theme\")"
+        f"#font(RC12,R2C12,RC12)"
+        f"#ctxt[%LIST9](%B[x:0,y:%LIST8-1,w:146,h:24],{{GW|open&forum_search.dcml\\00&last_view=0\\00|LW_lockall}},\"{{Search}}\")"
+        f"#hint(%LIST9,\"Search a message by author or text\")"
+        f"#pan[%PAN](%B[x:154,y:42,w:526-3,h:291],7)"
+        f"#sbox[%SB](x:150,y:42+4,w:526+4,h:291-8)"
+        f"{thread_strings}"
+        f"<NGDLG>"
+        f"<NGDLG>"
+        f"#block(cancel.cml,CAN)"
+        f"<NGDLG>"
+        f"<NGDLG>"
+        f"#end(CAN)"
+    )
 
 def games(**_) -> str:
     return (
@@ -800,60 +801,60 @@ def join_game(variables: dict, database: Engine, **_) -> str:
             lobby = connection.execute(text(f"SELECT players, max_players, ip, password, (SELECT nick FROM players WHERE players.player_id = lobbies.host_id) as nick FROM lobbies WHERE id = {id_room} LIMIT 1")).fetchone()
     if lobby:
         if lobby.max_players <= lobby.players:
-            return " ".join((
-                f"<NGDLG>",
-                f"#ebox[%L0](x:0,y:0,w:100%,h:100%)",
-                f"#pix[%PX1](%L0[x:0-62,y:0-136,w:1024,h:768],{{}},Interf3/internet,0,0,0,0)",
-                f"#exec(LW_enbbox&0&%L0)",
-                f"#exec(LW_enbbox&0&%B)",
-                f"#exec(LW_enbbox&0&%FLBOX)",
-                f"#exec(LW_enbbox&0&%BP)",
-                f"#exec(LW_enbbox&0&%L)",
-                f"#exec(LW_enbbox&0&%BB)",
-                f"#exec(LW_enbbox&0&%B1)",
-                f"#exec(LW_enbbox&0&%BG)",
-                f"#exec(LW_enbbox&0&%B2)",
-                f"#exec(LW_enbbox&0&%BPANEL)",
-                f"#exec(LW_enbbox&0&%BPANEL2)",
-                f"#exec(LW_enbbox&0&%TB)",
-                f"#exec(LW_enbbox&0&%B_VOTE)",
-                f"#exec(LW_enbbox&0&%MBG)",
-                f"#exec(LW_enbbox&0&%B0)",
-                f"#exec(LW_enbbox&0&%M)",
-                f"#exec(LW_enbbox&0&%LB)",
-                f"#exec(LW_enbbox&0&%MB)",
-                f"#exec(LW_enbbox&0&%EBG)",
-                f"#exec(LW_enbbox&0&%LBX)",
-                f"#exec(LW_enbbox&0&%BARDLD)",
-                f"#exec(LW_enbbox&0&%BF2)",
-                f"#exec(LW_enbbox&0&%B01)",
-                f"#exec(LW_enbbox&0&%BF)",
-                f"#exec(LW_enbbox&0&%BTABLE2)",
-                f"#exec(LW_enbbox&0&%SB)",
-                f"#ebox[%BTABLE](x:0,y:0,w:100%,h:100%)",
-                f"#font(BC12,BC12,BC12)",
-                f"#def_panel(11,Interf3/elements/b02,21,20,14,15,4,5,12,16,8,8)",
-                f"#pan[%MPN](%BTABLE[x:242,y:115+15,w:415,h:220-15],11)",
-                f"#pix[%PXP1](%BTABLE[x:242+20,y:115+20,w:100%,h:100%],{{}},Internet/pix/i_pri0,32,32,32,32)",
-                f"#pix[%PX2](%BTABLE[x:522,y:115-10,w:50,h:70],{{}},Interf3/elements/head01,2,2,2,2)",
-                f"#pix[%PX3](%BTABLE[x:327,y:115-10,w:50,h:70],{{}},Interf3/elements/head01,2,2,2,2)",
-                f"#pix[%PX4](%BTABLE[x:377,y:115-10,w:50,h:70],{{}},Interf3/elements/head01,2,2,2,2)",
-                f"#pix[%PX5](%BTABLE[x:427,y:115-10,w:50,h:70],{{}},Interf3/elements/head01,2,2,2,2)",
-                f"#pix[%PX6](%BTABLE[x:477,y:115-10,w:50,h:70],{{}},Interf3/elements/head01,2,2,2,2)",
-                f"#pix[%PX0](%BTABLE[x:317,y:115-10,w:90,h:70],{{}},Interf3/elements/head01,0,0,0,0)",
-                f"#pix[%PX1](%BTABLE[x:572,y:115-10,w:90,h:70],{{}},Interf3/elements/head01,1,1,1,1)",
-                f"#font(BG18,BG18,RG18)",
-                f"#ctxt[%TTEXT](%BTABLE[x:242,y:115-1,w:415,h:20],{{0}},\"ERROR\")",
-                f"#font(BC12,RC12,RC12)",
-                f"#ctxt[%MTEXT0](%BTABLE[x:242+20,y:115+22,w:415-40,h:20],{{}},\"This lobby is full\")",
-                f"#exec(LW_vis&0&%MTEXT0)",
-                f"#ctxt[%MTEXT](%BTABLE[x:242+20,yc:225-3,w:415-40,h:%MTEXT0-115-159],{{}},\"This lobby is full\")",
-                f"#def_gp_btn(Internet/pix/i_pri0,49,50,0,0)",
-                f"#font(WG14,BG14,WG14)",
+            return (
+                f"<NGDLG>"
+                f"#ebox[%L0](x:0,y:0,w:100%,h:100%)"
+                f"#pix[%PX1](%L0[x:0-62,y:0-136,w:1024,h:768],{{}},Interf3/internet,0,0,0,0)"
+                f"#exec(LW_enbbox&0&%L0)"
+                f"#exec(LW_enbbox&0&%B)"
+                f"#exec(LW_enbbox&0&%FLBOX)"
+                f"#exec(LW_enbbox&0&%BP)"
+                f"#exec(LW_enbbox&0&%L)"
+                f"#exec(LW_enbbox&0&%BB)"
+                f"#exec(LW_enbbox&0&%B1)"
+                f"#exec(LW_enbbox&0&%BG)"
+                f"#exec(LW_enbbox&0&%B2)"
+                f"#exec(LW_enbbox&0&%BPANEL)"
+                f"#exec(LW_enbbox&0&%BPANEL2)"
+                f"#exec(LW_enbbox&0&%TB)"
+                f"#exec(LW_enbbox&0&%B_VOTE)"
+                f"#exec(LW_enbbox&0&%MBG)"
+                f"#exec(LW_enbbox&0&%B0)"
+                f"#exec(LW_enbbox&0&%M)"
+                f"#exec(LW_enbbox&0&%LB)"
+                f"#exec(LW_enbbox&0&%MB)"
+                f"#exec(LW_enbbox&0&%EBG)"
+                f"#exec(LW_enbbox&0&%LBX)"
+                f"#exec(LW_enbbox&0&%BARDLD)"
+                f"#exec(LW_enbbox&0&%BF2)"
+                f"#exec(LW_enbbox&0&%B01)"
+                f"#exec(LW_enbbox&0&%BF)"
+                f"#exec(LW_enbbox&0&%BTABLE2)"
+                f"#exec(LW_enbbox&0&%SB)"
+                f"#ebox[%BTABLE](x:0,y:0,w:100%,h:100%)"
+                f"#font(BC12,BC12,BC12)"
+                f"#def_panel(11,Interf3/elements/b02,21,20,14,15,4,5,12,16,8,8)"
+                f"#pan[%MPN](%BTABLE[x:242,y:115+15,w:415,h:220-15],11)"
+                f"#pix[%PXP1](%BTABLE[x:242+20,y:115+20,w:100%,h:100%],{{}},Internet/pix/i_pri0,32,32,32,32)"
+                f"#pix[%PX2](%BTABLE[x:522,y:115-10,w:50,h:70],{{}},Interf3/elements/head01,2,2,2,2)"
+                f"#pix[%PX3](%BTABLE[x:327,y:115-10,w:50,h:70],{{}},Interf3/elements/head01,2,2,2,2)"
+                f"#pix[%PX4](%BTABLE[x:377,y:115-10,w:50,h:70],{{}},Interf3/elements/head01,2,2,2,2)"
+                f"#pix[%PX5](%BTABLE[x:427,y:115-10,w:50,h:70],{{}},Interf3/elements/head01,2,2,2,2)"
+                f"#pix[%PX6](%BTABLE[x:477,y:115-10,w:50,h:70],{{}},Interf3/elements/head01,2,2,2,2)"
+                f"#pix[%PX0](%BTABLE[x:317,y:115-10,w:90,h:70],{{}},Interf3/elements/head01,0,0,0,0)"
+                f"#pix[%PX1](%BTABLE[x:572,y:115-10,w:90,h:70],{{}},Interf3/elements/head01,1,1,1,1)"
+                f"#font(BG18,BG18,RG18)"
+                f"#ctxt[%TTEXT](%BTABLE[x:242,y:115-1,w:415,h:20],{{0}},\"ERROR\")"
+                f"#font(BC12,RC12,RC12)"
+                f"#ctxt[%MTEXT0](%BTABLE[x:242+20,y:115+22,w:415-40,h:20],{{}},\"This lobby is full\")"
+                f"#exec(LW_vis&0&%MTEXT0)"
+                f"#ctxt[%MTEXT](%BTABLE[x:242+20,yc:225-3,w:415-40,h:%MTEXT0-115-159],{{}},\"This lobby is full\")"
+                f"#def_gp_btn(Internet/pix/i_pri0,49,50,0,0)"
+                f"#font(WG14,BG14,WG14)"
                 f"#gpbtn[%PXBT](%BTABLE[x:520-433,y:303-16,w:100%,h:70],{{GW|open&cancel.dcml\\00|LW_lockall}},\"OK\")"
                 f"<NGDLG>"
-            ))
-
+            )
+        # TODO: PROBABLY NOT NEEDED
         # elif lobby.host.profileID == player.profileID:
         #     id_room=variables.get("id_room", "")
         #     return " ".join((
@@ -868,89 +869,89 @@ def join_game(variables: dict, database: Engine, **_) -> str:
             if lobby.password:
                 if variables.get("password", "") == "":
                     id_room=variables.get("id_room", "")
-                    return " ".join((
-                        f"<NGDLG>",
-                        f"#exec(LW_cfile&\\00&Bastet/%GV_VE_PASSWD)",
-                        f"#ebox[%BF](x:0,y:0,w:100%,h:100%)",
-                        f"#table[%TBL](%BF[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&join_game.dcml\\00&delete_old=true^id_room={id_room}^password=<%GV_VE_PASSWD>\\00|LW_lockall}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"JOIN\",,26,\"JOIN\",\"Cancel\")",
-                        f"#ebox[%L](x:245,y:100,w:450,h:210)",
-                        f"#font(BC12,RC12,RC12)",
-                        f"#txt[%L_PASS](%L[x:11,y:95,w:360,h:20],{{}},\"Enter the password:\")",
-                        f"#pan[%P_PASS](%L[x:15,y:114,w:382,h:14],1)",
-                        f"#font(BC12,GC12,GC12)",
-                        f"#edit[%E_PASS](%L[x:19,y:113,w:377,h:18],{{%GV_VE_PASSWD}},0,0,1,1)",
+                    return (
                         f"<NGDLG>"
-                    ))
+                        f"#exec(LW_cfile&\\00&Bastet/%GV_VE_PASSWD)"
+                        f"#ebox[%BF](x:0,y:0,w:100%,h:100%)"
+                        f"#table[%TBL](%BF[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&join_game.dcml\\00&delete_old=true^id_room={id_room}^password=<%GV_VE_PASSWD>\\00|LW_lockall}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"JOIN\",,26,\"JOIN\",\"Cancel\")"
+                        f"#ebox[%L](x:245,y:100,w:450,h:210)"
+                        f"#font(BC12,RC12,RC12)"
+                        f"#txt[%L_PASS](%L[x:11,y:95,w:360,h:20],{{}},\"Enter the password:\")"
+                        f"#pan[%P_PASS](%L[x:15,y:114,w:382,h:14],1)"
+                        f"#font(BC12,GC12,GC12)"
+                        f"#edit[%E_PASS](%L[x:19,y:113,w:377,h:18],{{%GV_VE_PASSWD}},0,0,1,1)"
+                        f"<NGDLG>"
+                    )
                 elif variables.get("password", "") != lobby.password:
-                    return " ".join((
-                        f"<NGDLG>",
-                        f"#ebox[%L0](x:0,y:0,w:100%,h:100%)",
-                        f"#pix[%PX1](%L0[x:0-62,y:0-136,w:1024,h:768],{{}},Interf3/internet,0,0,0,0)",
-                        f"#exec(LW_enbbox&0&%L0)",
-                        f"#exec(LW_enbbox&0&%B)",
-                        f"#exec(LW_enbbox&0&%FLBOX)",
-                        f"#exec(LW_enbbox&0&%BP)",
-                        f"#exec(LW_enbbox&0&%L)",
-                        f"#exec(LW_enbbox&0&%BB)",
-                        f"#exec(LW_enbbox&0&%B1)",
-                        f"#exec(LW_enbbox&0&%BG)",
-                        f"#exec(LW_enbbox&0&%B2)",
-                        f"#exec(LW_enbbox&0&%BPANEL)",
-                        f"#exec(LW_enbbox&0&%BPANEL2)",
-                        f"#exec(LW_enbbox&0&%TB)",
-                        f"#exec(LW_enbbox&0&%B_VOTE)",
-                        f"#exec(LW_enbbox&0&%MBG)",
-                        f"#exec(LW_enbbox&0&%B0)",
-                        f"#exec(LW_enbbox&0&%M)",
-                        f"#exec(LW_enbbox&0&%LB)",
-                        f"#exec(LW_enbbox&0&%MB)",
-                        f"#exec(LW_enbbox&0&%EBG)",
-                        f"#exec(LW_enbbox&0&%LBX)",
-                        f"#exec(LW_enbbox&0&%BARDLD)",
-                        f"#exec(LW_enbbox&0&%BF2)",
-                        f"#exec(LW_enbbox&0&%B01)",
-                        f"#exec(LW_enbbox&0&%BF)",
-                        f"#exec(LW_enbbox&0&%BTABLE2)",
-                        f"#exec(LW_enbbox&0&%SB)",
-                        f"#ebox[%BTABLE](x:0,y:0,w:100%,h:100%)",
-                        f"#font(BC12,BC12,BC12)",
-                        f"#def_panel(11,Interf3/elements/b02,21,20,14,15,4,5,12,16,8,8)",
-                        f"#pan[%MPN](%BTABLE[x:242,y:115+15,w:415,h:220-15],11)",
-                        f"#pix[%PXP1](%BTABLE[x:242+20,y:115+20,w:100%,h:100%],{{}},Internet/pix/i_pri0,32,32,32,32)",
-                        f"#pix[%PX2](%BTABLE[x:522,y:115-10,w:50,h:70],{{}},Interf3/elements/head01,2,2,2,2)",
-                        f"#pix[%PX3](%BTABLE[x:327,y:115-10,w:50,h:70],{{}},Interf3/elements/head01,2,2,2,2)",
-                        f"#pix[%PX4](%BTABLE[x:377,y:115-10,w:50,h:70],{{}},Interf3/elements/head01,2,2,2,2)",
-                        f"#pix[%PX5](%BTABLE[x:427,y:115-10,w:50,h:70],{{}},Interf3/elements/head01,2,2,2,2)",
-                        f"#pix[%PX6](%BTABLE[x:477,y:115-10,w:50,h:70],{{}},Interf3/elements/head01,2,2,2,2)",
-                        f"#pix[%PX0](%BTABLE[x:317,y:115-10,w:90,h:70],{{}},Interf3/elements/head01,0,0,0,0)",
-                        f"#pix[%PX1](%BTABLE[x:572,y:115-10,w:90,h:70],{{}},Interf3/elements/head01,1,1,1,1)",
-                        f"#font(BG18,BG18,RG18)",
-                        f"#ctxt[%TTEXT](%BTABLE[x:242,y:115-1,w:415,h:20],{{0}},\"ERROR\")",
-                        f"#font(BC12,RC12,RC12)",
-                        f"#ctxt[%MTEXT0](%BTABLE[x:242+20,y:115+22,w:415-40,h:20],{{}},\"Incorrect password!\")",
-                        f"#exec(LW_vis&0&%MTEXT0)",
-                        f"#ctxt[%MTEXT](%BTABLE[x:242+20,yc:225-3,w:415-40,h:%MTEXT0-115-159],{{}},\"Incorrect password!\")",
-                        f"#def_gp_btn(Internet/pix/i_pri0,49,50,0,0)",
-                        f"#font(WG14,BG14,WG14)",
-                        f"#gpbtn[%PXBT](%BTABLE[x:520-433,y:303-16,w:100%,h:70],{{GW|open&cancel.dcml\\00|LW_lockall}},\"OK\")",
+                    return (
                         f"<NGDLG>"
-                    ))
+                        f"#ebox[%L0](x:0,y:0,w:100%,h:100%)"
+                        f"#pix[%PX1](%L0[x:0-62,y:0-136,w:1024,h:768],{{}},Interf3/internet,0,0,0,0)"
+                        f"#exec(LW_enbbox&0&%L0)"
+                        f"#exec(LW_enbbox&0&%B)"
+                        f"#exec(LW_enbbox&0&%FLBOX)"
+                        f"#exec(LW_enbbox&0&%BP)"
+                        f"#exec(LW_enbbox&0&%L)"
+                        f"#exec(LW_enbbox&0&%BB)"
+                        f"#exec(LW_enbbox&0&%B1)"
+                        f"#exec(LW_enbbox&0&%BG)"
+                        f"#exec(LW_enbbox&0&%B2)"
+                        f"#exec(LW_enbbox&0&%BPANEL)"
+                        f"#exec(LW_enbbox&0&%BPANEL2)"
+                        f"#exec(LW_enbbox&0&%TB)"
+                        f"#exec(LW_enbbox&0&%B_VOTE)"
+                        f"#exec(LW_enbbox&0&%MBG)"
+                        f"#exec(LW_enbbox&0&%B0)"
+                        f"#exec(LW_enbbox&0&%M)"
+                        f"#exec(LW_enbbox&0&%LB)"
+                        f"#exec(LW_enbbox&0&%MB)"
+                        f"#exec(LW_enbbox&0&%EBG)"
+                        f"#exec(LW_enbbox&0&%LBX)"
+                        f"#exec(LW_enbbox&0&%BARDLD)"
+                        f"#exec(LW_enbbox&0&%BF2)"
+                        f"#exec(LW_enbbox&0&%B01)"
+                        f"#exec(LW_enbbox&0&%BF)"
+                        f"#exec(LW_enbbox&0&%BTABLE2)"
+                        f"#exec(LW_enbbox&0&%SB)"
+                        f"#ebox[%BTABLE](x:0,y:0,w:100%,h:100%)"
+                        f"#font(BC12,BC12,BC12)"
+                        f"#def_panel(11,Interf3/elements/b02,21,20,14,15,4,5,12,16,8,8)"
+                        f"#pan[%MPN](%BTABLE[x:242,y:115+15,w:415,h:220-15],11)"
+                        f"#pix[%PXP1](%BTABLE[x:242+20,y:115+20,w:100%,h:100%],{{}},Internet/pix/i_pri0,32,32,32,32)"
+                        f"#pix[%PX2](%BTABLE[x:522,y:115-10,w:50,h:70],{{}},Interf3/elements/head01,2,2,2,2)"
+                        f"#pix[%PX3](%BTABLE[x:327,y:115-10,w:50,h:70],{{}},Interf3/elements/head01,2,2,2,2)"
+                        f"#pix[%PX4](%BTABLE[x:377,y:115-10,w:50,h:70],{{}},Interf3/elements/head01,2,2,2,2)"
+                        f"#pix[%PX5](%BTABLE[x:427,y:115-10,w:50,h:70],{{}},Interf3/elements/head01,2,2,2,2)"
+                        f"#pix[%PX6](%BTABLE[x:477,y:115-10,w:50,h:70],{{}},Interf3/elements/head01,2,2,2,2)"
+                        f"#pix[%PX0](%BTABLE[x:317,y:115-10,w:90,h:70],{{}},Interf3/elements/head01,0,0,0,0)"
+                        f"#pix[%PX1](%BTABLE[x:572,y:115-10,w:90,h:70],{{}},Interf3/elements/head01,1,1,1,1)"
+                        f"#font(BG18,BG18,RG18)"
+                        f"#ctxt[%TTEXT](%BTABLE[x:242,y:115-1,w:415,h:20],{{0}},\"ERROR\")"
+                        f"#font(BC12,RC12,RC12)"
+                        f"#ctxt[%MTEXT0](%BTABLE[x:242+20,y:115+22,w:415-40,h:20],{{}},\"Incorrect password!\")"
+                        f"#exec(LW_vis&0&%MTEXT0)"
+                        f"#ctxt[%MTEXT](%BTABLE[x:242+20,yc:225-3,w:415-40,h:%MTEXT0-115-159],{{}},\"Incorrect password!\")"
+                        f"#def_gp_btn(Internet/pix/i_pri0,49,50,0,0)"
+                        f"#font(WG14,BG14,WG14)"
+                        f"#gpbtn[%PXBT](%BTABLE[x:520-433,y:303-16,w:100%,h:70],{{GW|open&cancel.dcml\\00|LW_lockall}},\"OK\")"
+                        f"<NGDLG>"
+                    )
             id_room = variables.get("id_room", "")
-            return " ".join((
-                f"<NGDLG>",
-                f"#exec(LW_cfile&\\00&Bastet/%GV_VE_PASSWD)",
-                f"#ebox[%BF](x:0,y:0,w:100%,h:100%)",
-                f"#table[%TBL](%BF[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&cancel.dcml\\00|LW_lockall}},2,0,3,13,252,\"JOIN\",\"Connecting...\\Please, wait.\",26,\"Cancel\")",
-                f"#exec(LW_gvar&%CG_GAMEID&{id_room}&%CG_MAXPL&{str(lobby.max_players)}&%CG_GAMENAME&{'namehere'}&%COMMAND&JGAME&%CG_IP&{lobby.ip}:{34000})",
-                f"<NGDLG>"
-                ))
-    return " ".join((
-        f"<NGDLG>",
-        f"#exec(LW_cfile&\\00&Bastet/%GV_VE_PASSWD)",
-        f"#ebox[%BF](x:0,y:0,w:100%,h:100%)",
-        f"#table[%TBL](%BF[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&join_game.dcml\\00&id_room={id_room}\\00|LW_lockall}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"ERROR\",\"You cannot join the room! This is an incorrect room. Press Cancel button to exit\",26,\"Try Again\",\"Cancel\")",
+            return (
+                    f"<NGDLG>"
+                    f"#exec(LW_cfile&\\00&Bastet/%GV_VE_PASSWD)"
+                    f"#ebox[%BF](x:0,y:0,w:100%,h:100%)"
+                    f"#table[%TBL](%BF[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&cancel.dcml\\00|LW_lockall}},2,0,3,13,252,\"JOIN\",\"Connecting...\\Please, wait.\",26,\"Cancel\")"
+                    f"#exec(LW_gvar&%CG_GAMEID&{id_room}&%CG_MAXPL&{str(lobby.max_players)}&%CG_GAMENAME&{'namehere'}&%COMMAND&JGAME&%CG_IP&{lobby.ip}:{34000})"
+                    f"<NGDLG>"
+                )
+    return (
         f"<NGDLG>"
-    ))
+        f"#exec(LW_cfile&\\00&Bastet/%GV_VE_PASSWD)"
+        f"#ebox[%BF](x:0,y:0,w:100%,h:100%)"
+        f"#table[%TBL](%BF[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&join_game.dcml\\00&id_room={id_room}\\00|LW_lockall}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"ERROR\",\"You cannot join the room! This is an incorrect room. Press Cancel button to exit\",26,\"Try Again\",\"Cancel\")"
+        f"<NGDLG>"
+    )
 
 def join_pl_cmd(variables: dict, player_id: str | int, **_) -> str:
     if variables['VE_PLAYER'] == str(player_id):
@@ -1029,92 +1030,78 @@ def log_new_form(variables: dict, database: Engine, **_) -> str:
         countries = ",".join(countries)
 
     if variables['VE_MODE'] == "edit":
-        return " ".join((
-            f"#ebox[%EBG](x:0,y:0,w:1024,h:768)",
-            f"#edit[%E_LUP](%EBG[x:0,y:0,w:0,h:0],{{%GV_LAST_UPDATE}})",
-            f"#block(cancel.cml,l_g):<!goback!>\\00",
-            f"#end(l_g)",
-            f"#def_dtbl_button_hotkey(13,0,27)",
-            f"#table[%TBL](%EBG[x:251,y:247,w:523,h:381],{{}}{{}}{{GW|open&reg_new_user.dcml\\00&cansel=true^VE_PROF={variables['VE_PROF']}^VE_MODE=edit^VE_NAME=<%GV_VE_NAME>^VE_NICK=<%GV_VE_NICK>^VE_MAIL=<%GV_VE_MAIL>^VE_GMID=<%GV_VE_GMID>^VE_PASS=<%GV_VE_PASS>^VE_RASS=<%GV_VE_RASS>^VE_ICQ=<%GV_VE_ICQ>^VE_HOMP=<%GV_VE_HOMP>^VE_SEX=<%GV_VE_SEX>^VE_CNTRY=<%GV_VE_CNTRY>^VE_PHON=<%GV_VE_PHON>^VE_BIRTH=<%GV_VE_BIRTH>^accounts={variables['accounts']}\\00|LW_lockall}}{{GW|open&log_new_form.dcml\\00&logs=1^cansel=true^VE_MODE=creat^accounts={variables['accounts']}\\00|LW_lockall}}{{LW_file&Internet/Cash/cancel.cml}},0,11,368,EDIT PERSONAL PROFILE,,26,Update,\"New account\",\"Cancel\")",
-            f"#ebox[%LBX](x:270,y:210,w:500,h:220)",
-            f"#font(BC14,RC14,RC14))",
-
-            f"#txt[%L_NAME](%LBX[x:4,y:56,w:100%,h:20],{{}},\"Full Name\")",
-            f"#pan[%P_NAME](%LBX[x:159,y:56,w:317,h:14],1)",
-            f"#exec(LW_cfile&{variables['VE_NAME']}\\00&Cookies/%GV_VE_NAME)",
-            f"#edit[%E_NAME](%LBX[x:164,y:53,w:302,h:18],{{%GV_VE_NAME}},0,0,0,1)",
-
-            f"#txt[%L_NICK](%LBX[x:4,y:84,w:100%,h:20],{{}},\"Nickname\")",
-            f"#pan[%P_NICK](%LBX[x:159,y:84,w:317,h:14],1)",
-            f"#exec(LW_cfile&{variables['VE_NICK']}\\00&Cookies/%GV_VE_NICK)",
-            f"#edit[%E_NICK](%LBX[x:164,y:81,w:302,h:18],{{%GV_VE_NICK}})",
-
-            f"#txt[%L_MAIL](%LBX[x:4,y:112,w:100%,h:20],{{}},\"E-Mail Address\")",
-            f"#pan[%P_MAIL](%LBX[x:159,y:112,w:317,h:14],1)",
-            f"#exec(LW_cfile&{variables['VE_MAIL']}\\00&Cookies/%GV_VE_MAIL)",
-            f"#edit[%E_MAIL](%LBX[x:164,y:109,w:302,h:18],{{%GV_VE_MAIL}})",
-
-            f"#txt[%L_GMID](%LBX[x:4,y:140,w:100%,h:20],{{}},\"Game Box #ID\")",
-            f"#pan[%P_GMID](%LBX[x:159,y:140,w:317,h:14],1)",
-            f"#exec(LW_cfile&\\00&Cookies/%GV_VE_GMID)",
-            f"#edit[%E_GMID](%LBX[x:164,y:137,w:302,h:18],{{%GV_VE_GMID}},0,0,1)",
-
-            f"#txt[%L_PASS](%LBX[x:4,y:168,w:100%,h:20],{{}},\"User Password\")",
-            f"#pan[%P_PASS](%LBX[x:159,y:168,w:317,h:14],1)",
-            f"#exec(LW_cfile&\\00&Cookies/%GV_VE_PASS)",
-            f"#edit[%E_PASS](%LBX[x:164,y:165,w:302,h:18],{{%GV_VE_PASS}},0,0,1)",
-
-            f"#txt[%L_RASS](%LBX[x:4,y:196,w:100%,h:20],{{}},\"Change password to\")",
-            f"#pan[%P_RASS](%LBX[x:159,y:196,w:317,h:14],1)",
-            f"#exec(LW_cfile&\\00&Cookies/%GV_VE_RASS)",
-            f"#edit[%E_RASS](%LBX[x:164,y:193,w:302,h:18],{{%GV_VE_RASS}},0,0,1)",
-
-            f"#txt[%L_ICQ](%LBX[x:4,y:224,w:100%,h:20],{{}},\"ICQ #ID\")",
-            f"#pan[%P_ICQ](%LBX[x:159,y:224,w:317,h:14],1)",
-            f"#exec(LW_cfile&{variables['VE_ICQ']}\\00&Cookies/%GV_VE_ICQ)",
-            f"#edit[%E_ICQ](%LBX[x:164,y:221,w:302,h:18],{{%GV_VE_ICQ}})",
-
-            f"#txt[%L_HOMP](%LBX[x:4,y:252,w:100%,h:20],{{}},\"Internet Homepage\")",
-            f"#pan[%P_HOMP](%LBX[x:159,y:252,w:317,h:14],1)",
-            f"#exec(LW_cfile&{variables['VE_HOMP']}\\00&Cookies/%GV_VE_HOMP)",
-            f"#edit[%E_HOMP](%LBX[x:164,y:249,w:302,h:18],{{%GV_VE_HOMP}})",
-
-            f"#txt[%L_SEX](%LBX[x:4,y:280,w:100%,h:20],{{}},\"Gender\")",
-            f"#exec(LW_cfile&{int(variables['VE_SEX'])-1}\\00&Cookies/%GV_VE_SEX)",
-            f"#cbb[%E_SEX](%LBX[x:153,y:273,w:329,h:18],{{%GV_VE_SEX}},{genders},0)",
-
-            f"#txt[%L_CNTRY](%LBX[x:4,y:308,w:100%,h:20],{{}},\"Country\")",
-            f"#exec(LW_cfile&{int(variables['VE_CNTRY'])-1}\\00&Cookies/%GV_VE_CNTRY)",
-            f"#cbb[%E_CNTRY](%LBX[x:153,y:301,w:329,h:18],{{%GV_VE_CNTRY}},{countries},0)",
-
-            f"#txt[%L_PHON](%LBX[x:4,y:336,w:100%,h:20],{{}},\"Home Phone\")",
-            f"#pan[%P_PHON](%LBX[x:159,y:336,w:317,h:14],1)",
-            f"#exec(LW_cfile&{variables['VE_PHON']}\\00&Cookies/%GV_VE_PHON)",
-            f"#edit[%E_PHON](%LBX[x:164,y:333,w:302,h:18],{{%GV_VE_PHON}})",
-
-            f"#txt[%L_BIRTH](%LBX[x:4,y:364,w:100%,h:20],{{}},\"Birthday (D/M/Y)\")",
-            f"#pan[%P_BIRTH](%LBX[x:159,y:364,w:317,h:14],1)",
-            f"#exec(LW_cfile&{variables['VE_BIRTH']}\\00&Cookies/%GV_VE_BIRTH)",
-            f"#edit[%E_BIRTH](%LBX[x:164,y:361,w:302,h:18],{{%GV_VE_BIRTH}})",
-
-            f"<MESDLG><MESDLG>",
-            f"#block(l_games_btn.cml,CAN)<MESDLG><MESDLG>",
-            f"#end(CAN)",
-
-            f"#hint(%L_NAME,\"Enter your name\")",
-            f"#hint(%L_NICK,\"Enter your nickname\")",
-            f"#hint(%L_MAIL,\"Enter your e-mail address\")",
-            f"#hint(%L_PASS,\"Enter your password\")",
-            f"#hint(%L_RASS,\"Change password to\")",
-            f"#hint(%L_GMID,\"Enter your GameBox ID#\")",
-            f"#hint(%L_ICQ,\"Enter your ICQ number\")",
-            f"#hint(%L_HOMP,\"Enter your homepage\")",
-            f"#hint(%L_SEX,\"Select your sex\")",
-            f"#hint(%L_CNTRY,\"Select country\")",
-            f"#hint(%L_PHON,\"Enter your home phone number\")",
-            f"#hint(%L_BIRTH,\"Enter your birth date (DD/MM/YYYY)\")",
-            f"#hint(%New account,\"Create a new account\")",
-        ))
+        return (
+            f"#ebox[%EBG](x:0,y:0,w:1024,h:768)"
+            f"#edit[%E_LUP](%EBG[x:0,y:0,w:0,h:0],{{%GV_LAST_UPDATE}})"
+            f"#block(cancel.cml,l_g):<!goback!>\\00"
+            f"#end(l_g)"
+            f"#def_dtbl_button_hotkey(13,0,27)"
+            f"#table[%TBL](%EBG[x:251,y:247,w:523,h:381],{{}}{{}}{{GW|open&reg_new_user.dcml\\00&cansel=true^VE_PROF={variables['VE_PROF']}^VE_MODE=edit^VE_NAME=<%GV_VE_NAME>^VE_NICK=<%GV_VE_NICK>^VE_MAIL=<%GV_VE_MAIL>^VE_GMID=<%GV_VE_GMID>^VE_PASS=<%GV_VE_PASS>^VE_RASS=<%GV_VE_RASS>^VE_ICQ=<%GV_VE_ICQ>^VE_HOMP=<%GV_VE_HOMP>^VE_SEX=<%GV_VE_SEX>^VE_CNTRY=<%GV_VE_CNTRY>^VE_PHON=<%GV_VE_PHON>^VE_BIRTH=<%GV_VE_BIRTH>^accounts={variables['accounts']}\\00|LW_lockall}}{{GW|open&log_new_form.dcml\\00&logs=1^cansel=true^VE_MODE=creat^accounts={variables['accounts']}\\00|LW_lockall}}{{LW_file&Internet/Cash/cancel.cml}},0,11,368,EDIT PERSONAL PROFILE,,26,Update,\"New account\",\"Cancel\")"
+            f"#ebox[%LBX](x:270,y:210,w:500,h:220)"
+            f"#font(BC14,RC14,RC14))"
+            f"#txt[%L_NAME](%LBX[x:4,y:56,w:100%,h:20],{{}},\"Full Name\")"
+            f"#pan[%P_NAME](%LBX[x:159,y:56,w:317,h:14],1)"
+            f"#exec(LW_cfile&{variables['VE_NAME']}\\00&Cookies/%GV_VE_NAME)"
+            f"#edit[%E_NAME](%LBX[x:164,y:53,w:302,h:18],{{%GV_VE_NAME}},0,0,0,1)"
+            f"#txt[%L_NICK](%LBX[x:4,y:84,w:100%,h:20],{{}},\"Nickname\")"
+            f"#pan[%P_NICK](%LBX[x:159,y:84,w:317,h:14],1)"
+            f"#exec(LW_cfile&{variables['VE_NICK']}\\00&Cookies/%GV_VE_NICK)"
+            f"#edit[%E_NICK](%LBX[x:164,y:81,w:302,h:18],{{%GV_VE_NICK}})"
+            f"#txt[%L_MAIL](%LBX[x:4,y:112,w:100%,h:20],{{}},\"E-Mail Address\")"
+            f"#pan[%P_MAIL](%LBX[x:159,y:112,w:317,h:14],1)"
+            f"#exec(LW_cfile&{variables['VE_MAIL']}\\00&Cookies/%GV_VE_MAIL)"
+            f"#edit[%E_MAIL](%LBX[x:164,y:109,w:302,h:18],{{%GV_VE_MAIL}})"
+            f"#txt[%L_GMID](%LBX[x:4,y:140,w:100%,h:20],{{}},\"Game Box #ID\")"
+            f"#pan[%P_GMID](%LBX[x:159,y:140,w:317,h:14],1)"
+            f"#exec(LW_cfile&\\00&Cookies/%GV_VE_GMID)"
+            f"#edit[%E_GMID](%LBX[x:164,y:137,w:302,h:18],{{%GV_VE_GMID}},0,0,1)"
+            f"#txt[%L_PASS](%LBX[x:4,y:168,w:100%,h:20],{{}},\"User Password\")"
+            f"#pan[%P_PASS](%LBX[x:159,y:168,w:317,h:14],1)"
+            f"#exec(LW_cfile&\\00&Cookies/%GV_VE_PASS)"
+            f"#edit[%E_PASS](%LBX[x:164,y:165,w:302,h:18],{{%GV_VE_PASS}},0,0,1)"
+            f"#txt[%L_RASS](%LBX[x:4,y:196,w:100%,h:20],{{}},\"Change password to\")"
+            f"#pan[%P_RASS](%LBX[x:159,y:196,w:317,h:14],1)"
+            f"#exec(LW_cfile&\\00&Cookies/%GV_VE_RASS)"
+            f"#edit[%E_RASS](%LBX[x:164,y:193,w:302,h:18],{{%GV_VE_RASS}},0,0,1)"
+            f"#txt[%L_ICQ](%LBX[x:4,y:224,w:100%,h:20],{{}},\"ICQ #ID\")"
+            f"#pan[%P_ICQ](%LBX[x:159,y:224,w:317,h:14],1)"
+            f"#exec(LW_cfile&{variables['VE_ICQ']}\\00&Cookies/%GV_VE_ICQ)"
+            f"#edit[%E_ICQ](%LBX[x:164,y:221,w:302,h:18],{{%GV_VE_ICQ}})"
+            f"#txt[%L_HOMP](%LBX[x:4,y:252,w:100%,h:20],{{}},\"Internet Homepage\")"
+            f"#pan[%P_HOMP](%LBX[x:159,y:252,w:317,h:14],1)"
+            f"#exec(LW_cfile&{variables['VE_HOMP']}\\00&Cookies/%GV_VE_HOMP)"
+            f"#edit[%E_HOMP](%LBX[x:164,y:249,w:302,h:18],{{%GV_VE_HOMP}})"
+            f"#txt[%L_SEX](%LBX[x:4,y:280,w:100%,h:20],{{}},\"Gender\")"
+            f"#exec(LW_cfile&{int(variables['VE_SEX'])-1}\\00&Cookies/%GV_VE_SEX)"
+            f"#cbb[%E_SEX](%LBX[x:153,y:273,w:329,h:18],{{%GV_VE_SEX}},{genders},0)"
+            f"#txt[%L_CNTRY](%LBX[x:4,y:308,w:100%,h:20],{{}},\"Country\")"
+            f"#exec(LW_cfile&{int(variables['VE_CNTRY'])-1}\\00&Cookies/%GV_VE_CNTRY)"
+            f"#cbb[%E_CNTRY](%LBX[x:153,y:301,w:329,h:18],{{%GV_VE_CNTRY}},{countries},0)"
+            f"#txt[%L_PHON](%LBX[x:4,y:336,w:100%,h:20],{{}},\"Home Phone\")"
+            f"#pan[%P_PHON](%LBX[x:159,y:336,w:317,h:14],1)"
+            f"#exec(LW_cfile&{variables['VE_PHON']}\\00&Cookies/%GV_VE_PHON)"
+            f"#edit[%E_PHON](%LBX[x:164,y:333,w:302,h:18],{{%GV_VE_PHON}})"
+            f"#txt[%L_BIRTH](%LBX[x:4,y:364,w:100%,h:20],{{}},\"Birthday (D/M/Y)\")"
+            f"#pan[%P_BIRTH](%LBX[x:159,y:364,w:317,h:14],1)"
+            f"#exec(LW_cfile&{variables['VE_BIRTH']}\\00&Cookies/%GV_VE_BIRTH)"
+            f"#edit[%E_BIRTH](%LBX[x:164,y:361,w:302,h:18],{{%GV_VE_BIRTH}})"
+            f"<MESDLG><MESDLG>"
+            f"#block(l_games_btn.cml,CAN)<MESDLG><MESDLG>"
+            f"#end(CAN)"
+            f"#hint(%L_NAME,\"Enter your name\")"
+            f"#hint(%L_NICK,\"Enter your nickname\")"
+            f"#hint(%L_MAIL,\"Enter your e-mail address\")"
+            f"#hint(%L_PASS,\"Enter your password\")"
+            f"#hint(%L_RASS,\"Change password to\")"
+            f"#hint(%L_GMID,\"Enter your GameBox ID#\")"
+            f"#hint(%L_ICQ,\"Enter your ICQ number\")"
+            f"#hint(%L_HOMP,\"Enter your homepage\")"
+            f"#hint(%L_SEX,\"Select your sex\")"
+            f"#hint(%L_CNTRY,\"Select country\")"
+            f"#hint(%L_PHON,\"Enter your home phone number\")"
+            f"#hint(%L_BIRTH,\"Enter your birth date (DD/MM/YYYY)\")"
+            f"#hint(%New account,\"Create a new account\")"
+        )
 
     elif not variables['VE_MODE'] or variables['VE_MODE'] == "creat":
         return " ".join((
@@ -1202,23 +1189,23 @@ def log_user(variables: dict, database: Engine, **_) -> str:
                 sid = genID()
                 connection.execute(text(f"REPLACE INTO sessions (session_key, player_id) VALUES ('{sid}', '{profile[0]}')"))
                 connection.commit()
-                return "".join((
-                    f"<MESDLG> ",
-                    f"#ebox[%MBG](x:0,y:0,w:1024,h:768)",
-                    f"#pix[%PX1](%MBG[x:0,y:0,w:1024,h:768],{{}},Interf3/internet,0,0,0,0)",
+                return (
+                    f"<MESDLG> "
+                    f"#ebox[%MBG](x:0,y:0,w:1024,h:768)"
+                    f"#pix[%PX1](%MBG[x:0,y:0,w:1024,h:768],{{}},Interf3/internet,0,0,0,0)"
                     f"#exec(LW_cfile&{sid if variables['save_pass'] else ''}&lgdta.log)"
-                    f"#exec(LW_key&{profile[0]})",
-                    f"#exec(LW_gvar&",
-                    f"%PROF&{profile[0]}&",
-                    f"%NAME&{variables['VE_NAME']}&",
-                    f"%NICK&{profile[1]}&",
-                    f"%MAIL&{variables['VE_MAIL']}&",
-                    f"%PASS&{variables['VE_PASS']}&",
-                    f"%GMID&{variables['VE_GMID']}&",
-                    f"%CHAT&{ALEX_IRC.address}&",
-                    f"%CHNL1&{ALEX_IRC.ch1}\\00&",
-                    f"%CHNL2&{ALEX_IRC.ch2}\\00)",
-                    f"<MESDLG> "))
+                    f"#exec(LW_key&{profile[0]})"
+                    f"#exec(LW_gvar&"
+                    f"%PROF&{profile[0]}&"
+                    f"%NAME&{variables['VE_NAME']}&"
+                    f"%NICK&{profile[1]}&"
+                    f"%MAIL&{variables['VE_MAIL']}&"
+                    f"%PASS&{variables['VE_PASS']}&"
+                    f"%GMID&{variables['VE_GMID']}&"
+                    f"%CHAT&{ALEX_IRC.address}&"
+                    f"%CHNL1&{ALEX_IRC.ch1}\\00&"
+                    f"%CHNL2&{ALEX_IRC.ch2}\\00)"
+                    f"<MESDLG> ")
             else:
                 return (
                     f"<MESDLG> "
@@ -1620,7 +1607,7 @@ def mail_view(variables: dict, database: Engine, player_id, **_) -> str:
                 )
     return ""
 
-def map_(variables: dict, **_) -> str:
+def map_(**_) -> str:
     return (
         f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
         f"#pan[%P1](%TB[x:42,y:0-22,w:0,h:80],10)"
@@ -1767,57 +1754,57 @@ def news(database: Engine, **_) -> str:
                     #ctxt[%DATE{idx+1}](%SB[x:0,y:%TEXT{idx}+27,w:78,h:24],{{}},\
                     {' - ' if not isinstance(news[0][0], datetime) else n[0].strftime('%d/%m/%Y')})") # type: ignore
         news_board = "".join(news_board)
-    return " ".join((
-    f"#ebox[%TB](x:0,y:0,w:100%,h:100%)",
-    f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)",
-    f"#pix[%PXT2](%TB[x:0,y:263,w:100%,h:100%],{{}},Internet/pix/i_pri0,13,13,13,13)",
-    f"#pan[%P1](%TB[x:42,y:0-22,w:0,h:80],10)",
-    f"#font(RG18,RG18,RG18)",
-    f"#txt[%PL](%TB[x:737,y:0,w:150,h:20],{{}},\"Players\")\"",
-    f"#font(BG18,BG18,BG18)",
-    f"#ctxt[%TTTEXT](%TB[x:0-62,y:0-32,w:1024,h:20],{{}},\"NEWS & EVENTS\")",
-    f"#font(R2C12,R2C12,R2C12)",
-    f"#txt[%TMTEXT](%TB[x:0,y:514,w:100,h:20],{{}},\"Message:\")",
-    f"#font(RC12,RC12,RC12)",
-    f"#def_gp_btn(Internet/pix/i_pri0,51,51,0,1)",
-    f"#gpbtn[%BT1](%TB[x:74,y:22,w:-22,h:-18],{{}},\"News & Events\")",
-    f"#hint(%BT1,\"News, events, forum and punishment list\")",
-    f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)",
-    f"#font(RC12,R2C12,RC12)",
-    f"#gpbtn[%BT2](%TB[x:196,y:23,w:-22,h:-18],{{GW|open&users_list.dcml\\00|LW_lockall}},\"Player List\")",
-    f"#hint(%BT2,\"Player list, personal mail and clan information\")",
-    f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)",
-    f"#font(RC12,R2C12,RC12)",
-    f"#gpbtn[%BT4](%TB[x:318,y:23,w:-22,h:-18],{{GW|open&games.dcml\\00|LW_lockall}},\"Custom Games\")",
-    f"#hint(%BT4,\"Play custom games\")",
-    f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)",
-    f"#font(RC12,R2C12,RC12)",
-    f"#gpbtn[%BT5](%TB[x:440,y:23,w:-22,h:-18],{{GW|open&scored_games.dcml\\00&player_id=0\\00|LW_lockall}},\"Scored Games\")",
-    f"#hint(%BT5,\"Played games and their scores\")",
-    f"#ebox[%B_VOTE](x:5,y:396,w:140,h:103)",
-    f"<VOTING>",
-    f"#exec(GW|open&voting.dcml\\00&question=46\\00)",
-    f"<VOTING>",
-    f"#ebox[%B](x:0,y:0,w:100%,h:100%)",
-    f"#font(RC14,GC14,RC14)",
-    f"#ctxt[%LIST1](%B[x:0,y:106,w:146,h:24],{{GW|open&news.dcml\\00|LW_lockall}},\"{{News & Events}}\")",
-    f"#font(R2C14,R2C14,RC14)",
-    f"#ctxt[%LIST2](%B[x:0,y:%LIST1-9,w:146,h:24],{{GW|open&punishments.dcml\\00|LW_lockall}},\"{{Punishments}}\")",
-    f"#hint(%LIST2,\"List of punished players\")",
-    f"#edit[%E_FT](%B[x:0,y:0,w:0,h:0],{{%GV_FORUM_LAST_TIME}})",
-    f"#ctxt[%LIST3](%B[x:0,y:%LIST2-9,w:146,h:24],{{GW|open&forum.dcml\\00&last_view=<%GV_FORUM_LAST_TIME>\\00|LW_lockall}},\"{{Forum}}\")",
-    f"#hint(%LIST3,\"Read and write forum messages\")",
-    f"#pan[%PAN](%B[x:154,y:42,w:526-3,h:291],7)",
-    f"#sbox[%SB](x:150,y:46,w:526+4,h:291-8)",
-    f"{news_board}",
-    f"#ebox[%B1](x:0,y:0,w:100%,h:100%)",
-    f"#pan[%PANV](%B1[x:260,y:8,w:0,h:359],10)",
-    f"<NGDLG>",
-    f"<NGDLG>",
-    f"#block(cancel.cml,CAN)<NGDLG>",
-    f"<NGDLG>",
+    return (
+    f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
+    f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)"
+    f"#pix[%PXT2](%TB[x:0,y:263,w:100%,h:100%],{{}},Internet/pix/i_pri0,13,13,13,13)"
+    f"#pan[%P1](%TB[x:42,y:0-22,w:0,h:80],10)"
+    f"#font(RG18,RG18,RG18)"
+    f"#txt[%PL](%TB[x:737,y:0,w:150,h:20],{{}},\"Players\")\""
+    f"#font(BG18,BG18,BG18)"
+    f"#ctxt[%TTTEXT](%TB[x:0-62,y:0-32,w:1024,h:20],{{}},\"NEWS & EVENTS\")"
+    f"#font(R2C12,R2C12,R2C12)"
+    f"#txt[%TMTEXT](%TB[x:0,y:514,w:100,h:20],{{}},\"Message:\")"
+    f"#font(RC12,RC12,RC12)"
+    f"#def_gp_btn(Internet/pix/i_pri0,51,51,0,1)"
+    f"#gpbtn[%BT1](%TB[x:74,y:22,w:-22,h:-18],{{}},\"News & Events\")"
+    f"#hint(%BT1,\"News, events, forum and punishment list\")"
+    f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)"
+    f"#font(RC12,R2C12,RC12)"
+    f"#gpbtn[%BT2](%TB[x:196,y:23,w:-22,h:-18],{{GW|open&users_list.dcml\\00|LW_lockall}},\"Player List\")"
+    f"#hint(%BT2,\"Player list, personal mail and clan information\")"
+    f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)"
+    f"#font(RC12,R2C12,RC12)"
+    f"#gpbtn[%BT4](%TB[x:318,y:23,w:-22,h:-18],{{GW|open&games.dcml\\00|LW_lockall}},\"Custom Games\")"
+    f"#hint(%BT4,\"Play custom games\")"
+    f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)"
+    f"#font(RC12,R2C12,RC12)"
+    f"#gpbtn[%BT5](%TB[x:440,y:23,w:-22,h:-18],{{GW|open&scored_games.dcml\\00&player_id=0\\00|LW_lockall}},\"Scored Games\")"
+    f"#hint(%BT5,\"Played games and their scores\")"
+    f"#ebox[%B_VOTE](x:5,y:396,w:140,h:103)"
+    f"<VOTING>"
+    f"#exec(GW|open&voting.dcml\\00&question=46\\00)"
+    f"<VOTING>"
+    f"#ebox[%B](x:0,y:0,w:100%,h:100%)"
+    f"#font(RC14,GC14,RC14)"
+    f"#ctxt[%LIST1](%B[x:0,y:106,w:146,h:24],{{GW|open&news.dcml\\00|LW_lockall}},\"{{News & Events}}\")"
+    f"#font(R2C14,R2C14,RC14)"
+    f"#ctxt[%LIST2](%B[x:0,y:%LIST1-9,w:146,h:24],{{GW|open&punishments.dcml\\00|LW_lockall}},\"{{Punishments}}\")"
+    f"#hint(%LIST2,\"List of punished players\")"
+    f"#edit[%E_FT](%B[x:0,y:0,w:0,h:0],{{%GV_FORUM_LAST_TIME}})"
+    f"#ctxt[%LIST3](%B[x:0,y:%LIST2-9,w:146,h:24],{{GW|open&forum.dcml\\00&last_view=<%GV_FORUM_LAST_TIME>\\00|LW_lockall}},\"{{Forum}}\")"
+    f"#hint(%LIST3,\"Read and write forum messages\")"
+    f"#pan[%PAN](%B[x:154,y:42,w:526-3,h:291],7)"
+    f"#sbox[%SB](x:150,y:46,w:526+4,h:291-8)"
+    f"{news_board}"
+    f"#ebox[%B1](x:0,y:0,w:100%,h:100%)"
+    f"#pan[%PANV](%B1[x:260,y:8,w:0,h:359],10)"
+    f"<NGDLG>"
+    f"<NGDLG>"
+    f"#block(cancel.cml,CAN)<NGDLG>"
+    f"<NGDLG>"
     f"#end(CAN)"
-))
+)
 
 def punishments(database: Engine, **_) -> str:
     with database.connect() as connection:
@@ -2518,6 +2505,8 @@ def url_open(variables: dict, **_) -> str:
     )
 
 def users_list(variables: dict, database: Engine, **_) -> str:
+    user_list = []
+    user_buttons = []
     page=variables.get("next_user", 0)
     resort=variables.get("resort", "1")
     order = variables.get("order", "score")
@@ -2534,12 +2523,15 @@ def users_list(variables: dict, database: Engine, **_) -> str:
     order = 'DESC' if resort == '1' else 'ASC'
     players = None
     with database.connect() as connection:
-        players = connection.execute(text(f"SELECT get_display_nick(player_id), players.name, players.player_id, countries.name, players.score, ranks.name, row_number()\
+        players = connection.execute(text(
+                        f"SELECT get_display_nick(player_id), players.name, players.player_id, countries.name, players.score, ranks.name, row_number()\
                         OVER ( order by {order_by} {order} ) AS 'pos'\
                         FROM players\
                         INNER JOIN ranks ON players.clan_rank = ranks.id\
                         LEFT JOIN countries ON players.country = countries.id\
                         ORDER BY {order_by} {order} LIMIT 14 OFFSET {13*page};")).fetchall()
+    user_buttons = "".join([f"#apan[%APAN0](%BB[x:150,y:{60+(21*idx)}-1,w:100%-161,h:20],{{GW|open&user_details.dcml\\00&ID={player[2]}\\00|LW_lockall}},8)" for idx, player in enumerate(players[:13])])
+    user_list = "".join([f"21,\"{player[6]}\",\"{player[0]}\",\"{player[1]}\",\"{player[2]}\",\"{player[3]}\",\"{player[4]}\",\"{player[5]}\"," for idx, player in enumerate(players[:13])])
     return "".join((
         f"#ebox[%TB](x:0,y:0,w:100%,h:100%)",
         f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)",
@@ -2596,10 +2588,10 @@ def users_list(variables: dict, database: Engine, **_) -> str:
         f"{{GW|open&users_list.dcml\\00&users_total=^order=country^resort={'1' if order_by == 'players.country' and resort == '0' else '0'}\\00|LW_lockall}}",
         f"{{GW|open&users_list.dcml\\00&users_total=^order=score^resort={'1' if order_by == 'players.score' and resort == '0' else '0'}\\00|LW_lockall}}",
         f"{{GW|open&users_list.dcml\\00&users_total=^order=score^resort={'1' if order_by == 'players.score' and resort == '0' else '0'}\\00|LW_lockall}},7,7,7,1,21,1,25,1,6,1,15,1,7,1,19,1,20,\"{{Pos\",\"{{Nickname\",\"{{Full Name\",\"{{#\",\"{{Country\",\"{{Scores\",\"{{Rank\")",
-        "".join([f"#apan[%APAN0](%BB[x:150,y:{60+(21*idx)}-1,w:100%-161,h:20],{{GW|open&user_details.dcml\\00&ID={player[2]}\\00|LW_lockall}},8)" for idx, player in enumerate(players[:13])]),
+        f"{user_buttons}",
         f"#font(BC12,BC12,BC12)",
         f"#stbl[%TBL](%BB[x:154,y:42+18,w:559,h:270],{{}},7,0,7,1,21,1,25,1,6,1,15,1,7,1,19,1,",
-        "".join([f"21,\"{player[6]}\",\"{player[0]}\",\"{player[1]}\",\"{player[2]}\",\"{player[3]}\",\"{player[4]}\",\"{player[5]}\"," for idx, player in enumerate(players[:13])]),
+        f"{user_list}",
         f")",
         f"#font(RC12,R2C12,RC12)",
         f"#font(BC14,WC14,BC14)",
@@ -2632,7 +2624,7 @@ def voting_view(database: Engine, **_) -> str:
                     f'#txt[%ANS{idx}_{idy+1}](%SB[x:10,y:%ANS{idx}_{idy},w:100%-30,h:20],{{}},"- {answer[0]}")\
                     #rtxt[%RES{idx}_{idy+1}](%SB[x:100%-110,y:%ANS{idx}_{idy},w:100,h:20],{{}},"{answer[1]}")')
             output.append(f'#pan[%HPAN{idx}](%SB[x:0-32,y:%ANS{idx}_{n}+40,w:100%+65,h:0],9)')
-
+    output = "".join(output)
     return " ".join((
         f"#ebox[%TB](x:0,y:0,w:100%,h:100%)",
         f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)",
@@ -2671,7 +2663,7 @@ def voting_view(database: Engine, **_) -> str:
         f"#ctxt[%LIST2](%B[x:0,y:%LIST1-9,w:146,h:24],{{GW|open&voting_view.dcml\\00|LW_lockall}},\"{{View votes}}\")",
         f"#pan[%PAN](%B[x:154,y:42,w:526-3,h:291],7)",
         f"#sbox[%SB](x:150,y:42+4,w:526+4,h:291-8)",
-        "".join(output),
+        f"{output}",
         f"#font(R2C14,R2C14,RC14)",
         f"#ctxt[%LIST5](%B[x:0,y:%LIST2-9,w:146,h:24],{{GW|open&punishments.dcml\\00|LW_lockall}},\"{{Punishments}}\")",
         f"#hint(%LIST5,\"List of punished players\")",
@@ -2684,6 +2676,7 @@ def voting_view(database: Engine, **_) -> str:
         f"<NGDLG>",
         f"#end(CAN)"))
 
+# TODO: HANDLE THE ACTUAL VOTING
 def voting(variables: dict, database: Engine, **_) -> str:
     with database.connect() as connection:
         question = variables.get("question")
