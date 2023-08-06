@@ -1,11 +1,14 @@
 from collections import defaultdict
 from datetime import datetime
-from common import *
+from common import clip, genID, clip_string, reverse_address
 from config import ALEX_DBTBL_INTERVAL, ALEX_IRC, mysql_error_messages
-import sqlalchemy
-import sqlalchemy.exc
+from sqlalchemy import Engine, text
+from sqlalchemy.exc import DBAPIError, SQLAlchemyError
 from math import floor, ceil
 from struct import unpack
+
+
+
 
 def cancel(**_) -> str:
     return (
@@ -69,6 +72,7 @@ def change(variables: dict, **_) -> str:
         f'<MESDLG>'
         )
 
+# TODO: PLACEHOLDER. 
 def clan_admin2(variables: dict, **_) -> str:
     # · ·open· ·   clan_admin2.dcml -   clanID=288^signature=GOTT^new_jointer=136995
     # clan_admin2.dcml ·   clanID=288^leaver=136995
@@ -138,10 +142,10 @@ def clan_load_image(variables: dict, **_) -> str:
         f'<NGDLG>'
         )
 
-def clan_new(variables: dict, database: sqlalchemy.Engine, player_id: str | int, **_) -> str:
+def clan_new(variables: dict, database: Engine, player_id: str | int, **_) -> str:
     if variables['title'] and variables['signature']:
             with database.connect() as connection:
-                connection.execute(sqlalchemy.text(f'CALL create_clan({player_id}, "{variables["title"]}", "{variables["signature"]}", "{variables["info"]}")'))
+                connection.execute(text(f'CALL create_clan({player_id}, "{variables["title"]}", "{variables["signature"]}", "{variables["info"]}")'))
                 connection.commit()
             return (
                 f'#ebox[%TB](x:0,y:0,w:100%,h:100%)'
@@ -249,17 +253,17 @@ def clan_new(variables: dict, database: sqlalchemy.Engine, player_id: str | int,
         f'#end(CAN)'
     )
 
-def clan_users(variables: dict, database: sqlalchemy.Engine, player_id, **_) -> str:
+def clan_users(variables: dict, database: Engine, player_id, **_) -> str:
     # variables['clanID']
     members_list = []
     members_buttons = []
     with database.connect() as connection:
-        clan = connection.execute(sqlalchemy.text(
+        clan = connection.execute(text(
             f"CALL get_clan_summary({variables['clanID']})"
         )).fetchone()
         if clan:
             clan = clan._mapping
-            members = connection.execute(sqlalchemy.text(
+            members = connection.execute(text(
                 f"CALL get_clan_members({variables['clanID']})"
             )).fetchall()
             for idx, member in enumerate(members):
@@ -338,7 +342,7 @@ def clan_users(variables: dict, database: sqlalchemy.Engine, player_id, **_) -> 
             )
     return ""
 
-def clans_list(variables: dict, database: sqlalchemy.Engine, **_) -> str:
+def clans_list(variables: dict, database: Engine, **_) -> str:
     button_list = []
     clan_list = []
     icon_dialog = ""
@@ -348,7 +352,7 @@ def clans_list(variables: dict, database: sqlalchemy.Engine, **_) -> str:
             f"#table[%TBL](%L0[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&clan_load_image.dcml\\00&help=true^signature=SAM\\00|LW_lockall}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"CLAN ICON\",\"You are recommended to use a .jpg or .png 32x24 file as a clan icon.If the resolution of the file is greater, then it will be automatically miniaturized to 32x24 resolution saving the proportions. Size must be smaller than 16 KB. It is restricted to use pornographic or erotic images, nazi symbols and obscenities. The icon will be displayed in chat window within a day.\",26,\"OK\",\"Cancel\")"
         )
     with database.connect() as connection:
-        clans = connection.execute(sqlalchemy.text(
+        clans = connection.execute(text(
             "CALL get_clans()"
         )).fetchall()
         if clans:
@@ -419,9 +423,9 @@ def clans_list(variables: dict, database: sqlalchemy.Engine, **_) -> str:
         f"#end(CAN)"
     )
 
-def dbtbl(database: sqlalchemy.Engine, **_) -> str:
+def dbtbl(database: Engine, **_) -> str:
     with database.connect() as connection:
-        lobbies = connection.execute(sqlalchemy.text(
+        lobbies = connection.execute(text(
             f"CALL get_lobbies()")).fetchall()
     ping_list = "".join(
         [f"#apan[%APAN{idx}](%SB[x:0,y:{idx*21}-2,w:100%,h:20],"\
@@ -456,18 +460,14 @@ def dbtbl(database: sqlalchemy.Engine, **_) -> str:
         f"<DBTBL>"
     )
 
-def forum_add(variables: dict, database: sqlalchemy.Engine, player_id: str | int, **_) -> str:
+def forum_add(variables: dict, database: Engine, player_id: str | int, **_) -> str:
     if variables['add_message']:
-        try:
-            with database.connect() as connection:
-                if variables['theme'] != 'None':
-                    connection.execute(sqlalchemy.text(f'INSERT INTO thread_messages (author_id, thread_id, content) VALUES ({player_id}, {variables["theme"]}, "{variables["add_message"]}")'))
-                else:
-                    connection.execute(sqlalchemy.text(f'INSERT INTO threads (author_id, content) VALUES ({player_id}, "{variables["add_message"]}")'))
-                connection.commit()
-        except Exception as ex:
-            print(ex)
-        finally:
+        with database.connect() as connection:
+            if variables['theme'] != 'None':
+                connection.execute(text(f'INSERT INTO thread_messages (author_id, thread_id, content) VALUES ({player_id}, {variables["theme"]}, "{variables["add_message"]}")'))
+            else:
+                connection.execute(text(f'INSERT INTO threads (author_id, content) VALUES ({player_id}, "{variables["add_message"]}")'))
+            connection.commit()
             return "#exec(GW|open&forum.dcml\\00&mode=1^last_view=^noback=true\\00|LW_lockall)"
     return (
         f"#block(l_games_btn.cml,l_g):<!goback!>\\00"
@@ -552,13 +552,13 @@ def forum_search(**_) -> str:
         f"<NGDLG>"
     )
 
-def forum_view(variables: dict, database: sqlalchemy.Engine, **_) -> str:
+def forum_view(variables: dict, database: Engine, **_) -> str:
     with database.connect() as connection:
         if variables['theme']:
-            thread = connection.execute(sqlalchemy.text(f"""CALL get_thread({variables['theme']})""")).fetchone()
+            thread = connection.execute(text(f"""CALL get_thread({variables['theme']})""")).fetchone()
             if thread:
                 thread = thread._mapping
-                messages = connection.execute(sqlalchemy.text(f"""CALL get_thread_messages({thread['id']})"""))
+                messages = connection.execute(text(f"""CALL get_thread_messages({thread['id']})"""))
                 message_list = []
                 for idx, entry in enumerate(messages):
                         message = entry._mapping
@@ -645,23 +645,16 @@ def forum_view(variables: dict, database: sqlalchemy.Engine, **_) -> str:
                 )
         return ""
 
-def forum(variables: dict, database: sqlalchemy.Engine, **_) -> str:
+def forum(variables: dict, database: Engine, **_) -> str:
     with database.connect() as connection:
         thread_list = []
         search = False
-        mode = '1'
+        if variables['mode'] not in ('1','2','3','4'):
+            variables['mode'] = '1'
         if variables['search_nick'] or variables['search_text']:
             search = True
-            threads = connection.execute(sqlalchemy.text(f'CALL forum_search(\"{variables["search_nick"]}\", \"{variables["search_text"]}\" )')).fetchall()
-        elif variables["mode"] == "1":
-            mode = '1'
-        elif variables["mode"] == "2":
-            mode = '2'
-        elif variables["mode"] == "3":
-            mode = '3'
-        elif variables["mode"] == "4":
-            mode = '4'
-        threads = connection.execute(sqlalchemy.text(f"CALL get_thread_list({mode}, {int(variables['next_message']) if variables['next_message'] else 0})")).fetchall()
+            threads = connection.execute(text(f'CALL forum_search(\"{variables["search_nick"]}\", \"{variables["search_text"]}\" )')).fetchall()
+        threads = connection.execute(text(f"CALL get_thread_list({variables['mode']}, {int(variables['next_message']) if variables['next_message'] else 0})")).fetchall()
         for idx, entry in enumerate(threads[:30]):
             thread = entry._mapping
             thread_list.append(" ".join([
@@ -801,10 +794,10 @@ def games(**_) -> str:
         f"#end(CAN)"
     )
 
-def join_game(variables: dict, database: sqlalchemy.Engine, **_) -> str:
+def join_game(variables: dict, database: Engine, **_) -> str:
     id_room = variables.get("id_room", "")
     with database.connect() as connection:
-            lobby = connection.execute(sqlalchemy.text(f"SELECT players, max_players, ip, password, (SELECT nick FROM players WHERE players.player_id = lobbies.host_id) as nick FROM lobbies WHERE id = {id_room} LIMIT 1")).fetchone()
+            lobby = connection.execute(text(f"SELECT players, max_players, ip, password, (SELECT nick FROM players WHERE players.player_id = lobbies.host_id) as nick FROM lobbies WHERE id = {id_room} LIMIT 1")).fetchone()
     if lobby:
         if lobby.max_players <= lobby.players:
             return " ".join((
@@ -1020,17 +1013,17 @@ def log_conf_dlg(variables: dict, **_) -> str:
         f"#hint(%Edit Profile,\"Edit profile\")"
     )
 
-def log_new_form(variables: dict, database: sqlalchemy.Engine, **_) -> str:
+def log_new_form(variables: dict, database: Engine, **_) -> str:
     genders = []
     countries = []
     with database.connect() as connection:
 
-        cursor_out = connection.execute(sqlalchemy.text(f'select name from sexes')).fetchall()
+        cursor_out = connection.execute(text(f'select name from sexes')).fetchall()
         for row in cursor_out:
             genders.append(f'\"{row[0]}\"')
         genders = ",".join(genders)
 
-        cursor_out = connection.execute(sqlalchemy.text(f'select name from countries')).fetchall()
+        cursor_out = connection.execute(text(f'select name from countries')).fetchall()
         for row in cursor_out:
             countries.append(f'\"{row[0]}\"')
         countries = ",".join(countries)
@@ -1197,17 +1190,17 @@ def log_new_form(variables: dict, database: sqlalchemy.Engine, **_) -> str:
         ))
     return ""
 
-def log_user(variables: dict, database: sqlalchemy.Engine, **_) -> str:
+def log_user(variables: dict, database: Engine, **_) -> str:
     try:
         with database.connect() as connection:
             if variables['relogin'] == "true":
-                profile = connection.execute(sqlalchemy.text(f"CALL relogin(\'{variables['VE_NICK']}\',\'{variables['VE_PASS']}\')")).fetchone()
+                profile = connection.execute(text(f"CALL relogin(\'{variables['VE_NICK']}\',\'{variables['VE_PASS']}\')")).fetchone()
             else:
-                profile = connection.execute(sqlalchemy.text(f"CALL login(\'{variables['VE_NICK']}\',\'{variables['VE_PASS']}\', \'{variables['VE_GMID']}\')")).fetchone()
+                profile = connection.execute(text(f"CALL login(\'{variables['VE_NICK']}\',\'{variables['VE_PASS']}\', \'{variables['VE_GMID']}\')")).fetchone()
             if profile:
                 print("Profile")
                 sid = genID()
-                connection.execute(sqlalchemy.text(f"REPLACE INTO sessions (session_key, player_id) VALUES ('{sid}', '{profile[0]}')"))
+                connection.execute(text(f"REPLACE INTO sessions (session_key, player_id) VALUES ('{sid}', '{profile[0]}')"))
                 connection.commit()
                 return "".join((
                     f"<MESDLG> ",
@@ -1234,7 +1227,7 @@ def log_user(variables: dict, database: sqlalchemy.Engine, **_) -> str:
                     f"#table[%TBL](%D[x:306,y:325,w:415,h:205],{{}}{{}}{{LW_file&Internet/Cash/l_games_btn.cml}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"ERROR\",\"{mysql_error_messages['ERR_ACC_NOTFOUND']}\",26,\"Edit\",\"Cancel\") "
                     f"<MESDLG> "
                 )
-    except sqlalchemy.exc.DBAPIError as err:
+    except DBAPIError as err:
         print(err)
         error_code = None
         if err.orig:
@@ -1247,14 +1240,14 @@ def log_user(variables: dict, database: sqlalchemy.Engine, **_) -> str:
             f"<MESDLG> "
         )
 
-def mail_list(variables: dict, database: sqlalchemy.Engine, player_id, **_) -> str:
+def mail_list(variables: dict, database: Engine, player_id, **_) -> str:
     panel_list = []
     message_list = []
 
     with database.connect() as connection:
 
         if variables['delete']:
-            sender = connection.execute(sqlalchemy.text(
+            sender = connection.execute(text(
                 f"SELECT id_from, id_to "
                 f"FROM mail_messages "
                 f"WHERE mail_messages.id = {variables['messageID']}"
@@ -1262,7 +1255,7 @@ def mail_list(variables: dict, database: sqlalchemy.Engine, player_id, **_) -> s
 
             if sender:
                 sender = sender._mapping
-                connection.execute(sqlalchemy.text(
+                connection.execute(text(
                     f"UPDATE mail_messages "
                     f"SET {'removed_by_sender' if sender['id_from'] == int(player_id) else 'removed_by_recipient'} = 1 "
                     f"{',removed_by_recipient = 1' if sender['id_from'] == sender['id_to'] else ''} "
@@ -1271,7 +1264,7 @@ def mail_list(variables: dict, database: sqlalchemy.Engine, player_id, **_) -> s
 
                 connection.commit()
 
-        summary = connection.execute(sqlalchemy.text(
+        summary = connection.execute(text(
         f"CALL mail_stats({player_id}) "
         )).fetchone()
 
@@ -1286,7 +1279,7 @@ def mail_list(variables: dict, database: sqlalchemy.Engine, player_id, **_) -> s
             else:
                 mode = "4"
 
-            messages = connection.execute(sqlalchemy.text(f"CALL get_mail({mode}, {player_id}) ")).fetchall()
+            messages = connection.execute(text(f"CALL get_mail({mode}, {player_id}) ")).fetchall()
 
             for idx, entry in enumerate(messages):
                 message = entry._mapping
@@ -1387,19 +1380,19 @@ def mail_list(variables: dict, database: sqlalchemy.Engine, player_id, **_) -> s
             )
     return ""
 
-def mail_new(variables: dict, database: sqlalchemy.Engine, player_id, **_) -> str | None:
+def mail_new(variables: dict, database: Engine, player_id, **_) -> str | None:
     with database.connect() as connection:
-        summary = connection.execute(sqlalchemy.text(
+        summary = connection.execute(text(
             f"CALL mail_stats({player_id}) "
             )).fetchone()
         if summary:
             summary = summary._mapping
             if variables['send']:
-                id = connection.execute(sqlalchemy.text(
+                id = connection.execute(text(
                     f"CALL get_player_id_by_nick(\"{variables['send_to']}\")"
                 )).fetchone()
                 if id:
-                    connection.execute(sqlalchemy.text(
+                    connection.execute(text(
                         "INSERT INTO mail_messages ("
                         "id_from, id_to, subject, content "
                         ") "
@@ -1511,14 +1504,14 @@ def mail_new(variables: dict, database: sqlalchemy.Engine, player_id, **_) -> st
             f"#end(CAN)",
             ))
 
-def mail_view(variables: dict, database: sqlalchemy.Engine, player_id, **_) -> str:
+def mail_view(variables: dict, database: Engine, player_id, **_) -> str:
     with database.connect() as connection:
-        summary = connection.execute(sqlalchemy.text(
+        summary = connection.execute(text(
         f"CALL mail_stats({player_id}) "
         )).fetchone()
         if summary:
             summary = summary._mapping
-            message = connection.execute(sqlalchemy.text(
+            message = connection.execute(text(
                 f"SELECT "
                 f"subject "
                 f"content, "
@@ -1536,7 +1529,7 @@ def mail_view(variables: dict, database: sqlalchemy.Engine, player_id, **_) -> s
             if message:
                 message = message._mapping
                 if message['status'] == 1:
-                    connection.execute(sqlalchemy.text(
+                    connection.execute(text(
                         f"UPDATE mail_messages "
                         f"SET status = 2 "
                         f"WHERE id = {variables['messageID']}"
@@ -1693,7 +1686,7 @@ def mclick(variables : dict, **_) -> str:
         f"<MCLICK>"
     )
 
-def enter_game_dlg(database: sqlalchemy.Engine, **_) -> str:
+def enter_game_dlg(database: Engine, **_) -> str:
     #· ·· ·open· ·   enter_game_dlg.dcml 
     #land_id=2 ·   02     35070762 
 #HOST
@@ -1707,7 +1700,7 @@ def enter_game_dlg(database: sqlalchemy.Engine, **_) -> str:
 # <NGDLG>
 
     # with database.connect() as connection:
-    #     types = connection.execute(sqlalchemy.text(f"SELECT name FROM lobby_types")).fetchall()
+    #     types = connection.execute(text(f"SELECT name FROM lobby_types")).fetchall()
     return (
         f"<NGDLG>"
         f"#exec(LW_time&3000&l_games_btn.cml\\00)"
@@ -1724,9 +1717,9 @@ def enter_game_dlg(database: sqlalchemy.Engine, **_) -> str:
         f"<NGDLG>"
     )
 
-def new_game_dlg(database: sqlalchemy.Engine, **_) -> str:
+def new_game_dlg(database: Engine, **_) -> str:
     with database.connect() as connection:
-        types = connection.execute(sqlalchemy.text(f"SELECT name FROM lobby_types")).fetchall()
+        types = connection.execute(text(f"SELECT name FROM lobby_types")).fetchall()
     return (
             f"<NGDLG>"
             f"#ebox[%L0](x:0,y:0,w:100%,h:100%)"
@@ -1754,9 +1747,9 @@ def new_game_dlg(database: sqlalchemy.Engine, **_) -> str:
             f"<NGDLG>"
         )
 
-def news(database: sqlalchemy.Engine, **_) -> str:
+def news(database: Engine, **_) -> str:
     with database.connect() as connection:
-        news = connection.execute(sqlalchemy.text(f"SELECT posted_at, content FROM news ORDER BY id DESC")).fetchall()
+        news = connection.execute(text(f"SELECT posted_at, content FROM news ORDER BY id DESC")).fetchall()
     news_board = []
     if news:
         news_board.append(f"\
@@ -1826,10 +1819,10 @@ def news(database: sqlalchemy.Engine, **_) -> str:
     f"#end(CAN)"
 ))
 
-def punishments(database: sqlalchemy.Engine, **_) -> str:
+def punishments(database: Engine, **_) -> str:
     with database.connect() as connection:
         punishment_list = []
-        punishments = connection.execute(sqlalchemy.text(
+        punishments = connection.execute(text(
             "CALL get_punishments()"
             )).fetchall()
         for idx, entry in enumerate(punishments):
@@ -2028,10 +2021,10 @@ def rating_help(**_) -> str:
         f"#end(CAN)"
     )
 
-def reg_new_user(variables: dict, database: sqlalchemy.Engine, **_) -> str | None:
+def reg_new_user(variables: dict, database: Engine, **_) -> str | None:
     try:
         with database.connect() as connection:
-            connection.execute(sqlalchemy.text(
+            connection.execute(text(
                 f"CALL reg_new_user("
                 f"'{variables['VE_MODE']}', '{variables['VE_NICK']}', '{variables['VE_NAME']}', '{variables['VE_MAIL']}', '{variables['VE_ICQ']}', "
                 f"'{variables['VE_HOMP']}', {variables['VE_SEX']}, {variables['VE_CNTRY']}, '{variables['VE_PHON']}', '{variables['VE_BIRTH']}', "
@@ -2133,7 +2126,7 @@ def reg_new_user(variables: dict, database: sqlalchemy.Engine, **_) -> str | Non
                 f"\"INFORMATION\",\"Your personal profile data has been successfully created!\\Press OK button to save password, in other case press Cancel.\\This option saves your password and Game Box #ID. Don't use it, if you play from computer accessible for other people.\",26,\"OK\",\"Cancel\")"
                 f"<MESDLG>")
 
-    except sqlalchemy.exc.DBAPIError as err:
+    except DBAPIError as err:
         print(err)
         error_code = None
         if err.orig:
@@ -2348,9 +2341,9 @@ def startup(**_) -> str:
         f"#end(CAN)"
     )
 
-def user_details(variables: dict, database: sqlalchemy.Engine, player_id, **_) -> str | None:
+def user_details(variables: dict, database: Engine, player_id, **_) -> str | None:
     with database.connect() as connection:
-        profile = connection.execute(sqlalchemy.text(
+        profile = connection.execute(text(
             f"SELECT "
             f"player_id, "
             f"COALESCE(players.name, ' - ') AS name, "
@@ -2375,7 +2368,7 @@ def user_details(variables: dict, database: sqlalchemy.Engine, player_id, **_) -
             )).fetchone()
         if profile:
             profile = profile._mapping
-            can_be_excluded = connection.execute(sqlalchemy.text(
+            can_be_excluded = connection.execute(text(
             f"SELECT "
             f"(CASE  "
                 f"WHEN clan_id = {profile.clan_id} "
@@ -2524,7 +2517,7 @@ def url_open(variables: dict, **_) -> str:
         f"<OPENURL>"
     )
 
-def users_list(variables: dict, database: sqlalchemy.Engine, **_) -> str:
+def users_list(variables: dict, database: Engine, **_) -> str:
     page=variables.get("next_user", 0)
     resort=variables.get("resort", "1")
     order = variables.get("order", "score")
@@ -2541,7 +2534,7 @@ def users_list(variables: dict, database: sqlalchemy.Engine, **_) -> str:
     order = 'DESC' if resort == '1' else 'ASC'
     players = None
     with database.connect() as connection:
-        players = connection.execute(sqlalchemy.text(f"SELECT get_display_nick(player_id), players.name, players.player_id, countries.name, players.score, ranks.name, row_number()\
+        players = connection.execute(text(f"SELECT get_display_nick(player_id), players.name, players.player_id, countries.name, players.score, ranks.name, row_number()\
                         OVER ( order by {order_by} {order} ) AS 'pos'\
                         FROM players\
                         INNER JOIN ranks ON players.clan_rank = ranks.id\
@@ -2618,11 +2611,11 @@ def users_list(variables: dict, database: sqlalchemy.Engine, **_) -> str:
         f"#end(CAN)"
     ))
 
-def voting_view(database: sqlalchemy.Engine, **_) -> str:
+def voting_view(database: Engine, **_) -> str:
     output = []
 
     with database.connect() as connection:
-        votings = connection.execute(sqlalchemy.text(f"SELECT id, subject, published_at FROM votes;")).fetchall()
+        votings = connection.execute(text(f"SELECT id, subject, published_at FROM votes;")).fetchall()
         n = None
         for idx, voting in enumerate(votings):
             output.append(
@@ -2632,7 +2625,7 @@ def voting_view(database: sqlalchemy.Engine, **_) -> str:
                 #ctxt[%ANS{idx}_0](%SB[x:5,y:{25-3 if not output else f"%ANS{idx-1}_{n}+40-3"},w:100%-10,h:20],{{}},"{voting[1]}")\
                 #font(BC12,R2C12,RC12)')
             n = 0
-            answers = connection.execute(sqlalchemy.text(f"SELECT text, votes FROM vote_answers WHERE vote_id = {voting[0]} LIMIT 4;")).fetchall()
+            answers = connection.execute(text(f"SELECT text, votes FROM vote_answers WHERE vote_id = {voting[0]} LIMIT 4;")).fetchall()
             for idy, answer in enumerate(answers):
                 n = idy + 1
                 output.append(
@@ -2691,14 +2684,14 @@ def voting_view(database: sqlalchemy.Engine, **_) -> str:
         f"<NGDLG>",
         f"#end(CAN)"))
 
-def voting(variables: dict, database: sqlalchemy.Engine, **_) -> str:
+def voting(variables: dict, database: Engine, **_) -> str:
     with database.connect() as connection:
         question = variables.get("question")
         answer = variables.get("answer")
-        latest_vote = connection.execute(sqlalchemy.text("SELECT votes.id, votes.subject\
+        latest_vote = connection.execute(text("SELECT votes.id, votes.subject\
                         FROM votes ORDER BY id DESC LIMIT 1")).fetchone()
         if latest_vote:
-            answers = connection.execute(sqlalchemy.text(f"SELECT vote_answers.id, vote_answers.text, vote_answers.votes\
+            answers = connection.execute(text(f"SELECT vote_answers.id, vote_answers.text, vote_answers.votes\
                             FROM vote_answers WHERE vote_answers.vote_id = '{latest_vote[0]}' LIMIT 4")).fetchall()
             return " ".join((
                 f"<VOTING>",
@@ -2724,18 +2717,18 @@ def voting(variables: dict, database: sqlalchemy.Engine, **_) -> str:
                 f"<VOTING>"
             )
 
-def create_game(variables: dict, database: sqlalchemy.Engine, player_id: str | int, **_) -> str:
+def create_game(variables: dict, database: Engine, player_id: str | int, **_) -> str:
     gameTitle = variables.get('title', 'Lobby')
     gameType = variables.get('type', 0)
     with database.connect() as connection:
-        output = connection.execute(sqlalchemy.text(f"SELECT allow_designed, allow_ai FROM lobby_types WHERE id = {int(gameType)+1} LIMIT 1")).fetchone()
+        output = connection.execute(text(f"SELECT allow_designed, allow_ai FROM lobby_types WHERE id = {int(gameType)+1} LIMIT 1")).fetchone()
         if output:
             allow_designed, allow_ai = output
         else:
             allow_designed, allow_ai = False, False
         gameMaxPlayers = int(variables['max_players'])+2
         password = variables.get('password', '')
-        result = connection.execute(sqlalchemy.text(f'INSERT INTO lobbies (title, host_id, type, max_players, password)\
+        result = connection.execute(text(f'INSERT INTO lobbies (title, host_id, type, max_players, password)\
                 VALUES ("{gameTitle}", "{player_id}", "{int(gameType)+1}", "{gameMaxPlayers}", "{password}")\
                 ON DUPLICATE KEY UPDATE title = "{gameTitle}", type = "{int(gameType)+1}", max_players = "{gameMaxPlayers}", password = "{password}"'))
         connection.commit()
@@ -2809,7 +2802,7 @@ def extract_variables(destination: defaultdict, variable_string: str) -> None:
         if len(t) == 2:
             destination[t[0]] = t[1] # type: ignore
 
-def command_open(parameters: list[bytes], database: sqlalchemy.Engine, player_id: str | int) -> str:
+def command_open(parameters: list[bytes], database: Engine, player_id: str | int) -> str:
     filename = parameters[0].decode()
     variables = defaultdict(lambda: None)
     if len(parameters) > 1:
@@ -2820,17 +2813,17 @@ def command_open(parameters: list[bytes], database: sqlalchemy.Engine, player_id
         database = database,
         player_id = player_id) # type: ignore
 
-def command_login(parameters: list[bytes], database: sqlalchemy.Engine) -> str:
+def command_login(parameters: list[bytes], database: Engine) -> str:
     lgd = parameters[0].decode()
     if lgd:
         with database.connect() as connection:
-            profileid = connection.execute(sqlalchemy.text(f"SELECT player_id "
+            profileid = connection.execute(text(f"SELECT player_id "
                                                            f"FROM sessions "
                                                            f"WHERE session_key = '{lgd}' "
                                                            f"LIMIT 1")).fetchone()
             if profileid:
                 profileid = profileid._mapping
-                profile = connection.execute(sqlalchemy.text(
+                profile = connection.execute(text(
                     f"SELECT "
                     f"player_id, "
                     f"name, "
@@ -2882,7 +2875,7 @@ def command_login(parameters: list[bytes], database: sqlalchemy.Engine) -> str:
 def command_url(parameters: list[bytes]) -> str:
     return parameters[0].decode()
 
-def command_alive(parameters: list[bytes], database: sqlalchemy.Engine) -> None:
+def command_alive(parameters: list[bytes], database: Engine) -> None:
     data = bytearray(parameters[0])
     data.extend(b'\x00'*(4-len(data)%4))
     values = []
@@ -2891,19 +2884,19 @@ def command_alive(parameters: list[bytes], database: sqlalchemy.Engine) -> None:
         values.append(unpack('<I', src)[0])
     reported_player_count, host_id = values[0], values[1]
     with database.connect() as connection:
-        connection.execute(sqlalchemy.text(
+        connection.execute(text(
             f"UPDATE lobbies SET players = '{reported_player_count}' WHERE host_id = {host_id}"
         ))
         connection.commit()
 
-def command_leave(database: sqlalchemy.Engine, player_id: str | int) -> None:
+def command_leave(database: Engine, player_id: str | int) -> None:
     with database.connect() as connection:
-        connection.execute(sqlalchemy.text(f"DELETE FROM lobbies WHERE host_id={player_id};"))
+        connection.execute(text(f"DELETE FROM lobbies WHERE host_id={player_id};"))
         connection.commit()
 
-def command_setipaddr(database: sqlalchemy.Engine, lobby_id: str, address: str) -> None:
+def command_setipaddr(database: Engine, lobby_id: str, address: str) -> None:
     with database.connect() as connection:
-        connection.execute(sqlalchemy.text(f"UPDATE lobbies SET ip = '{address}' WHERE id = {lobby_id}"))
+        connection.execute(text(f"UPDATE lobbies SET ip = '{address}' WHERE id = {lobby_id}"))
         connection.commit()
 
 def verbose_sql_error(requested_file: str, error_message: str) -> str:
@@ -2979,7 +2972,7 @@ def process_request(request, database, player_id) -> list:
         try:
             response.append(LW_show(command_open(parameters, database, player_id)))
 
-        except sqlalchemy.exc.SQLAlchemyError as error:
+        except SQLAlchemyError as error:
             print(error)
             response.append(LW_show(verbose_sql_error(parameters[0].decode(), error._message())))
             
