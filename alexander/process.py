@@ -70,48 +70,51 @@ def change(variables: dict, **_) -> str:
         )
 
 def clan_admin2(variables: dict, database: Engine, player_id, **_) -> str:
-    # · ·open· ·   clan_admin2.dcml -   clanID=288^signature=GOTT^new_jointer=136995
-    # clan_admin2.dcml ·   clanID=288^leaver=136995
-    print(type(player_id))
-    print(variables)
-    if variables['new_jointer']:
-        if variables['again'] == 'true':
-             with database.connect() as connection:
+    with database.connect() as connection:
+        has_clan = connection.execute(text(
+            f'SELECT '
+            f'signature '
+            f'FROM clans '
+            f'WHERE creator = {player_id} '
+        )).fetchone()
+    if variables['new_jointer'] == player_id:
+        if has_clan:
+            has_clan = has_clan._mapping
+            if variables['again'] == 'true':
+                pass
+            else:
+                return (
+                        f'<NGDLG>'
+                        f'#ebox[%L0](x:0,y:0,w:100%,h:100%)'
+                        f'#table[%TBL](%L0[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&clan_admin2.dcml\\00&again=true^clanID={variables["clanID"]}^new_jointer={player_id}\\00}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"NOTICE\",\"Delete clan [{has_clan["signature"]}]?\",26,\"OK\",\"Cancel\")'
+                        f'<NGDLG>'
+                    )
+        with database.connect() as connection:
+            connection.execute(text(
+                f'DELETE '
+                f'FROM clans '
+                f'WHERE creator = {player_id}'
+            ))
+            connection.execute(text(
+                f'UPDATE players '
+                f'SET clan_id = {variables["clanID"]} '
+                f'WHERE player_id = {player_id}'
+            ))
+            connection.commit()
+    elif variables['leaver']:
+        with database.connect() as connection:
+            if has_clan:
                 connection.execute(text(
                     f'DELETE '
                     f'FROM clans '
-                    f'WHERE creator = {player_id} '
+                    f'WHERE creator = {player_id}'
                 ))
+            else:
                 connection.execute(text(
                     f'UPDATE players '
-                    f'SET clan_id = {variables["clanID"]} '
-                    f'WHERE player_id = {player_id} '
+                    f'SET clan_id = NULL '
+                    f'WHERE player_id = {player_id}'
                 ))
-                connection.commit()
-        else:
-            with database.connect() as connection:
-                has_clan = connection.execute(text(
-                    f'SELECT '
-                    f'signature '
-                    f'FROM clans '
-                    f'WHERE creator = {player_id} '
-                )).fetchone()
-            if has_clan:
-                has_clan = has_clan._mapping
-                return (
-                    f'<NGDLG>'
-                    f'#ebox[%L0](x:0,y:0,w:100%,h:100%)'
-                    f'#table[%TBL](%L0[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&clan_admin2.dcml\\00&again=true^clanID={variables["clanID"]}^new_jointer={player_id}\\00}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"NOTICE\",\"Delete clan [{has_clan["signature"]}]?\",26,\"OK\",\"Cancel\")'
-                    f'<NGDLG>'
-                )
-
-    elif variables['leaver']:
-        with database.connect() as connection:
-            has_clan = connection.execute(text(
-                f'DELETE '
-                f'FROM clans '
-                f'WHERE creator = {player_id} '
-            ))
             connection.commit()
     return (
         f'<NGDLG>'
@@ -267,7 +270,7 @@ def clan_users(variables: dict, database: Engine, player_id, **_) -> str:
     members_buttons = []
     with database.connect() as connection:
         clan = connection.execute(text(
-            f"CALL get_clan_summary({variables['clanID']})"
+            f"CALL get_clan_summary({variables['clanID']}, {player_id})"
         )).fetchone()
         if clan:
             clan = clan._mapping
@@ -280,6 +283,9 @@ def clan_users(variables: dict, database: Engine, player_id, **_) -> str:
                 members_list.append(f",21,\"{member['state']}\",\"{member['nick']}\",\"{member['name']}\",\"{member['position']}\",\"{member['player_id']}\",\"{member['country']}\",\"{member['score']}\",\"{member['player_rank']}\"")
             members_list = "".join(members_list)
             members_buttons = "".join(members_buttons)
+            join_leave_button = \
+                f"#sbtn[%BTXT1](%B[x:641,y:377,w:100,h:305],{{GW|open&clan_admin2.dcml\\00&clanID={variables['clanID']}^leaver={player_id}\\00|LW_lockall}},\"Leave clan\")" if clan['is_member'] == 1 else\
+                f"#sbtn[%BTXT1](%B[x:641,y:377,w:100,h:305],{{GW|open&clan_admin2.dcml\\00&clanID={variables['clanID']}^new_jointer={player_id}\\00|LW_lockall}},\"Join clan\")" 
             return (
                 f"#ebox[%TB](x:0,y:0,w:100%,h:100%) "
                 f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12) "
@@ -333,7 +339,7 @@ def clan_users(variables: dict, database: Engine, player_id, **_) -> str:
                 f"#font(BC12,BC12,RC12) "
                 f"#txt[%INFO](%B0[x:12,y:64,w:540,h:20],{{}},\"{clan['info']}\")"
                 f"#font(R2C12,R2C12,RC12) "
-                f"#stbl[%TBL0](%B0[x:0,y:%INFO0+19,w:526-3,y1:D],{{GW|open&clan_users.dcml\\00&clanID=288^order=state^resort=\\00|LW_lockall}}{{GW|open&clan_users.dcml\\00&clanID=288^order=nick^resort=\\00|LW_lockall}}{{GW|open&clan_users.dcml\\00&clanID=288^order=name^resort=\\00|LW_lockall}}{{GW|open&clan_users.dcml\\00&clanID=288^order=position^resort=\\00|LW_lockall}}{{GW|open&clan_users.dcml\\00&clanID=288^order=id^resort=\\00|LW_lockall}}{{GW|open&clan_users.dcml\\00&clanID=288^order=country^resort=\\00|LW_lockall}}{{GW|open&clan_users.dcml\\00&clanID=288^order=score^resort=1\\00|LW_lockall}}{{GW|open&clan_users.dcml\\00&clanID=288^order=score^resort=1\\00|LW_lockall}},8,7,10%,1,21%,1,20%,1,8%,1,6%,1,14%,1,8%,1,13%,1,20,\"{{State\",\"{{Nickname\",\"{{Full Name\",\"{{Pos\",\"{{#\",\"{{Country\",\"{{Scores\",\"{{Rank\") "
+                f"#stbl[%TBL0](%B0[x:0,y:%INFO0+19,w:526-3,y1:D],{{GW|open&clan_users.dcml\\00&clanID={variables['clanID']}^order=state^resort=\\00|LW_lockall}}{{GW|open&clan_users.dcml\\00&clanID={variables['clanID']}^order=nick^resort=\\00|LW_lockall}}{{GW|open&clan_users.dcml\\00&clanID={variables['clanID']}^order=name^resort=\\00|LW_lockall}}{{GW|open&clan_users.dcml\\00&clanID={variables['clanID']}^order=position^resort=\\00|LW_lockall}}{{GW|open&clan_users.dcml\\00&clanID={variables['clanID']}^order=id^resort=\\00|LW_lockall}}{{GW|open&clan_users.dcml\\00&clanID={variables['clanID']}^order=country^resort=\\00|LW_lockall}}{{GW|open&clan_users.dcml\\00&clanID={variables['clanID']}^order=score^resort=1\\00|LW_lockall}}{{GW|open&clan_users.dcml\\00&clanID={variables['clanID']}^order=score^resort=1\\00|LW_lockall}},8,7,10%,1,21%,1,20%,1,8%,1,6%,1,14%,1,8%,1,13%,1,20,\"{{State\",\"{{Nickname\",\"{{Full Name\",\"{{Pos\",\"{{#\",\"{{Country\",\"{{Scores\",\"{{Rank\") "
                 f"#def_sbox(Internet/pix/i_pri%d,-1,-1,-1,-1,-1,-1,-1,-1,0,0,0,0,6,-21,25) "
                 f"#sbox[%SB](%B0[x:0-4,y:%PAN+28,w:526+4,y1:D-2]) "
                 f"{members_buttons}"
@@ -341,7 +347,7 @@ def clan_users(variables: dict, database: Engine, player_id, **_) -> str:
                 f"#font(BC12,R2C12,RC12) "
                 f"#stbl[%TBL](%SB[x:4,y:0,w:526-3,h:42],{{}},8,0,10%,1,21%,1,20%,1,8%,1,6%,1,14%,1,8%,1,13%,1{members_list})"
                 f"#font(BC14,WC14,BC14) "
-                f"#sbtn[%BTXT1](%B[x:641,y:377,w:100,h:305],{{GW|open&clan_admin2.dcml\\00&clanID=288^signature=GOTT^new_jointer={player_id}\\00|LW_lockall}},\"Join clan\")"
+                f"{join_leave_button}"
                 f"<NGDLG> "
                 f"<NGDLG> "
                 f"#block(cancel.cml,CAN)<NGDLG> "
@@ -654,14 +660,15 @@ def forum_view(variables: dict, database: Engine, **_) -> str:
         return ""
 
 def forum(variables: dict, database: Engine, **_) -> str:
+    thread_strings = ""
+    thread_list = []
+    search = False
+    if variables['mode'] not in ('1','2','3','4'):
+        variables['mode'] = '1'
+    if variables['search_nick'] or variables['search_text']:
+        search = True
     with database.connect() as connection:
-        thread_list = []
-        search = False
-        if variables['mode'] not in ('1','2','3','4'):
-            variables['mode'] = '1'
-        if variables['search_nick'] or variables['search_text']:
-            search = True
-            threads = connection.execute(text(f'CALL forum_search(\"{variables["search_nick"]}\", \"{variables["search_text"]}\" )')).fetchall()
+        threads = connection.execute(text(f'CALL forum_search(\"{variables["search_nick"]}\", \"{variables["search_text"]}\" )')).fetchall()
         threads = connection.execute(text(f"CALL get_thread_list({variables['mode']}, {int(variables['next_message']) if variables['next_message'] else 0})")).fetchall()
         for idx, entry in enumerate(threads[:30]):
             thread = entry._mapping
@@ -669,7 +676,7 @@ def forum(variables: dict, database: Engine, **_) -> str:
                 f"#font(BC12,RC12,RC12)",
                 f"""#txt[%TXT{idx+1}](%SB[x:218,y:{'4' if idx == 0 else f'%P{idx}-21'},w:100%-215,h:24],{{}},\"{thread['content'].replace(variables['search_text'], '{'+variables['search_text']+'}') if search else thread['content']}\")""",
                 f"#exec(LW_vis&0&%TXT{idx+1})",
-                f"#apan[%PAN{idx+1}](%SB[x:0,y:{'4' if idx == 0 else f'%P{idx}-21'}-10,w:100%,y1:{'4' if idx == 0 else f'%P{idx}-21'}+{'42' if variables['mode'] == '1' else '28'}>%TXT{idx+1}+5],{{GW|open&forum_view.dcml\\00&last_view=0^theme={thread['id']}\\00|LW_lockall}},14,\"\")",
+                f"#apan[%PAN{idx+1}](%SB[x:0,y:{'4' if idx == 0 else f'%P{idx}-21'}-10,w:100%,y1:{'4' if idx == 0 else f'%P{idx}-21'}+{'42' if variables['mode'] == '1' else '28'}>%TXT{idx+1}+5],{{GW|open&forum_view.dcml&last_view=0^theme={thread['id']}|LW_lockall}},14,\"\")",
                 f"#font(BC12,RC12,RC12)",
                 f"#txt[%TEXT{idx+1}](%SB[x:218,y:{'4' if idx == 0 else f'%P{idx}-21'},w:100%-220,h:24],{{}},\"{thread['content'].replace(variables['search_text'], '{'+variables['search_text']+'}') if search else thread['content']}\")",
                 f"#font(R2C12,R2C12,RC12)",
@@ -690,9 +697,8 @@ def forum(variables: dict, database: Engine, **_) -> str:
         f"#font(BC14,WC14,BC14)",
         f"#sbtn[%BT3](%B[x:684,y:377,w:15,h:305],{{GW|open&forum.dcml\\00&mode=^next_message={int(variables['next_message']) + 30 if variables['next_message'] else 0}^last_view=0^search_nick=^search_text=\\00|LW_lockall}},\"Next\")" if len(threads) > 29 else "",
     ]) if threads else "".join([
-            f"#font(RG18,RG18,RG18) ",
-            f"#ctxt[%T0](%B[x:154,y:179,w:523,h:20],{{}},\"{{No search results}}\")",
-            ]),
+            f"#font(RG18,RG18,RG18)", f"#ctxt[%T0](%B[x:154,y:179,w:523,h:20],{{}},\"{{No search results}}\")"]),
+    print(thread_strings)
     return (
         f"#exec(LW_cfile&20230722144507&Cookies/%GV_FORUM_LAST_TIME)"
         f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
@@ -733,13 +739,13 @@ def forum(variables: dict, database: Engine, **_) -> str:
         f"#font(RC14,GC14,RC14)"
         f"#ctxt[%LIST3](%B[x:0,y:%LIST2-9,w:146,h:24],{{GW|open&forum.dcml\\00&last_view=0\\00|LW_lockall}},\"{{Forum}}\")"
         f"#hint(%LIST3,\"Read and write forum messages\")"
-        f"#font(RC12,GC12,RC12)" if variables['mode'] == "1" else "#font(RC12,R2C12,RC12)"
+        f"{'#font(RC12,GC12,RC12)' if variables['mode'] == '1' else '#font(RC12,R2C12,RC12)'}"
         f"#ctxt[%LIST4](%B[x:0,y:%LIST3-10,w:146,h:24],{{GW|open&forum.dcml\\00&mode=1^last_view=0\\00|LW_lockall}},\"{{All themes}}\")"
-        f"#font(RC12,GC12,RC12)" if variables['mode'] == "2" else "#font(RC12,R2C12,RC12)"
+        f"{'#font(RC12,GC12,RC12)' if variables['mode'] == '2' else '#font(RC12,R2C12,RC12)'}"
         f"#ctxt[%LIST5](%B[x:0,y:%LIST4-1,w:146,h:24],{{GW|open&forum.dcml\\00&mode=2^last_view=0\\00|LW_lockall}},\"{{Last 10 messages}}\")"
-        f"#font(RC12,GC12,RC12)" if variables['mode'] == "3" else "#font(RC12,R2C12,RC12)"
+        f"{'#font(RC12,GC12,RC12)' if variables['mode'] == '3' else '#font(RC12,R2C12,RC12)'}"
         f"#ctxt[%LIST6](%B[x:0,y:%LIST5-1,w:146,h:24],{{GW|open&forum.dcml\\00&mode=3^last_view=0\\00|LW_lockall}},\"{{Messages for this day}}\")"
-        f"#font(RC12,GC12,RC12)" if variables['mode'] == "4" else "#font(RC12,R2C12,RC12)"
+        f"{'#font(RC12,GC12,RC12)' if variables['mode'] == '4' else '#font(RC12,R2C12,RC12)'}"
         f"#ctxt[%LIST7](%B[x:0,y:%LIST6-1,w:146,h:24],{{GW|open&forum.dcml\\00&mode=4^last_view=0\\00|LW_lockall}},\"{{Messages for this week}}\")"
         f"#font(RC12,R2C12,RC12)"
         f"#ctxt[%LIST8](%B[x:0,y:%LIST7-1,w:146,h:24],{{GW|open&forum_add.dcml\\00&last_view=0\\00|LW_lockall}},\"{{Add theme}}\")"
@@ -1194,7 +1200,6 @@ def log_user(variables: dict, database: Engine, **_) -> str:
             else:
                 profile = connection.execute(text(f"CALL login(\'{variables['VE_NICK']}\',\'{variables['VE_PASS']}\', \'{variables['VE_GMID']}\')")).fetchone()
             if profile:
-                print("Profile")
                 sid = genID()
                 connection.execute(text(f"REPLACE INTO sessions (session_key, player_id) VALUES ('{sid}', '{profile[0]}')"))
                 connection.commit()
@@ -1456,7 +1461,7 @@ def mail_new(variables: dict, database: Engine, player_id, **_) -> str | None:
             f"#pan[%P2](%B1[x:314,y:0-34,w:0,h:100%+68],10) ",
             f"<MAILBUTTONS>",
             f"#ebox[%B](x:0,y:0,w:100%,h:100%) ",
-            f"#exec(LW_cfile&\\00&Cookies/%GV_SEND_TO) ",
+            f"#exec(LW_cfile&\\00&Cookies/%GV_SEND_TO) " if not variables['send_to'] else f"#exec(LW_cfile&{variables['send_to']}\\00&Cookies/%GV_SEND_TO) ",
             f"#exec(LW_cfile&{variables['subject'] if variables['subject'] else ''}\\00&Cookies/%GV_SUBJECT) ",
             f"#exec(LW_cfile&{variables['message'] if variables['message'] else ''}\\00&Cookies/%GV_TEXT) ",
             f"#ebox[%B0](x:154,y:95,w:559,h:238) ",
@@ -2061,7 +2066,7 @@ def reg_new_user(variables: dict, database: Engine, **_) -> str | None:
                 f"\\00|LW_lockall}},2,0,3,13,252,"
                 f"\"INFORMATION\",\"Your personal profile data has been successfully updated!\\"
                 f"{new_password}"
-                f"Press OK button to save password, in other case press Cancel.\This option saves your password and Game Box #ID. Don't use it, if you play from computer accessible for other people.\",26,\"OK\",\"Cancel\")"
+                f"Press OK button to save password, in other case press Cancel.\\This option saves your password and Game Box #ID. Don't use it, if you play from computer accessible for other people.\",26,\"OK\",\"Cancel\")"
                 f"<MESDLG>")
 
         elif variables['VE_MODE'] in ('creat', None):
