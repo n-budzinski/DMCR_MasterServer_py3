@@ -77,10 +77,12 @@ def clan_admin2(variables: dict, database: Engine, player_id, **_) -> str:
     if variables['new_jointer']:
         if variables['again'] == 'true':
              with database.connect() as connection:
-                has_clan = connection.execute(text(
+                connection.execute(text(
                     f'DELETE '
                     f'FROM clans '
-                    f'WHERE creator = {player_id}; '
+                    f'WHERE creator = {player_id} '
+                ))
+                connection.execute(text(
                     f'UPDATE players '
                     f'SET clan_id = {variables["clanID"]} '
                     f'WHERE player_id = {player_id} '
