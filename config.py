@@ -26,21 +26,21 @@ ALEX_HOST = environ.get("DCMLEMU_ALEX_URL", DB_HOST)
 ALEX_SCHEME = environ.get("DCMLEMU_ALEX_SCHEME", "alexander")
 ALEX_USERNAME = environ.get("DCMLEMU_ALEX_USERNAME", DB_USERNAME)
 ALEX_PASSWORD = environ.get("DCMLEMU_ALEX_PASSWORD", DB_PASSWORD)
-ALEX_IRC = Irc(address = "192.168.0.200", ch1 = "#GSP!conquest_m!5", ch2 = "#GSP!conquest!3")
+ALEX_IRC = Irc(address = "127.0.0.1", ch1 = "#GSP!conquest_m!5", ch2 = "#GSP!conquest!3")
 ALEX_DBTBL_INTERVAL = 15
 
 ALEX_DEMO_HOST = environ.get("DCMLEMU_ALEX_DEMO_URL", DB_HOST)
 ALEX_DEMO_SCHEME = environ.get("DCMLEMU_ALEX_DEMO_SCHEME", "alexander_demo")
 ALEX_DEMO_USERNAME = environ.get("DCMLEMU_ALEX_DEMO_USERNAME", DB_USERNAME)
 ALEX_DEMO_PASSWORD =environ.get("DCMLEMU_ALEX_DEMO_PASSWORD", DB_PASSWORD)
-ALEX_DEMO_IRC = Irc(address = "irc.freenode.org", ch1 = "#GSP!conquest_m!5", ch2 = "#GSP!conquest!3")
+ALEX_DEMO_IRC = Irc(address = "127.0.0.1", ch1 = "#GSP!conquest_m!5", ch2 = "#GSP!conquest!3")
 ALEX_DEMO_DBTBL_INTERVAL = 15
 
 HOAE_HOST = environ.get("DCMLEMU_HOAE_URL", DB_HOST)
 HOAE_SCHEME = environ.get("DCMLEMU_HOAE_SCHEME", "heroes_of_annihilated_empires")
 HOAE_USERNAME = environ.get("DCMLEMU_HOAE_USERNAME", DB_USERNAME)
 HOAE_PASSWORD =environ.get("DCMLEMU_HOAE_PASSWORD", DB_PASSWORD)
-HOAE_IRC = Irc(address = "irc.freenode.org", ch1 = "#GSP!conquest_m!5", ch2 = "#GSP!conquest!3")
+HOAE_IRC = Irc(address = "127.0.0.1", ch1 = "#GSP!conquest_m!5", ch2 = "#GSP!conquest!3")
 HOAE_DBTBL_INTERVAL = 15
 
 ALEX_DB = create_engine(f'mysql+pymysql://{ALEX_USERNAME}:{ALEX_PASSWORD}@{ALEX_HOST}/{ALEX_SCHEME}?charset=utf8mb4')

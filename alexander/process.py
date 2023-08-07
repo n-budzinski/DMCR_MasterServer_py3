@@ -7,9 +7,6 @@ from sqlalchemy.exc import DBAPIError, SQLAlchemyError
 from math import floor, ceil
 from struct import unpack
 
-
-
-
 def cancel(**_) -> str:
     return (
         '<NGDLG>'
@@ -1671,7 +1668,7 @@ def mclick(variables : dict, **_) -> str:
         f"<MCLICK>"
     )
 
-def enter_game_dlg(database: Engine, **_) -> str:
+def enter_game_dlg(**_) -> str:
     #· ·· ·open· ·   enter_game_dlg.dcml 
     #land_id=2 ·   02     35070762 
 #HOST
