@@ -72,43 +72,53 @@ def change(variables: dict, **_) -> str:
         f'<MESDLG>'
         )
 
-# TODO: PLACEHOLDER
-def clan_admin2(variables: dict, **_) -> str:
+def clan_admin2(variables: dict, database: Engine, player_id, **_) -> str:
     # · ·open· ·   clan_admin2.dcml -   clanID=288^signature=GOTT^new_jointer=136995
     # clan_admin2.dcml ·   clanID=288^leaver=136995
-
+    print(type(player_id))
+    print(variables)
     if variables['new_jointer']:
         if variables['again'] == 'true':
-            ###removes existing clan
-            return (
-                f'<NGDLG>'
-                f'#exec(GW|open&clan_users.dcml\\00&clanID=288\\00|LW_lockall)'
-                f'<NGDLG>'
-            )
+             with database.connect() as connection:
+                has_clan = connection.execute(text(
+                    f'DELETE '
+                    f'FROM clans '
+                    f'WHERE creator = {player_id}; '
+                    f'UPDATE players '
+                    f'SET clan_id = {variables["clanID"]} '
+                    f'WHERE player_id = {player_id} '
+                ))
+                connection.commit()
         else:
-            ## if has a clan
-            return (
-                f'<NGDLG>'
-                f'#ebox[%L0](x:0,y:0,w:100%,h:100%)'
-                f'#table[%TBL](%L0[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&clan_admin2.dcml\\00&again=true^clanID=288^new_jointer=136995\\00}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"NOTICE\",\"Delete clan [SAM]\",26,\"OK\",\"Cancel\")'
-                f'<NGDLG>'
-            )
+            with database.connect() as connection:
+                has_clan = connection.execute(text(
+                    f'SELECT '
+                    f'signature '
+                    f'FROM clans '
+                    f'WHERE creator = {player_id} '
+                )).fetchone()
+            if has_clan:
+                has_clan = has_clan._mapping
+                return (
+                    f'<NGDLG>'
+                    f'#ebox[%L0](x:0,y:0,w:100%,h:100%)'
+                    f'#table[%TBL](%L0[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&clan_admin2.dcml\\00&again=true^clanID={variables["clanID"]}^new_jointer={player_id}\\00}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"NOTICE\",\"Delete clan [{has_clan["signature"]}]?\",26,\"OK\",\"Cancel\")'
+                    f'<NGDLG>'
+                )
 
     elif variables['leaver']:
-        #leaves clan
-        return (
-            f'<NGDLG>'
-            f'#exec(GW|open&clan_users.dcml\\00&clanID=288\\00|LW_lockall)'
-            f'<NGDLG>'
-        )
-
-    else:
-        ###removes existing clan
-        return (
-            f'<NGDLG>'
-            f'#exec(GW|open&clan_users.dcml\\00&clanID=288\\00|LW_lockall)'
-            f'<NGDLG>'
-        )
+        with database.connect() as connection:
+            has_clan = connection.execute(text(
+                f'DELETE '
+                f'FROM clans '
+                f'WHERE creator = {player_id} '
+            ))
+            connection.commit()
+    return (
+        f'<NGDLG>'
+        f'#exec(GW|open&clan_users.dcml\\00&clanID={variables["clanID"]}\\00|LW_lockall)'
+        f'<NGDLG>'
+    )
 
 def clan_load_image(variables: dict, **_) -> str:
     if variables['signature'] and variables['icon_name']:
@@ -1230,16 +1240,13 @@ def log_user(variables: dict, database: Engine, **_) -> str:
 def mail_list(variables: dict, database: Engine, player_id, **_) -> str:
     panel_list = []
     message_list = []
-
     with database.connect() as connection:
-
         if variables['delete']:
             sender = connection.execute(text(
                 f"SELECT id_from, id_to "
                 f"FROM mail_messages "
                 f"WHERE mail_messages.id = {variables['messageID']}"
             )).fetchone()
-
             if sender:
                 sender = sender._mapping
                 connection.execute(text(
@@ -1248,13 +1255,10 @@ def mail_list(variables: dict, database: Engine, player_id, **_) -> str:
                     f"{',removed_by_recipient = 1' if sender['id_from'] == sender['id_to'] else ''} "
                     f"WHERE id = {variables['messageID']}"
                 ))
-
                 connection.commit()
-
         summary = connection.execute(text(
         f"CALL mail_stats({player_id}) "
         )).fetchone()
-
         if summary:
             summary = summary._mapping
             if variables['sent'] == 'true':
@@ -1265,9 +1269,7 @@ def mail_list(variables: dict, database: Engine, player_id, **_) -> str:
                 mode = "3"
             else:
                 mode = "4"
-
             messages = connection.execute(text(f"CALL get_mail({mode}, {player_id}) ")).fetchall()
-
             for idx, entry in enumerate(messages):
                 message = entry._mapping
                 highlight = "{" if message.status == 1 else ""
@@ -1277,19 +1279,15 @@ def mail_list(variables: dict, database: Engine, player_id, **_) -> str:
                 message_list.append(
                     f",21,\"{message.nick}\",\"{highlight}{message.subject}\",\"{message.sent_at}\""
                 )
-
             panel_list = "".join(panel_list)
             message_list = "".join(message_list)
-
             selection = 0
-
             if variables['sent'] == 'true':
                 selection = 1
             elif variables['readable'] == '2':
                 selection = 2
             elif variables['readable'] == '3':
                 selection = 3
-
             return (
                 f"#ebox[%TB](x:0,y:0,w:100%,h:100%) "
                 f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12) "
@@ -2948,6 +2946,7 @@ def process_request(request, database, player_id) -> list:
         pass
     
     elif command == "setclan":
+        print("SIGNATURE ", parameters)
         # signature = parameters[]
         pass
 
