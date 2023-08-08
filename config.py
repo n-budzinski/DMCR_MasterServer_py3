@@ -69,3 +69,24 @@ mysql_error_messages = defaultdict(lambda: "ERR_INTERNAL",{
     "REG_NEW_USER_EDIT_OK": "Your personal profile data has been successfully updated!\\Press OK button to save password, in other case press Cancel.\\This option saves your password and Game Box #ID. Don't use it, if you play from computer accessible for other people.",
     "REG_NEW_USER_CREATE_OK" : "Your personal profile data has been successfully created!\\Press OK button to save password, in other case press Cancel.\\This option saves your password and Game Box #ID. Don't use it, if you play from computer accessible for other people."
 })
+
+LOCALE = {
+    1: "English",
+    2: "German",
+    3: "French",
+    4: "Russian",
+    5: "Japan",
+    6: "Spanish",
+    7: "Italy",
+    8: "Polish",
+    9: "Ukrainian",
+    10: "Czech",
+    11: "Portuguese",
+    12: "Chinese",
+    13: "Estonian",
+    14: "Lithuanian",
+    15: "Dutch",
+    16: "HOAE: Japanese",
+    17: "HOAE: Chinese Simplified",
+    18: "HOAE: Chinese Traditional"
+}

@@ -6,12 +6,15 @@ from sqlalchemy import Engine, text
 from sqlalchemy.exc import DBAPIError, SQLAlchemyError
 from math import floor, ceil
 from struct import unpack
+from typing import Callable
+from sqlalchemy.engine.row import RowMapping, Row
 
 def cancel(**_) -> str:
     return (
         '<NGDLG>'
         '<NGDLG>'
     )
+
 
 def change_account2(**_) -> str:
     return (
@@ -49,6 +52,7 @@ def change_account2(**_) -> str:
         f'#end(CAN)'
     )
 
+
 def change(variables: dict, **_) -> str:
     return (
         f'<MESDLG>'
@@ -67,11 +71,12 @@ def change(variables: dict, **_) -> str:
         f'^accounts={variables["accounts"]}'
         f'\\00|LW_lockall)'
         f'<MESDLG>'
-        )
+    )
+
 
 def clan_admin2(variables: dict, database: Engine, player_id, **_) -> str:
     with database.connect() as connection:
-        has_clan = connection.execute(text(
+        has_clan: Row = connection.execute(text(
             f'SELECT '
             f'signature '
             f'FROM clans '
@@ -79,16 +84,19 @@ def clan_admin2(variables: dict, database: Engine, player_id, **_) -> str:
         )).fetchone()
     if variables['new_jointer'] == player_id:
         if has_clan:
-            has_clan = has_clan._mapping
+            has_clan: RowMapping = has_clan._mapping
             if variables['again'] == 'true':
                 pass
             else:
                 return (
-                        f'<NGDLG>'
-                        f'#ebox[%L0](x:0,y:0,w:100%,h:100%)'
-                        f'#table[%TBL](%L0[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&clan_admin2.dcml\\00&again=true^clanID={variables["clanID"]}^new_jointer={player_id}\\00}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"NOTICE\",\"Delete clan [{has_clan["signature"]}]?\",26,\"OK\",\"Cancel\")'
-                        f'<NGDLG>'
-                    )
+                    f'<NGDLG>'
+                    f'#ebox[%L0](x:0,y:0,w:100%,h:100%)'
+                    f'#table[%TBL](%L0[x:243,y:130,w:415,h:205],{{}}{{}}{{'
+                    f'GW|open&clan_admin2.dcml\\00&again=true^clanID={variables["clanID"]}^new_jointer='
+                    f'{player_id}\\00}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"NOTICE\",\"Delete clan ['
+                    f'{has_clan["signature"]}]?\",26,\"OK\",\"Cancel\")'
+                    f'<NGDLG>'
+                )
         with database.connect() as connection:
             connection.execute(text(
                 f'DELETE '
@@ -122,18 +130,23 @@ def clan_admin2(variables: dict, database: Engine, player_id, **_) -> str:
         f'<NGDLG>'
     )
 
+
 def clan_load_image(variables: dict, **_) -> str:
     if variables['signature'] and variables['icon_name']:
         return (
             f'<NGDLG>'
             f'#exec(GW|setclan&{variables["signature"]}.png\\00&<@%GV_CURFILE>&)'
-            f'#exec(GW|open&clan_load_image.dcml\\00&help=true^signature={variables["signature"]}^icon_name={variables["icon_name"]}.png^gdwrite=true\\00|LW_lockall)'
+            f'#exec(GW|open&clan_load_image.dcml\\00'
+            f'&help=true^signature={variables["signature"]}^icon_name={variables["icon_name"]}.png^gdwrite=true'
+            f'\\00|LW_lockall)'
             f'<NGDLG>'
-            )
+        )
     return (
         f'<NGDLG> '
         f'#ebox[%L0](x:0,y:0,w:100%,h:100%)'
-        f'#table[%TBL](%L0[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&clan_load_image.dcml\\00&help=true^signature=SAM^icon_name=<%GV_CLAN_ICON>\\00|LW_lockall}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"CLAN ICON\",\"\",26,\"Upload\",\"Cancel\")'
+        f'#table[%TBL](%L0[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&clan_load_image.dcml\\00'
+        f'&help=true^signature={variables["signature"]}^icon_name=<%GV_CLAN_ICON>\\00|LW_lockall}}'
+        f'{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"CLAN ICON\",\"\",26,\"Upload\",\"Cancel\")'
         f'#ebox[%BI](x:254,y:138,w:416,h:167)'
         f'#pan[%P1](%BI[x:181,y:14,w:175,h:141],5)'
         f'#def_sbox(Internet/pix/i_pri%d,-1,-1,-1,-1,-1,-1,-1,-1,0,0,0,0,6,-3,6)'
@@ -152,45 +165,49 @@ def clan_load_image(variables: dict, **_) -> str:
         f'<%FLBOX>'
         f'<%FLBOX>'
         f'<NGDLG>'
-        )
+    )
+
 
 def clan_new(variables: dict, database: Engine, player_id: str | int, **_) -> str:
     if variables['title'] and variables['signature']:
-            with database.connect() as connection:
-                connection.execute(text(f'CALL create_clan({player_id}, "{variables["title"]}", "{variables["signature"]}", "{variables["info"]}")'))
-                connection.commit()
-            return (
-                f'#ebox[%TB](x:0,y:0,w:100%,h:100%)'
-                f'#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)'
-                f'#pix[%PXT2](%TB[x:0,y:263,w:100%,h:100%],{{}},Internet/pix/i_pri0,13,13,13,13)'
-                f'#pan[%P1](%TB[x:42,y:0-22,w:0,h:80],10)'
-                f'#font(RG18,RG18,RG18)'
-                f'#txt[%PL](%TB[x:737,y:0,w:150,h:20],{{}},\"Players\")'
-                f'#font(BG18,BG18,BG18)'
-                f'#ctxt[%TTTEXT](%TB[x:0-62,y:0-32,w:1024,h:20],{{}},\"PLAYER LIST\")'
-                f'#font(R2C12,R2C12,R2C12)'
-                f'#txt[%TMTEXT](%TB[x:0,y:514,w:100,h:20],{{}},\"Message:\")'
-                f'#def_gp_btn(Internet/pix/i_pri0,53,53,0,1)'
-                f'#font(RC12,R2C12,RC12)'
-                f'#gpbtn[%BT1](%TB[x:74,y:23,w:-22,h:-18],{{GW|open&news.dcml\\00|LW_lockall}},\"News & Events\")'
-                f'#hint(%BT1,\"News, events, forum and punishment list\")'
-                f'#font(RC12,RC12,RC12)'
-                f'#def_gp_btn(Internet/pix/i_pri0,51,51,0,1)'
-                f'#gpbtn[%BT2](%TB[x:196,y:22,w:-22,h:-18],{{GW|open&users_list.dcml\\00&language=\\00|LW_lockall}},\"Player List\")'
-                f'#hint(%BT2,\"Player list, personal mail and clan information\")'
-                f'#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)'
-                f'#font(RC12,R2C12,RC12)'
-                f'#gpbtn[%BT4](%TB[x:318,y:23,w:-22,h:-18],{{GW|open&games.dcml\\00|LW_lockall}},\"Custom Games\")'
-                f'#hint(%BT4,\"Play custom games\")#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)'
-                f'#font(RC12,R2C12,RC12)'
-                f'#gpbtn[%BT5](%TB[x:440,y:23,w:-22,h:-18],{{GW|open&scored_games.dcml\\00&player_id=0\\00|LW_lockall}},\"Scored Games\")'
-                f'#hint(%BT5,\"Played games and their scores\")'
-                f'#ebox[%B_VOTE](x:5,y:396,w:140,h:103)'
-                f'<VOTING>'
-                f'#exec(GW|open&voting.dcml\\00&question=46\\00)'
-                f'<VOTING>'
-                f'#exec(GW|open&clans_list.dcml\\00&create_icon=true^signature=SAM\\00|LW_lockall)'
-            )
+        with database.connect() as connection:
+            connection.execute(text(
+                f'CALL create_clan({player_id}, "{variables["title"]}", "{variables["signature"]}", "{variables["info"]}")'))
+            connection.commit()
+        return (
+            f'#ebox[%TB](x:0,y:0,w:100%,h:100%)'
+            f'#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)'
+            f'#pix[%PXT2](%TB[x:0,y:263,w:100%,h:100%],{{}},Internet/pix/i_pri0,13,13,13,13)'
+            f'#pan[%P1](%TB[x:42,y:0-22,w:0,h:80],10)'
+            f'#font(RG18,RG18,RG18)'
+            f'#txt[%PL](%TB[x:737,y:0,w:150,h:20],{{}},\"Players\")'
+            f'#font(BG18,BG18,BG18)'
+            f'#ctxt[%TTTEXT](%TB[x:0-62,y:0-32,w:1024,h:20],{{}},\"PLAYER LIST\")'
+            f'#font(R2C12,R2C12,R2C12)'
+            f'#txt[%TMTEXT](%TB[x:0,y:514,w:100,h:20],{{}},\"Message:\")'
+            f'#def_gp_btn(Internet/pix/i_pri0,53,53,0,1)'
+            f'#font(RC12,R2C12,RC12)'
+            f'#gpbtn[%BT1](%TB[x:74,y:23,w:-22,h:-18],{{GW|open&news.dcml\\00|LW_lockall}},\"News & Events\")'
+            f'#hint(%BT1,\"News, events, forum and punishment list\")'
+            f'#font(RC12,RC12,RC12)'
+            f'#def_gp_btn(Internet/pix/i_pri0,51,51,0,1)'
+            f'#gpbtn[%BT2](%TB[x:196,y:22,w:-22,h:-18],{{GW|open&users_list.dcml\\00&language=\\00|LW_lockall}},'
+            f'\"Player List\")'
+            f'#hint(%BT2,\"Player list, personal mail and clan information\")'
+            f'#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)'
+            f'#font(RC12,R2C12,RC12)'
+            f'#gpbtn[%BT4](%TB[x:318,y:23,w:-22,h:-18],{{GW|open&games.dcml\\00|LW_lockall}},\"Custom Games\")'
+            f'#hint(%BT4,\"Play custom games\")#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)'
+            f'#font(RC12,R2C12,RC12)'
+            f'#gpbtn[%BT5](%TB[x:440,y:23,w:-22,h:-18],{{GW|open&scored_games.dcml\\00&player_id=0\\00|LW_lockall}},'
+            f'\"Scored Games\")'
+            f'#hint(%BT5,\"Played games and their scores\")'
+            f'#ebox[%B_VOTE](x:5,y:396,w:140,h:103)'
+            f'<VOTING>'
+            f'#exec(GW|open&voting.dcml\\00&question=46\\00)'
+            f'<VOTING>'
+            f'#exec(GW|open&clans_list.dcml\\00&create_icon=true^signature={variables["signature"]}\\00|LW_lockall)'
+        )
     return (
         f'#block(l_games_btn.cml,l_g):<!goback!>\\00'
         f'#end(l_g)'
@@ -210,7 +227,8 @@ def clan_new(variables: dict, database: Engine, player_id: str | int, **_) -> st
         f'#hint(%BT1,\"News, events, forum and punishment list\")'
         f'#font(RC12,RC12,RC12)'
         f'#def_gp_btn(Internet/pix/i_pri0,51,51,0,1)'
-        f'#gpbtn[%BT2](%TB[x:196,y:22,w:-22,h:-18],{{GW|open&users_list.dcml\\00&language=\\00|LW_lockall}},\"Player List\")'
+        f'#gpbtn[%BT2](%TB[x:196,y:22,w:-22,h:-18],{{GW|open&users_list.dcml\\00&language=\\00|LW_lockall}},'
+        f'\"Player List\")'
         f'#hint(%BT2,\"Player list, personal mail and clan information\")'
         f'#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)'
         f'#font(RC12,R2C12,RC12)'
@@ -218,7 +236,8 @@ def clan_new(variables: dict, database: Engine, player_id: str | int, **_) -> st
         f'#hint(%BT4,\"Play custom games\")'
         f'#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)'
         f'#font(RC12,R2C12,RC12)'
-        f'#gpbtn[%BT5](%TB[x:440,y:23,w:-22,h:-18],{{GW|open&scored_games.dcml\\00&player_id=0\\00|LW_lockall}},\"Scored Games\")'
+        f'#gpbtn[%BT5](%TB[x:440,y:23,w:-22,h:-18],{{GW|open&scored_games.dcml\\00&player_id=0\\00|LW_lockall}},'
+        f'\"Scored Games\")'
         f'#hint(%BT5,\"Played games and their scores\")'
         f'#ebox[%B_VOTE](x:5,y:396,w:140,h:103)'
         f'<VOTING>'
@@ -265,6 +284,7 @@ def clan_new(variables: dict, database: Engine, player_id: str | int, **_) -> st
         f'#end(CAN)'
     )
 
+
 def clan_users(variables: dict, database: Engine, player_id, **_) -> str:
     members_list = []
     members_buttons = []
@@ -279,13 +299,16 @@ def clan_users(variables: dict, database: Engine, player_id, **_) -> str:
             )).fetchall()
             for idx, member in enumerate(members):
                 member = member._mapping
-                members_buttons.append(f"#apan[%APAN{idx}](%SB[x:0,y:{idx*21}-2,w:100%,h:20],{{GW|open&user_details.dcml\\00&ID={member['player_id']}\\00|LW_lockall}},8) ")
-                members_list.append(f",21,\"{member['state']}\",\"{member['nick']}\",\"{member['name']}\",\"{member['position']}\",\"{member['player_id']}\",\"{member['country']}\",\"{member['score']}\",\"{member['player_rank']}\"")
+                members_buttons.append(
+                    f"#apan[%APAN{idx}](%SB[x:0,y:{idx * 21}-2,w:100%,h:20],{{GW|open&user_details.dcml\\00&ID={member['player_id']}\\00|LW_lockall}},8) ")
+                members_list.append(
+                    f",21,\"{member['state']}\",\"{member['nick']}\",\"{member['name']}\",\"{member['position']}\",\"{member['player_id']}\",\"{member['country']}\",\"{member['score']}\",\"{member['player_rank']}\"")
             members_list = "".join(members_list)
             members_buttons = "".join(members_buttons)
             join_leave_button = \
-                f"#sbtn[%BTXT1](%B[x:641,y:377,w:100,h:305],{{GW|open&clan_admin2.dcml\\00&clanID={variables['clanID']}^leaver={player_id}\\00|LW_lockall}},\"Leave clan\")" if clan['is_member'] == 1 else\
-                f"#sbtn[%BTXT1](%B[x:641,y:377,w:100,h:305],{{GW|open&clan_admin2.dcml\\00&clanID={variables['clanID']}^new_jointer={player_id}\\00|LW_lockall}},\"Join clan\")" 
+                f"#sbtn[%BTXT1](%B[x:641,y:377,w:100,h:305],{{GW|open&clan_admin2.dcml\\00&clanID={variables['clanID']}^leaver={player_id}\\00|LW_lockall}},\"Leave clan\")" if \
+                    clan['is_member'] == 1 else \
+                    f"#sbtn[%BTXT1](%B[x:641,y:377,w:100,h:305],{{GW|open&clan_admin2.dcml\\00&clanID={variables['clanID']}^new_jointer={player_id}\\00|LW_lockall}},\"Join clan\")"
             return (
                 f"#ebox[%TB](x:0,y:0,w:100%,h:100%) "
                 f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12) "
@@ -356,6 +379,7 @@ def clan_users(variables: dict, database: Engine, player_id, **_) -> str:
             )
     return ""
 
+
 def clans_list(variables: dict, database: Engine, **_) -> str:
     button_list = []
     clan_list = []
@@ -373,7 +397,7 @@ def clans_list(variables: dict, database: Engine, **_) -> str:
             for idx, entry in enumerate(clans):
                 clans = entry._mapping
                 button_list.append(
-                    f"#apan[%BT{idx}](%SB[x:0,y:{idx*21}-2,w:100%,h:20],{{GW|open&clan_users.dcml\\00&clanID={clans.id}\\00|LW_lockall}},8)"
+                    f"#apan[%BT{idx}](%SB[x:0,y:{idx * 21}-2,w:100%,h:20],{{GW|open&clan_users.dcml\\00&clanID={clans.id}\\00|LW_lockall}},8)"
                 )
                 clan_list.append(
                     f",21,\"{clans.title}\",\"{clans.signature}\",\"{clans.created_at}\",\"{clans.nick}\",\"{clans.members}\",\"{clans.score}\",\"{clans.average_score}\""
@@ -437,21 +461,24 @@ def clans_list(variables: dict, database: Engine, **_) -> str:
         f"#end(CAN)"
     )
 
+
 def dbtbl(database: Engine, **_) -> str:
     with database.connect() as connection:
         lobbies = connection.execute(text(
             f"CALL get_lobbies()")).fetchall()
     ping_list = "".join(
-        [f"#apan[%APAN{idx}](%SB[x:0,y:{idx*21}-2,w:100%,h:20],"\
-        f"{{GW|open&join_game.dcml\\00&delete_old=true^id_room={str(lobby[0])}\\00|LW_lockall}},8)"\
-        f"#font(BC12,BC12,BC12)"\
-        f"#ping[%PING{idx}](%SB[x:86%+30,y:{str(idx*21)}+4,w:14,h:20],"\
-        f"{reverse_address(lobby[-2])})"
-            for idx, lobby in enumerate(lobbies)])
-    lobbies = "".join([f',21,{str(lobby[1])} [{ "Y" if lobby[6] else "N"}], {lobby[-1]},"{lobby[3]}","{lobby[5]}/{lobby[4]}",""' for lobby in lobbies])
+        [f"#apan[%APAN{idx}](%SB[x:0,y:{idx * 21}-2,w:100%,h:20]," \
+         f"{{GW|open&join_game.dcml\\00&delete_old=true^id_room={str(lobby[0])}\\00|LW_lockall}},8)" \
+         f"#font(BC12,BC12,BC12)" \
+         f"#ping[%PING{idx}](%SB[x:86%+30,y:{str(idx * 21)}+4,w:14,h:20]," \
+         f"{reverse_address(lobby[-2])})"
+         for idx, lobby in enumerate(lobbies)])
+    lobbies = "".join(
+        [f',21,{str(lobby[1])} [{"Y" if lobby[6] else "N"}], {lobby[-1]},"{lobby[3]}","{lobby[5]}/{lobby[4]}",""' for
+         lobby in lobbies])
     return (
         f"<DBTBL>"
-        f"#exec(LW_time&{1000*ALEX_DBTBL_INTERVAL}&l_games_btn.cml\\00)"
+        f"#exec(LW_time&{1000 * ALEX_DBTBL_INTERVAL}&l_games_btn.cml\\00)"
         f"#block(l_games_btn.cml,l_g):GW|open&dbtbl.dcml\\00&order=r.hbtime^resort=\\00|LW_lockall"
         f"#end(l_g)"
         f"#ebox[%BB](x:0,y:0,w:100%,h:100%)"
@@ -464,23 +491,23 @@ def dbtbl(database: Engine, **_) -> str:
         f"#stbl[%ROOM_LST](%SB[x:4,y:0,w:523,h:21],{{}},5,0,33,0,25,1,14,1,14,1,14,1"
         f"{lobbies}"
         f")#font(BC14,WC14,BC14)"
-        f"#sbtn[%B_J](%BB[x:521,y:377,w:100,h:305],{{GW|open&dbtbl.dcml\\00&order=r.hbtime^resort=\\00|LW_lockall}},\"Refresh\")"
-        f"#sbtn[%B_CREDITS](%BB[x:50,y:377,w:100,h:305],{{GW|url&https://0x7350.blogspot.com/\\00}},\"Credits\")"
-        f"#sbtn[%B_DISCORD](%BB[x:170,y:377,w:100,h:305],{{GW|url&https://discord.gg/7tTAnPnNWG\\00}},\"Discord\")"
-        f"#hint(%B_DISCORD,\"Find mates to play with\")"
-        f"#sbtn[%B_DONATE](%BB[x:290,y:377,w:100,h:305],{{GW|url&https://paypal.me/NorbertBudzinski\\00}},\"Donate\")"
-        f"#hint(%B_DONATE,\"Buy me a coffee\")"
-        f"#sbtn[%B_J](%BB[x:521,y:377,w:100,h:305],{{GW|open&dbtbl.dcml\\00&order=r.hbtime^resort=\\00|LW_lockall}},\"Refresh\")"
+        # f"#sbtn[%B_J](%BB[x:521,y:377,w:100,h:305],{{GW|open&dbtbl.dcml\\00&order=r.hbtime^resort=\\00|LW_lockall}},\"Refresh\")"
+        # f"#sbtn[%B_DONATE](%BB[x:50,y:377,w:100,h:305],{{GW|url&https://paypal.me/NorbertBudzinski\\00}},\"Donate\")"
+        # f"#hint(%B_DONATE,\"Buy me a coffee\")"
+        f"#sbtn[%B_J](%BB[x:401,y:377,w:100,h:305],{{GW|open&dbtbl.dcml\\00&order=r.hbtime^resort=\\00|LW_lockall}},\"Refresh\")"
         f"<DBTBL>"
     )
+
 
 def forum_add(variables: dict, database: Engine, player_id: str | int, **_) -> str:
     if variables['add_message']:
         with database.connect() as connection:
             if variables['theme'] != 'None':
-                connection.execute(text(f'INSERT INTO thread_messages (author_id, thread_id, content) VALUES ({player_id}, {variables["theme"]}, "{variables["add_message"]}")'))
+                connection.execute(text(
+                    f'INSERT INTO thread_messages (author_id, thread_id, content) VALUES ({player_id}, {variables["theme"]}, "{variables["add_message"]}")'))
             else:
-                connection.execute(text(f'INSERT INTO threads (author_id, content) VALUES ({player_id}, "{variables["add_message"]}")'))
+                connection.execute(text(
+                    f'INSERT INTO threads (author_id, content) VALUES ({player_id}, "{variables["add_message"]}")'))
             connection.commit()
             return "#exec(GW|open&forum.dcml\\00&mode=1^last_view=^noback=true\\00|LW_lockall)"
     return (
@@ -545,6 +572,7 @@ def forum_add(variables: dict, database: Engine, player_id: str | int, **_) -> s
         f"#end(CAN)"
     )
 
+
 def forum_search(**_) -> str:
     return (
         f"<NGDLG>"
@@ -566,6 +594,7 @@ def forum_search(**_) -> str:
         f"<NGDLG>"
     )
 
+
 def forum_view(variables: dict, database: Engine, **_) -> str:
     with database.connect() as connection:
         if variables['theme']:
@@ -575,19 +604,19 @@ def forum_view(variables: dict, database: Engine, **_) -> str:
                 messages = connection.execute(text(f"""CALL get_thread_messages({thread['id']})"""))
                 message_list = []
                 for idx, entry in enumerate(messages):
-                        message = entry._mapping
-                        message_list.append("".join([
-                            f"#font(R2C12,R2C12,RC12)",
-                            f"#txt[%S_DATE{idx+1}](%SB[x:7,y:{'6' if idx == 0 else f'%P{idx}-22'},w:170,h:24],{{}},\"Date:\")",
-                            f"#font(BC12,R2C12,RC12)",
-                            f"#txt[%DATE{idx+1}](%SB[x:%S_DATE{idx+1}+5,y:{'6' if idx == 0 else f'%P{idx}-22'},w:170,h:24],{{}},\"{message['created_at']}\")",
-                            f"#font(R2C12,BC12,RC12)",
-                            f"#txt[%S_CR{idx+1}](%SB[x:7,y:{'6' if idx == 0 else f'%P{idx}-22'}+14,w:170,h:24],{{}},\"Author:\")",
-                            f"#txt[%CR{idx+1}](%SB[x:%S_CR{idx+1}+5,y:{'6' if idx == 0 else f'%P{idx}-22'}+14,w:170,h:24],{{GW|open&user_details.dcml\\00&ID={message['author_id']}\\00|LW_lockall}},\"{{{message['nick']}}}\")",
-                            f"#font(BC12,RC12,RC12)",
-                            f"#txt[%TEXT{idx+1}](%SB[x:215,y:{'6' if idx == 0 else f'%P{idx}-22'},w:100%-220+0,h:24],{{}},\"{message['content']}\")",
-                            f"#pan[%P{idx+1}](%SB[x:0-32,y:%CR{idx+1}>%TEXT{idx+1}+37,w:100%+65,h:0],9)",
-                        ]))
+                    message = entry._mapping
+                    message_list.append("".join([
+                        f"#font(R2C12,R2C12,RC12)",
+                        f"#txt[%S_DATE{idx + 1}](%SB[x:7,y:{'6' if idx == 0 else f'%P{idx}-22'},w:170,h:24],{{}},\"Date:\")",
+                        f"#font(BC12,R2C12,RC12)",
+                        f"#txt[%DATE{idx + 1}](%SB[x:%S_DATE{idx + 1}+5,y:{'6' if idx == 0 else f'%P{idx}-22'},w:170,h:24],{{}},\"{message['created_at']}\")",
+                        f"#font(R2C12,BC12,RC12)",
+                        f"#txt[%S_CR{idx + 1}](%SB[x:7,y:{'6' if idx == 0 else f'%P{idx}-22'}+14,w:170,h:24],{{}},\"Author:\")",
+                        f"#txt[%CR{idx + 1}](%SB[x:%S_CR{idx + 1}+5,y:{'6' if idx == 0 else f'%P{idx}-22'}+14,w:170,h:24],{{GW|open&user_details.dcml&ID={message['author_id']}|LW_lockall}},\"{{{message['nick']}}}\")",
+                        f"#font(BC12,RC12,RC12)",
+                        f"#txt[%TEXT{idx + 1}](%SB[x:215,y:{'6' if idx == 0 else f'%P{idx}-22'},w:100%-220+0,h:24],{{}},\"{message['content']}\")",
+                        f"#pan[%P{idx + 1}](%SB[x:0-32,y:%CR{idx + 1}>%TEXT{idx + 1}+37,w:100%+65,h:0],9)",
+                    ]))
                 message_list = "".join(message_list)
                 return (
                     f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
@@ -659,45 +688,51 @@ def forum_view(variables: dict, database: Engine, **_) -> str:
                 )
         return ""
 
+
 def forum(variables: dict, database: Engine, **_) -> str:
     thread_strings = ""
     thread_list = []
     search = False
-    if variables['mode'] not in ('1','2','3','4'):
+    if variables['mode'] not in ('1', '2', '3', '4'):
         variables['mode'] = '1'
     if variables['search_nick'] or variables['search_text']:
         search = True
     with database.connect() as connection:
-        threads = connection.execute(text(f'CALL forum_search(\"{variables["search_nick"]}\", \"{variables["search_text"]}\" )')).fetchall()
-        threads = connection.execute(text(f"CALL get_thread_list({variables['mode']}, {int(variables['next_message']) if variables['next_message'] else 0})")).fetchall()
+        threads = connection.execute(
+            text(f'CALL forum_search(\"{variables["search_nick"]}\", \"{variables["search_text"]}\" )')).fetchall()
+        threads = connection.execute(text(
+            f"CALL get_thread_list({variables['mode']}, {int(variables['next_message']) if variables['next_message'] else 0})")).fetchall()
         for idx, entry in enumerate(threads[:30]):
             thread = entry._mapping
             thread_list.append(" ".join([
                 f"#font(BC12,RC12,RC12)",
-                f"""#txt[%TXT{idx+1}](%SB[x:218,y:{'4' if idx == 0 else f'%P{idx}-21'},w:100%-215,h:24],{{}},\"{thread['content'].replace(variables['search_text'], '{'+variables['search_text']+'}') if search else thread['content']}\")""",
-                f"#exec(LW_vis&0&%TXT{idx+1})",
-                f"#apan[%PAN{idx+1}](%SB[x:0,y:{'4' if idx == 0 else f'%P{idx}-21'}-10,w:100%,y1:{'4' if idx == 0 else f'%P{idx}-21'}+{'42' if variables['mode'] == '1' else '28'}>%TXT{idx+1}+5],{{GW|open&forum_view.dcml&last_view=0^theme={thread['id']}|LW_lockall}},14,\"\")",
+                f"""#txt[%TXT{idx + 1}](%SB[x:218,y:{'4' if idx == 0 else f'%P{idx}-21'},w:100%-215,h:24],{{}},\"{thread['content'].replace(variables['search_text'], '{' + variables['search_text'] + '}') if search else thread['content']}\")""",
+                f"#exec(LW_vis&0&%TXT{idx + 1})",
+                f"#apan[%PAN{idx + 1}](%SB[x:0,y:{'4' if idx == 0 else f'%P{idx}-21'}-10,w:100%,y1:{'4' if idx == 0 else f'%P{idx}-21'}+{'42' if variables['mode'] == '1' else '28'}>%TXT{idx + 1}+5],{{GW|open&forum_view.dcml&last_view=0^theme={thread['id']}|LW_lockall}},14,\"\")",
                 f"#font(BC12,RC12,RC12)",
-                f"#txt[%TEXT{idx+1}](%SB[x:218,y:{'4' if idx == 0 else f'%P{idx}-21'},w:100%-220,h:24],{{}},\"{thread['content'].replace(variables['search_text'], '{'+variables['search_text']+'}') if search else thread['content']}\")",
+                f"#txt[%TEXT{idx + 1}](%SB[x:218,y:{'4' if idx == 0 else f'%P{idx}-21'},w:100%-220,h:24],{{}},\"{thread['content'].replace(variables['search_text'], '{' + variables['search_text'] + '}') if search else thread['content']}\")",
                 f"#font(R2C12,R2C12,RC12)",
-                f"#txt[%S_DATE{idx+1}](%SB[x:8,y:{'4' if idx == 0 else f'%P{idx}-21'},w:170,h:24],{{}},\"Date:\")",
+                f"#txt[%S_DATE{idx + 1}](%SB[x:8,y:{'4' if idx == 0 else f'%P{idx}-21'},w:170,h:24],{{}},\"Date:\")",
                 f"#font(BC12,R2C12,RC12)",
-                f"#txt[%DATE{idx+1}](%SB[x:%S_DATE{idx+1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'},w:170,h:24],{{}},\"{thread['created_at']}\")",
+                f"#txt[%DATE{idx + 1}](%SB[x:%S_DATE{idx + 1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'},w:170,h:24],{{}},\"{thread['created_at']}\")",
                 f"#font(R2C12,BC12,RC12)",
-                f"#txt[%S_CR{idx+1}](%SB[x:8,y:{'4' if idx == 0 else f'%P{idx}-21'}+14,w:170,h:24],{{}},\"Author:\")",
-                f"#txt[%CR{idx+1}](%SB[x:%S_CR{idx+1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'}+14,w:170,h:24],{{GW|open&user_details.dcml\\00&ID={thread['author_id']}\\00|LW_lockall}},\"{{{thread['nick']}}}\")",
-                f"#txt[%S_COU{idx+1}](%SB[x:8,y:{'4' if idx == 0 else f'%P{idx}-21'}+28,w:170,h:24],{{}},\"Message:\")" if variables['mode'] == '1' else '',
+                f"#txt[%S_CR{idx + 1}](%SB[x:8,y:{'4' if idx == 0 else f'%P{idx}-21'}+14,w:170,h:24],{{}},\"Author:\")",
+                f"#txt[%CR{idx + 1}](%SB[x:%S_CR{idx + 1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'}+14,w:170,h:24],{{GW|open&user_details.dcml&ID={thread['author_id']}|LW_lockall}},\"{{{thread['nick']}}}\")",
+                f"#txt[%S_COU{idx + 1}](%SB[x:8,y:{'4' if idx == 0 else f'%P{idx}-21'}+28,w:170,h:24],{{}},\"Message:\")" if
+                variables['mode'] == '1' else '',
                 f"#font(BC12,BC12,BC12)",
-                f"#txt[%COU{idx+1}](%SB[x:%S_COU{idx+1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'}+28,w:170,h:24],{{}},\"{thread['messages']}\")" if variables["mode"] == "1" else "",
-                f"#pan[%P{idx+1}](%SB[x:0-32,y:{'4' if idx == 0 else f'%P{idx}-21'}+{'42' if variables['mode'] == '1' else '28'}>%TEXT{idx+1}+38,w:100%+65,h:0],9)",
+                f"#txt[%COU{idx + 1}](%SB[x:%S_COU{idx + 1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'}+28,w:170,h:24],{{}},\"{thread['messages']}\")" if
+                variables["mode"] == "1" else "",
+                f"#pan[%P{idx + 1}](%SB[x:0-32,y:{'4' if idx == 0 else f'%P{idx}-21'}+{'42' if variables['mode'] == '1' else '28'}>%TEXT{idx + 1}+38,w:100%+65,h:0],9)",
             ]))
     thread_strings = "".join(thread_list) + \
-        f"#ebox[%B1](x:0,y:0,w:100%,h:100%)\
+                     f"#ebox[%B1](x:0,y:0,w:100%,h:100%)\
         #pan[%PAN0](%B1[x:390,y:8,w:0,h:359],10)" if thread_list else "".join([
         f"#font(BC14,WC14,BC14)",
-        f"#sbtn[%BT3](%B[x:684,y:377,w:15,h:305],{{GW|open&forum.dcml\\00&mode=^next_message={int(variables['next_message']) + 30 if variables['next_message'] else 0}^last_view=0^search_nick=^search_text=\\00|LW_lockall}},\"Next\")" if len(threads) > 29 else "",
+        f"#sbtn[%BT3](%B[x:684,y:377,w:15,h:305],{{GW|open&forum.dcml\\00&mode=^next_message={int(variables['next_message']) + 30 if variables['next_message'] else 0}^last_view=0^search_nick=^search_text=\\00|LW_lockall}},\"Next\")" if len(
+            threads) > 29 else "",
     ]) if threads else "".join([
-            f"#font(RG18,RG18,RG18)", f"#ctxt[%T0](%B[x:154,y:179,w:523,h:20],{{}},\"{{No search results}}\")"]),
+        f"#font(RG18,RG18,RG18)", f"#ctxt[%T0](%B[x:154,y:179,w:523,h:20],{{}},\"{{No search results}}\")"]),
     print(thread_strings)
     return (
         f"#exec(LW_cfile&20230722144507&Cookies/%GV_FORUM_LAST_TIME)"
@@ -764,6 +799,7 @@ def forum(variables: dict, database: Engine, **_) -> str:
         f"#end(CAN)"
     )
 
+
 def games(**_) -> str:
     return (
         f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
@@ -801,19 +837,25 @@ def games(**_) -> str:
         f"#font(RC14,GC14,RC14)"
         f"#ctxt[%TIT1](%B[x:0,y:106,w:146,h:24],{{GW|open&games.dcml\\00|LW_lockall}},\"{{Custom Games}}\")"
         f"#hint(%TIT1,\"Play custom games\")"
-        f"#ctxt[%LIST33](%B[x:0,y:%TIT1-9,w:146,h:24],{{GW|open&map.dcml\\00|LW_lockall}},\"{{Rating Games}}\")"
+        f"#font(R2C14,R2C14,RC14)"
+        f"#ctxt[%LIST33](%B[x:0,y:%TIT1-9,w:146,h:24],{{GW|open&rating_help.dcml\\00|LW_lockall}},\"{{Rating Describe}}\")"
+        # f"#ctxt[%LIST33](%B[x:0,y:%TIT1-9,w:146,h:24],{{GW|open&map.dcml\\00|LW_lockall}},\"{{Rating Games}}\")"
         f"#pan[%PAN](%B[x:154,y:42,w:523,h:291],7)"
         f"#font(BC14,WC14,BC14)"
+        f"#sbtn[%B_R](%B[x:521,y:377,w:100,h:305],{{GW|open&random_game_dlg.dcml\\00|LW_lockall}},\"Fight\")"
         f"#sbtn[%B_C](%B[x:641,y:377,w:100,h:305],{{GW|open&new_game_dlg.dcml\\00&delete_old=true\\00|LW_lockall}},\"Create\")<DBTBL>"
         f"#exec(GW|open&dbtbl.dcml\\00)<DBTBL><NGDLG><NGDLG>"
         f"#block(cancel.cml,CAN)<NGDLG><NGDLG>"
         f"#end(CAN)"
     )
 
+
 def join_game(variables: dict, database: Engine, **_) -> str:
     id_room = variables.get("id_room", "")
     with database.connect() as connection:
-            lobby = connection.execute(text(f"SELECT players, max_players, ip, password, (SELECT nick FROM players WHERE players.player_id = lobbies.host_id) as nick FROM lobbies WHERE id = {id_room} LIMIT 1")).fetchone()
+        lobby = connection.execute(text(
+            f"SELECT players, max_players, ip, password, (SELECT nick FROM players WHERE players.player_id = "
+            f"lobbies.host_id) as nick FROM lobbies WHERE id = {id_room} LIMIT 1")).fetchone()
     if lobby:
         if lobby.max_players <= lobby.players:
             return (
@@ -869,26 +911,24 @@ def join_game(variables: dict, database: Engine, **_) -> str:
                 f"#gpbtn[%PXBT](%BTABLE[x:520-433,y:303-16,w:100%,h:70],{{GW|open&cancel.dcml\\00|LW_lockall}},\"OK\")"
                 f"<NGDLG>"
             )
-        # TODO: PROBABLY NOT NEEDED
-        # elif lobby.host.profileID == player.profileID:
-        #     id_room=variables.get("id_room", "")
-        #     return " ".join((
-        #         f"<NGDLG>",
-        #         f"#exec(LW_cfile&\\00&Bastet/%GV_VE_PASSWD)",
-        #         f"#ebox[%BF](x:0,y:0,w:100%,h:100%)",
-        #         f"#table[%TBL](%BF[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&cancel.dcml\\00&id_room={id_room}\\00|LW_lockall}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"ERROR\",\"You cannot join your own room!\",26,\"OK\")",
-        #         f"<NGDLG>",
-        #     ))
+        # TODO: PROBABLY NOT NEEDED elif lobby.host.profileID == player.profileID: id_room=variables.get("id_room",
+        #  "") return " ".join(( f"<NGDLG>", f"#exec(LW_cfile&\\00&Bastet/%GV_VE_PASSWD)", f"#ebox[%BF](x:0,y:0,
+        #  w:100%,h:100%)", f"#table[%TBL](%BF[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&cancel.dcml\\00&id_room={
+        #  id_room}\\00|LW_lockall}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"ERROR\",\"You cannot join
+        #  your own room!\",26,\"OK\")", f"<NGDLG>", ))
 
         else:
             if lobby.password:
                 if variables.get("password", "") == "":
-                    id_room=variables.get("id_room", "")
+                    id_room = variables.get("id_room", "")
                     return (
                         f"<NGDLG>"
                         f"#exec(LW_cfile&\\00&Bastet/%GV_VE_PASSWD)"
                         f"#ebox[%BF](x:0,y:0,w:100%,h:100%)"
-                        f"#table[%TBL](%BF[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&join_game.dcml\\00&delete_old=true^id_room={id_room}^password=<%GV_VE_PASSWD>\\00|LW_lockall}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"JOIN\",,26,\"JOIN\",\"Cancel\")"
+                        f"#table[%TBL](%BF[x:243,y:130,w:415,h:205],{{}}{{}}{{"
+                        f"GW|open&join_game.dcml\\00&delete_old=true^id_room="
+                        f"{id_room}^password=<%GV_VE_PASSWD>\\00|LW_lockall}}{{LW_file&Internet/Cash/cancel.cml}},2,"
+                        f"0,3,13,252,\"JOIN\",,26,\"JOIN\",\"Cancel\")"
                         f"#ebox[%L](x:245,y:100,w:450,h:210)"
                         f"#font(BC12,RC12,RC12)"
                         f"#txt[%L_PASS](%L[x:11,y:95,w:360,h:20],{{}},\"Enter the password:\")"
@@ -953,13 +993,13 @@ def join_game(variables: dict, database: Engine, **_) -> str:
                     )
             id_room = variables.get("id_room", "")
             return (
-                    f"<NGDLG>"
-                    f"#exec(LW_cfile&\\00&Bastet/%GV_VE_PASSWD)"
-                    f"#ebox[%BF](x:0,y:0,w:100%,h:100%)"
-                    f"#table[%TBL](%BF[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&cancel.dcml\\00|LW_lockall}},2,0,3,13,252,\"JOIN\",\"Connecting...\\Please, wait.\",26,\"Cancel\")"
-                    f"#exec(LW_gvar&%CG_GAMEID&{id_room}&%CG_MAXPL&{str(lobby.max_players)}&%CG_GAMENAME&{'namehere'}&%COMMAND&JGAME&%CG_IP&{lobby.ip}:{34000})"
-                    f"<NGDLG>"
-                )
+                f"<NGDLG>"
+                f"#exec(LW_cfile&\\00&Bastet/%GV_VE_PASSWD)"
+                f"#ebox[%BF](x:0,y:0,w:100%,h:100%)"
+                f"#table[%TBL](%BF[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&cancel.dcml\\00|LW_lockall}},2,0,3,13,252,\"JOIN\",\"Connecting...\\Please, wait.\",26,\"Cancel\")"
+                f"#exec(LW_gvar&%CG_GAMEID&{id_room}&%CG_MAXPL&{str(lobby.max_players)}&%CG_GAMENAME&{'namehere'}&%COMMAND&JGAME&%CG_IP&{lobby.ip}:{34000})"
+                f"<NGDLG>"
+            )
     return (
         f"<NGDLG>"
         f"#exec(LW_cfile&\\00&Bastet/%GV_VE_PASSWD)"
@@ -967,6 +1007,7 @@ def join_game(variables: dict, database: Engine, **_) -> str:
         f"#table[%TBL](%BF[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&join_game.dcml\\00&id_room={id_room}\\00|LW_lockall}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"ERROR\",\"You cannot join the room! This is an incorrect room. Press Cancel button to exit\",26,\"Try Again\",\"Cancel\")"
         f"<NGDLG>"
     )
+
 
 def join_pl_cmd(variables: dict, player_id: str | int, **_) -> str:
     if variables['VE_PLAYER'] == str(player_id):
@@ -978,7 +1019,8 @@ def join_pl_cmd(variables: dict, player_id: str | int, **_) -> str:
         )
     else:
         return ""
-    
+
+
 def log_conf_dlg(variables: dict, **_) -> str:
     return (
         f"#ebox[%EBG](x:0,y:0,w:1024,h:768)"
@@ -1028,6 +1070,7 @@ def log_conf_dlg(variables: dict, **_) -> str:
         f"#hint(%Login,\"Join the server\")"
         f"#hint(%Edit Profile,\"Edit profile\")"
     )
+
 
 def log_new_form(variables: dict, database: Engine, **_) -> str:
     genders = []
@@ -1087,10 +1130,10 @@ def log_new_form(variables: dict, database: Engine, **_) -> str:
             f"#exec(LW_cfile&{variables['VE_HOMP']}\\00&Cookies/%GV_VE_HOMP)"
             f"#edit[%E_HOMP](%LBX[x:164,y:249,w:302,h:18],{{%GV_VE_HOMP}})"
             f"#txt[%L_SEX](%LBX[x:4,y:280,w:100%,h:20],{{}},\"Gender\")"
-            f"#exec(LW_cfile&{int(variables['VE_SEX'])-1}\\00&Cookies/%GV_VE_SEX)"
+            f"#exec(LW_cfile&{int(variables['VE_SEX']) - 1}\\00&Cookies/%GV_VE_SEX)"
             f"#cbb[%E_SEX](%LBX[x:153,y:273,w:329,h:18],{{%GV_VE_SEX}},{genders},0)"
             f"#txt[%L_CNTRY](%LBX[x:4,y:308,w:100%,h:20],{{}},\"Country\")"
-            f"#exec(LW_cfile&{int(variables['VE_CNTRY'])-1}\\00&Cookies/%GV_VE_CNTRY)"
+            f"#exec(LW_cfile&{int(variables['VE_CNTRY']) - 1}\\00&Cookies/%GV_VE_CNTRY)"
             f"#cbb[%E_CNTRY](%LBX[x:153,y:301,w:329,h:18],{{%GV_VE_CNTRY}},{countries},0)"
             f"#txt[%L_PHON](%LBX[x:4,y:336,w:100%,h:20],{{}},\"Home Phone\")"
             f"#pan[%P_PHON](%LBX[x:159,y:336,w:317,h:14],1)"
@@ -1192,22 +1235,27 @@ def log_new_form(variables: dict, database: Engine, **_) -> str:
         ))
     return ""
 
+
 def log_user(variables: dict, database: Engine, **_) -> str:
     try:
         with database.connect() as connection:
             if variables['relogin'] == "true":
-                profile = connection.execute(text(f"CALL relogin(\'{variables['VE_NICK']}\',\'{variables['VE_PASS']}\')")).fetchone()
+                profile = connection.execute(
+                    text(f"CALL relogin(\'{variables['VE_NICK']}\',\'{variables['VE_PASS']}\')")).fetchone()
             else:
-                profile = connection.execute(text(f"CALL login(\'{variables['VE_NICK']}\',\'{variables['VE_PASS']}\', \'{variables['VE_GMID']}\')")).fetchone()
+                profile = connection.execute(text(
+                    f"CALL login(\'{variables['VE_NICK']}\',\'{variables['VE_PASS']}\', \'{variables['VE_GMID']}\')")).fetchone()
             if profile:
                 sid = genID()
-                connection.execute(text(f"REPLACE INTO sessions (session_key, player_id) VALUES ('{sid}', '{profile[0]}')"))
+                connection.execute(
+                    text(f"REPLACE INTO sessions (session_key, player_id) VALUES ('{sid}', '{profile[0]}')"))
                 connection.commit()
                 return (
                     f"<MESDLG> "
                     f"#ebox[%MBG](x:0,y:0,w:1024,h:768)"
                     f"#pix[%PX1](%MBG[x:0,y:0,w:1024,h:768],{{}},Interf3/internet,0,0,0,0)"
                     f"#exec(LW_cfile&{sid if variables['save_pass'] else ''}&lgdta.log)"
+                    f"#exec(LW_cfile&{sid}&Cookies/%GV_SESSION_KEY)"
                     f"#exec(LW_key&{profile[0]})"
                     f"#exec(LW_gvar&"
                     f"%PROF&{profile[0]}&"
@@ -1234,12 +1282,13 @@ def log_user(variables: dict, database: Engine, **_) -> str:
         if err.orig:
             error_code = mysql_error_messages[err.orig.args[1]]
         return (
-            f"<MESDLG> " 
-            f"#ebox[%MBG](x:0,y:0,w:1024,h:768) " 
-            f"#def_dtbl_button_hotkey(13,27) " 
+            f"<MESDLG> "
+            f"#ebox[%MBG](x:0,y:0,w:1024,h:768) "
+            f"#def_dtbl_button_hotkey(13,27) "
             f"#table[%TBL](%MBG[x:287,y:285,w:450,h:200],{{}}{{}}{{LW_file&Internet/Cash/l_games_btn.cml}}{{LW_file&Internet/Cash/l_games_btn.cml}},1,0,11,362,\"ERROR\",\"{error_code}\",24,\"Edit\",\"Cancel\") "
             f"<MESDLG> "
         )
+
 
 def mail_list(variables: dict, database: Engine, player_id, **_) -> str:
     panel_list = []
@@ -1261,7 +1310,7 @@ def mail_list(variables: dict, database: Engine, player_id, **_) -> str:
                 ))
                 connection.commit()
         summary = connection.execute(text(
-        f"CALL mail_stats({player_id}) "
+            f"CALL mail_stats({player_id}) "
         )).fetchone()
         if summary:
             summary = summary._mapping
@@ -1278,7 +1327,7 @@ def mail_list(variables: dict, database: Engine, player_id, **_) -> str:
                 message = entry._mapping
                 highlight = "{" if message.status == 1 else ""
                 panel_list.append(
-                    f"#apan[%APAN{idx}](%SB[x:0,y:{21*idx}-2,w:100%,h:20],{{GW|open&mail_view.dcml\\00&messageID={message.id}^readable={variables['readable']}^sent={variables['sent']}\\00|LW_lockall}},8)"
+                    f"#apan[%APAN{idx}](%SB[x:0,y:{21 * idx}-2,w:100%,h:20],{{GW|open&mail_view.dcml\\00&messageID={message.id}^readable={variables['readable']}^sent={variables['sent']}\\00|LW_lockall}},8)"
                 )
                 message_list.append(
                     f",21,\"{message.nick}\",\"{highlight}{message.subject}\",\"{message.sent_at}\""
@@ -1369,11 +1418,12 @@ def mail_list(variables: dict, database: Engine, player_id, **_) -> str:
             )
     return ""
 
+
 def mail_new(variables: dict, database: Engine, player_id, **_) -> str | None:
     with database.connect() as connection:
         summary = connection.execute(text(
             f"CALL mail_stats({player_id}) "
-            )).fetchone()
+        )).fetchone()
         if summary:
             summary = summary._mapping
             if variables['send']:
@@ -1394,109 +1444,111 @@ def mail_new(variables: dict, database: Engine, player_id, **_) -> str | None:
                     return f"#exec(GW|open&mail_list.dcml\\00&sent=true\\00|LW_lockall)"
                 else:
                     return (
-                    f"<NGDLG>"
-                    f"#ebox[%BF](x:0,y:0,w:100%,h:100%)"
-                    f"#table[%TBL](%BF[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&mail_new.dcml\\00&subject={variables['subject']}^message={variables['message']}\\00|LW_lockall}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"ERROR\",\"The user with the provided nickname does not exist.\",26,\"OK\")"
-                    f"<NGDLG>"
+                        f"<NGDLG>"
+                        f"#ebox[%BF](x:0,y:0,w:100%,h:100%)"
+                        f"#table[%TBL](%BF[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&mail_new.dcml\\00&subject={variables['subject']}^message={variables['message']}\\00|LW_lockall}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"ERROR\",\"The user with the provided nickname does not exist.\",26,\"OK\")"
+                        f"<NGDLG>"
                     )
             not_found = False
             return " ".join((
-            f"#block(l_games_btn.cml,l_g):<!goback!>\\00",
-            f"#end(l_g) ",
-            f"#ebox[%TB](x:0,y:0,w:100%,h:100%) ",
-            f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12) ",
-            f"#pix[%PXT2](%TB[x:0,y:263,w:100%,h:100%],{{}},Internet/pix/i_pri0,13,13,13,13) ",
-            f"#pan[%P1](%TB[x:42,y:0-22,w:0,h:80],10) ",
-            f"#font(RG18,RG18,RG18) ",
-            f"#txt[%PL](%TB[x:737,y:0,w:150,h:20],{{}},\"Players\")",
-            f"#font(BG18,BG18,BG18) ",
-            f"#ctxt[%TTTEXT](%TB[x:0-62,y:0-32,w:1024,h:20],{{}},\"PLAYER LIST\") ",
-            f"#font(R2C12,R2C12,R2C12) ",
-            f"#txt[%TMTEXT](%TB[x:0,y:514,w:100,h:20],{{}},\"Message:\") ",
-            f"#def_gp_btn(Internet/pix/i_pri0,53,53,0,1)      ",
-            f"#font(RC12,R2C12,RC12) ",
-            f"#gpbtn[%BT1](%TB[x:74,y:23,w:-22,h:-18],{{GW|open&news.dcml\\00|LW_lockall}},\"News & Events\")",
-            f"#hint(%BT1,\"News, events, forum and punishment list\")      ",
-            f"#font(RC12,RC12,RC12) ",
-            f"#def_gp_btn(Internet/pix/i_pri0,51,51,0,1) ",
-            f"#gpbtn[%BT2](%TB[x:196,y:22,w:-22,h:-18],{{GW|open&users_list.dcml\\00&language=\\00|LW_lockall}},\"Player List\")",
-            f"#hint(%BT2,\"Player list, personal mail and clan information\")",
-            f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)      ",
-            f"#font(RC12,R2C12,RC12) ",
-            f"#gpbtn[%BT4](%TB[x:318,y:23,w:-22,h:-18],{{GW|open&games.dcml\\00|LW_lockall}},\"Custom Games\")",
-            f"#hint(%BT4,\"Play custom games\")",
-            f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)      ",
-            f"#font(RC12,R2C12,RC12) ",
-            f"#gpbtn[%BT5](%TB[x:440,y:23,w:-22,h:-18],{{GW|open&scored_games.dcml\\00&player_id=0\\00|LW_lockall}},\"Scored Games\")",
-            f"#hint(%BT5,\"Played games and their scores\")     ",
-            f"#ebox[%B_VOTE](x:5,y:396,w:140,h:103) ",
-            f"<VOTING> ",
-            f"#exec(GW|open&voting.dcml\\00&question=46\\00) ",
-            f"<VOTING> ",
-            f"<MAILBUTTONS> ",
-            f"#ebox[%MB](x:0,y:0,w:100%,h:100%) ",
-            f"#font(RC14,GC14,RC14) ",
-            f"#ctxt[%LIST1](%MB[x:0,y:106,w:146,h:24],{{GW|open&users_list.dcml\\00|LW_lockall}},\"{{Player List}}\") ",
-            f"#hint(%LIST1,\"Player list, personal mail and clan information\") ",
-            f"#font(RC12,GC12,RC12) ",
-            f"#ctxt[%LIST2](%MB[x:0,y:%LIST1-10,w:146,h:24],{{GW|open&mail_list.dcml\\00|LW_lockall}},\"{{Mail}}\") ",
-            f"#hint(%LIST2,\"Manage your personal mail\") ",
-            f"#font(R2C14,R2C14,RC14) ",
-            f"#ctxt[%LIST3](%MB[x:0,y:%LIST2+7,w:146,h:24],{{GW|open&clans_list.dcml\\00|LW_lockall}},\"{{Clan List}}\") ",
-            f"#hint(%LIST3,\"Clans, their members and details\") ",
-            f"#ebox[%B1](x:154,y:40,w:559,h:45) ",
-            f"#pan[%P1](%B1[x:0,y:0,w:100%,h:100%],7) ",
-            f"#font(BC12,BC12,GC12)"
-            f"#txt[%TITRE1](%B1[x:4,y:0+8,w:150,h:20],{{}},\"Mail Inbox total: {summary.messages_total}\")"
-            f"#apan[%APAN0](%B1[x:4,y:%TITRE1-18,x1:%TITRE1,h:16],{{GW|open&mail_list.dcml\\00|LW_lockall}},15)"
-            f"#font(BC12,BC12,GC12)"
-            f"#txt[%TITRE2](%B1[x:4,y:18+8,w:150,h:20],{{}},\"Sent: {summary.messages_sent}\")"
-            f"#apan[%APAN1](%B1[x:4,y:%TITRE2-18,x1:%TITRE2,h:16],{{GW|open&mail_list.dcml\\00&sent=true\\00|LW_lockall}},15)"
-            f"#font(BC12,BC12,GC12)"
-            f"#txt[%TITRE3](%B1[x:292,y:0+8,w:150,h:20],{{}},\"Unread: {summary.messages_unread}\")"
-            f"#apan[%APAN2](%B1[x:292,y:%TITRE3-18,x1:%TITRE3,h:16],{{GW|open&mail_list.dcml\\00&readable=2\\00|LW_lockall}},15)"
-            f"#font(BC12,BC12,GC12)"
-            f"#txt[%TITRE4](%B1[x:292,y:18+8,w:150,h:20],{{}},\"Read: {summary.messages_read}\")"
-            f"#apan[%APAN3](%B1[x:292,y:%TITRE4-18,x1:%TITRE4,h:16],{{GW|open&mail_list.dcml\\00&readable=3\\00|LW_lockall}},15)"
-            f"#pan[%P2](%B1[x:314,y:0-34,w:0,h:100%+68],10) ",
-            f"<MAILBUTTONS>",
-            f"#ebox[%B](x:0,y:0,w:100%,h:100%) ",
-            f"#exec(LW_cfile&\\00&Cookies/%GV_SEND_TO) " if not variables['send_to'] else f"#exec(LW_cfile&{variables['send_to']}\\00&Cookies/%GV_SEND_TO) ",
-            f"#exec(LW_cfile&{variables['subject'] if variables['subject'] else ''}\\00&Cookies/%GV_SUBJECT) ",
-            f"#exec(LW_cfile&{variables['message'] if variables['message'] else ''}\\00&Cookies/%GV_TEXT) ",
-            f"#ebox[%B0](x:154,y:95,w:559,h:238) ",
-            f"#pan[%P1](%B0[x:0,y:0,w:100%,h:100%],5) ",
-            f"#font(R2C12,RC12,RC12) ",
-            f"#txt[%T1](%B0[x:4,y:8,w:100,h:20],{{}},\"Send to:\") ",
-            f"#font(BC12,RC12,RC12) ",
-            f"#pan[%P2](%B0[x:8,y:27,w:543,h:14],1) ",
-            f"#edit[%E1](%B0[x:14,y:26,w:538,h:18],{{%GV_SEND_TO}},0,0,0,1) ",
-            f"#font(R2C12,RC12,RC12) ",
-            f"#txt[%T2](%B0[x:4,y:53,w:100,h:20],{{}},\"Subject:\") ",
-            f"#pan[%P3](%B0[x:8,y:72,w:543,h:14],1) ",
-            f"#font(BC12,RC12,RC12) ",
-            f"#edit[%E2](%B0[x:13,y:71,w:538,h:18],{{%GV_SUBJECT}}) ",
-            f"#font(R2C12,RC12,RC12) ",
-            f"#txt[%T3](%B0[x:4,y:98,w:100,h:20],{{}},\"Text:\") ",
-            f"#pan[%P4](%B0[x:8,y:117,w:543,h:111],1) ",
-            f"#font(BC12,RC12,RC12) ",
-            f"#edit[%E3](%B0[x:13,y:117,w:534,h:111],{{%GV_TEXT}},1) ",
-            f"#font(BC14,WC14,BC14) ",
-            f"#sbtn[%Send](%B[x:521,y:377,w:100,h:305],{{GW|open&mail_new.dcml\\00&cansel=true^send=1^send_to=<%GV_SEND_TO>^subject=<%GV_SUBJECT>^message=<%GV_TEXT>\\00|LW_lockall}},\"Send\") ",
-            f"#sbtn[%Back](%B[x:641,y:377,w:100,h:305],{{LW_file&Internet/Cash/l_games_btn.cml}},\"Cancel\") ",
-            f"<NGDLG> ",
+                f"#block(l_games_btn.cml,l_g):<!goback!>\\00",
+                f"#end(l_g) ",
+                f"#ebox[%TB](x:0,y:0,w:100%,h:100%) ",
+                f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12) ",
+                f"#pix[%PXT2](%TB[x:0,y:263,w:100%,h:100%],{{}},Internet/pix/i_pri0,13,13,13,13) ",
+                f"#pan[%P1](%TB[x:42,y:0-22,w:0,h:80],10) ",
+                f"#font(RG18,RG18,RG18) ",
+                f"#txt[%PL](%TB[x:737,y:0,w:150,h:20],{{}},\"Players\")",
+                f"#font(BG18,BG18,BG18) ",
+                f"#ctxt[%TTTEXT](%TB[x:0-62,y:0-32,w:1024,h:20],{{}},\"PLAYER LIST\") ",
+                f"#font(R2C12,R2C12,R2C12) ",
+                f"#txt[%TMTEXT](%TB[x:0,y:514,w:100,h:20],{{}},\"Message:\") ",
+                f"#def_gp_btn(Internet/pix/i_pri0,53,53,0,1)      ",
+                f"#font(RC12,R2C12,RC12) ",
+                f"#gpbtn[%BT1](%TB[x:74,y:23,w:-22,h:-18],{{GW|open&news.dcml\\00|LW_lockall}},\"News & Events\")",
+                f"#hint(%BT1,\"News, events, forum and punishment list\")      ",
+                f"#font(RC12,RC12,RC12) ",
+                f"#def_gp_btn(Internet/pix/i_pri0,51,51,0,1) ",
+                f"#gpbtn[%BT2](%TB[x:196,y:22,w:-22,h:-18],{{GW|open&users_list.dcml\\00&language=\\00|LW_lockall}},\"Player List\")",
+                f"#hint(%BT2,\"Player list, personal mail and clan information\")",
+                f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)      ",
+                f"#font(RC12,R2C12,RC12) ",
+                f"#gpbtn[%BT4](%TB[x:318,y:23,w:-22,h:-18],{{GW|open&games.dcml\\00|LW_lockall}},\"Custom Games\")",
+                f"#hint(%BT4,\"Play custom games\")",
+                f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)      ",
+                f"#font(RC12,R2C12,RC12) ",
+                f"#gpbtn[%BT5](%TB[x:440,y:23,w:-22,h:-18],{{GW|open&scored_games.dcml\\00&player_id=0\\00|LW_lockall}},\"Scored Games\")",
+                f"#hint(%BT5,\"Played games and their scores\")     ",
+                f"#ebox[%B_VOTE](x:5,y:396,w:140,h:103) ",
+                f"<VOTING> ",
+                f"#exec(GW|open&voting.dcml\\00&question=46\\00) ",
+                f"<VOTING> ",
+                f"<MAILBUTTONS> ",
+                f"#ebox[%MB](x:0,y:0,w:100%,h:100%) ",
+                f"#font(RC14,GC14,RC14) ",
+                f"#ctxt[%LIST1](%MB[x:0,y:106,w:146,h:24],{{GW|open&users_list.dcml\\00|LW_lockall}},\"{{Player List}}\") ",
+                f"#hint(%LIST1,\"Player list, personal mail and clan information\") ",
+                f"#font(RC12,GC12,RC12) ",
+                f"#ctxt[%LIST2](%MB[x:0,y:%LIST1-10,w:146,h:24],{{GW|open&mail_list.dcml\\00|LW_lockall}},\"{{Mail}}\") ",
+                f"#hint(%LIST2,\"Manage your personal mail\") ",
+                f"#font(R2C14,R2C14,RC14) ",
+                f"#ctxt[%LIST3](%MB[x:0,y:%LIST2+7,w:146,h:24],{{GW|open&clans_list.dcml\\00|LW_lockall}},\"{{Clan List}}\") ",
+                f"#hint(%LIST3,\"Clans, their members and details\") ",
+                f"#ebox[%B1](x:154,y:40,w:559,h:45) ",
+                f"#pan[%P1](%B1[x:0,y:0,w:100%,h:100%],7) ",
+                f"#font(BC12,BC12,GC12)"
+                f"#txt[%TITRE1](%B1[x:4,y:0+8,w:150,h:20],{{}},\"Mail Inbox total: {summary.messages_total}\")"
+                f"#apan[%APAN0](%B1[x:4,y:%TITRE1-18,x1:%TITRE1,h:16],{{GW|open&mail_list.dcml\\00|LW_lockall}},15)"
+                f"#font(BC12,BC12,GC12)"
+                f"#txt[%TITRE2](%B1[x:4,y:18+8,w:150,h:20],{{}},\"Sent: {summary.messages_sent}\")"
+                f"#apan[%APAN1](%B1[x:4,y:%TITRE2-18,x1:%TITRE2,h:16],{{GW|open&mail_list.dcml\\00&sent=true\\00|LW_lockall}},15)"
+                f"#font(BC12,BC12,GC12)"
+                f"#txt[%TITRE3](%B1[x:292,y:0+8,w:150,h:20],{{}},\"Unread: {summary.messages_unread}\")"
+                f"#apan[%APAN2](%B1[x:292,y:%TITRE3-18,x1:%TITRE3,h:16],{{GW|open&mail_list.dcml\\00&readable=2\\00|LW_lockall}},15)"
+                f"#font(BC12,BC12,GC12)"
+                f"#txt[%TITRE4](%B1[x:292,y:18+8,w:150,h:20],{{}},\"Read: {summary.messages_read}\")"
+                f"#apan[%APAN3](%B1[x:292,y:%TITRE4-18,x1:%TITRE4,h:16],{{GW|open&mail_list.dcml\\00&readable=3\\00|LW_lockall}},15)"
+                f"#pan[%P2](%B1[x:314,y:0-34,w:0,h:100%+68],10) ",
+                f"<MAILBUTTONS>",
+                f"#ebox[%B](x:0,y:0,w:100%,h:100%) ",
+                f"#exec(LW_cfile&\\00&Cookies/%GV_SEND_TO) " if not variables[
+                    'send_to'] else f"#exec(LW_cfile&{variables['send_to']}\\00&Cookies/%GV_SEND_TO) ",
+                f"#exec(LW_cfile&{variables['subject'] if variables['subject'] else ''}\\00&Cookies/%GV_SUBJECT) ",
+                f"#exec(LW_cfile&{variables['message'] if variables['message'] else ''}\\00&Cookies/%GV_TEXT) ",
+                f"#ebox[%B0](x:154,y:95,w:559,h:238) ",
+                f"#pan[%P1](%B0[x:0,y:0,w:100%,h:100%],5) ",
+                f"#font(R2C12,RC12,RC12) ",
+                f"#txt[%T1](%B0[x:4,y:8,w:100,h:20],{{}},\"Send to:\") ",
+                f"#font(BC12,RC12,RC12) ",
+                f"#pan[%P2](%B0[x:8,y:27,w:543,h:14],1) ",
+                f"#edit[%E1](%B0[x:14,y:26,w:538,h:18],{{%GV_SEND_TO}},0,0,0,1) ",
+                f"#font(R2C12,RC12,RC12) ",
+                f"#txt[%T2](%B0[x:4,y:53,w:100,h:20],{{}},\"Subject:\") ",
+                f"#pan[%P3](%B0[x:8,y:72,w:543,h:14],1) ",
+                f"#font(BC12,RC12,RC12) ",
+                f"#edit[%E2](%B0[x:13,y:71,w:538,h:18],{{%GV_SUBJECT}}) ",
+                f"#font(R2C12,RC12,RC12) ",
+                f"#txt[%T3](%B0[x:4,y:98,w:100,h:20],{{}},\"Text:\") ",
+                f"#pan[%P4](%B0[x:8,y:117,w:543,h:111],1) ",
+                f"#font(BC12,RC12,RC12) ",
+                f"#edit[%E3](%B0[x:13,y:117,w:534,h:111],{{%GV_TEXT}},1) ",
+                f"#font(BC14,WC14,BC14) ",
+                f"#sbtn[%Send](%B[x:521,y:377,w:100,h:305],{{GW|open&mail_new.dcml\\00&cansel=true^send=1^send_to=<%GV_SEND_TO>^subject=<%GV_SUBJECT>^message=<%GV_TEXT>\\00|LW_lockall}},\"Send\") ",
+                f"#sbtn[%Back](%B[x:641,y:377,w:100,h:305],{{LW_file&Internet/Cash/l_games_btn.cml}},\"Cancel\") ",
+                f"<NGDLG> ",
                 f"#ebox[%L0](x:0,y:0,w:100%,h:100%)\
                 #table[%TBL](%L0[x:243,y:130,w:415,h:205],{{}}{{}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"NOTICE\",\" Players with nicknames \'\'c\'\' not found! \",0,\"OK\")" if not_found else "",
-            f"<NGDLG> ",
-            f"#block(cancel.cml,CAN)<NGDLG> ",
-            f"<NGDLG> ",
-            f"#end(CAN)",
+                f"<NGDLG> ",
+                f"#block(cancel.cml,CAN)<NGDLG> ",
+                f"<NGDLG> ",
+                f"#end(CAN)",
             ))
+
 
 def mail_view(variables: dict, database: Engine, player_id, **_) -> str:
     with database.connect() as connection:
         summary = connection.execute(text(
-        f"CALL mail_stats({player_id}) "
+            f"CALL mail_stats({player_id}) "
         )).fetchone()
         if summary:
             summary = summary._mapping
@@ -1609,6 +1661,7 @@ def mail_view(variables: dict, database: Engine, player_id, **_) -> str:
                 )
     return ""
 
+
 def map_(**_) -> str:
     return (
         f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
@@ -1658,35 +1711,32 @@ def map_(**_) -> str:
         f"#end(CAN)"
     )
 
-def mclick(variables : dict, **_) -> str:
+
+def mclick(variables: dict, **_) -> str:
     print(variables)
-    # <MCLICK> 
-    # #ebox[%M](x:550,y:42,w:164,h:291) 
-    # #font(RG18,WF16,WF16) 
-    # #pan[%PAN1](%M[x:0,y:0,w:100%,h:100%],7) 
-    # #ctxt[%TIT](%M[x:5,y:10,w:100%-10,h:30],{},"Persia") 
-    # #font(BC12,RC12,RC12) 
-    # #stbl[%TBL](%M[x:5,y:50,w:100%-10,h:100%],{},2,0,70%,0,30%,1,20,"Total wins","615",20,"Total losses","439",20,"Country area","41246",20,"Current area","41189") 
-    # #font(BC14,WC14,BC14) 
-    # #sbtn[%B_J](%M[x:91,y:335,w:100,h:305],{GW|open&enter_game_dlg.dcml\00&land_id=1\00|LW_lockall},"Fight") 
-    # <MCLICK>
+    # <MCLICK> #ebox[%M](x:550,y:42,w:164,h:291) #font(RG18,WF16,WF16) #pan[%PAN1](%M[x:0,y:0,w:100%,h:100%],
+    # 7) #ctxt[%TIT](%M[x:5,y:10,w:100%-10,h:30],{},"Persia") #font(BC12,RC12,RC12) #stbl[%TBL](%M[x:5,y:50,
+    # w:100%-10,h:100%],{},2,0,70%,0,30%,1,20,"Total wins","615",20,"Total losses","439",20,"Country area","41246",
+    # 20,"Current area","41189") #font(BC14,WC14,BC14) #sbtn[%B_J](%M[x:91,y:335,w:100,h:305],
+    # {GW|open&enter_game_dlg.dcml\00&land_id=1\00|LW_lockall},"Fight") <MCLICK>
     return (
         f"<MCLICK>"
         f"<MCLICK>"
     )
 
-def enter_game_dlg(**_) -> str:
-    #· ·· ·open· ·   enter_game_dlg.dcml 
-    #land_id=2 ·   02     35070762 
-#HOST
-#<NGDLG> 
-##exec(LW_file&Internet/Cash/cancel.cml|LW_gvar&%GOPT&/NAT3 /OPT00 /OPT10 /OPT20 /OPT30 /OPT60 /PAGE2 /NOCOMP&%CG_GAMEID&2852165&%CG_MAXPL&2&%CG_GAMENAME&"Rating Game"&%COMMAND&CGAME) 
-#<NGDLG>
 
-#CLIENT
-# <NGDLG> 
-# #exec(LW_file&Internet/Cash/cancel.cml|LW_gvar&%GOPT&/NAT1&%CG_GAMEID&2852171&%CG_MAXPL&2&%CG_GAMENAME&"Rating Game"&%COMMAND&JGAME&%CG_IP&) 
-# <NGDLG>
+def enter_game_dlg(**_) -> str:
+    # · ·· ·open· ·   enter_game_dlg.dcml
+    # land_id=2 ·   02     35070762
+    # HOST
+    # <NGDLG>
+    ##exec(LW_file&Internet/Cash/cancel.cml|LW_gvar&%GOPT&/NAT3 /OPT00 /OPT10 /OPT20 /OPT30 /OPT60 /PAGE2 /NOCOMP&%CG_GAMEID&2852165&%CG_MAXPL&2&%CG_GAMENAME&"Rating Game"&%COMMAND&CGAME)
+    # <NGDLG>
+
+    # CLIENT
+    # <NGDLG>
+    # #exec(LW_file&Internet/Cash/cancel.cml|LW_gvar&%GOPT&/NAT1&%CG_GAMEID&2852171&%CG_MAXPL&2&%CG_GAMENAME&"Rating Game"&%COMMAND&JGAME&%CG_IP&)
+    # <NGDLG>
 
     # with database.connect() as connection:
     #     types = connection.execute(text(f"SELECT name FROM lobby_types")).fetchall()
@@ -1706,35 +1756,37 @@ def enter_game_dlg(**_) -> str:
         f"<NGDLG>"
     )
 
+
 def new_game_dlg(database: Engine, **_) -> str:
     with database.connect() as connection:
         types = connection.execute(text(f"SELECT name FROM lobby_types")).fetchall()
     return (
-            f"<NGDLG>"
-            f"#ebox[%L0](x:0,y:0,w:100%,h:100%)"
-            # f"#exec(LW_cfile&{player.nickname}\\00&Bastet/%GV_VE_TITLE)"
-            f"#exec(LW_cfile&\\00&Bastet/%GV_VE_PASSWD)"
-            f"#exec(LW_cfile&\\00&Bastet/%GV_VE_MAX_PL)"
-            f"#table[%TBL](%L0[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&new_game_dlg_create.dcml\\00&max_players=<%GV_VE_MAX_PL>^type=<%GV_VE_TYPE>^password=<%GV_VE_PASSWD>^title=<%GV_VE_TITLE>\\00|LW_lockall}}{{GW|open&cancel.dcml\\00|LW_lockall}},1,0,13,252,\"CREATE NEW GAME\",,26,\"Create\",\"Cancel\")"
-            f"#ebox[%L](x:245,y:100,w:450,h:210)"
-            f"#font(BC12,RC12,RC12)"
-            f"#txt[%L_NAME](%L[x:11,y:48,w:160,h:20],{{}},\"Game Title:\")"
-            f"#pan[%P_NAME](%L[x:15,y:68,w:382,h:14],1)"
-            f"#font(BC12,GC12,GC12)"
-            f"#edit[%E_NAME](%L[x:19,y:67,w:377,h:18],{{%GV_VE_TITLE}},0,0,0,1)"
-            f"#font(BC12,RC12,RC12)"
-            f"#txt[%L_PASS](%L[x:11,y:95,w:160,h:20],{{}},\"Password:\")"
-            f"#pan[%P_PASS](%L[x:15,y:114,w:382,h:14],1)"
-            f"#font(BC12,GC12,GC12)"
-            f"#edit[%E_PASS](%L[x:19,y:113,w:377,h:18],{{%GV_VE_PASSWD}},0,0,1)"
-            f"#font(BC14,RC14,RC14)"
-            f"#txt[%L_MAXPL](%L[x:11,y:145,w:150,h:24],{{}},\"Max Players:\")"
-            f"#cbb[%E_MAXPL](%L[x:130,y:139,w:273,h:24],{{%GV_VE_MAX_PL}},2,3,4,5,6,7,0)"
-            f"#font(BC14,RC14,RC14)"
-            f"#txt[%L_MAXPL](%L[x:11,y:175,w:151,h:24],{{}},\"Type:\")"
-            f"#cbb[%E_TYPE](%L[x:130,y:169,w:273,h:24],{{%GV_VE_TYPE}},{''.join([f'{type[0]},' for type in types])})"
-            f"<NGDLG>"
-        )
+        f"<NGDLG>"
+        f"#ebox[%L0](x:0,y:0,w:100%,h:100%)"
+        # f"#exec(LW_cfile&{player.nickname}\\00&Bastet/%GV_VE_TITLE)"
+        f"#exec(LW_cfile&\\00&Bastet/%GV_VE_PASSWD)"
+        f"#exec(LW_cfile&\\00&Bastet/%GV_VE_MAX_PL)"
+        f"#table[%TBL](%L0[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&new_game_dlg_create.dcml\\00&max_players=<%GV_VE_MAX_PL>^type=<%GV_VE_TYPE>^password=<%GV_VE_PASSWD>^title=<%GV_VE_TITLE>\\00|LW_lockall}}{{GW|open&cancel.dcml\\00|LW_lockall}},1,0,13,252,\"CREATE NEW GAME\",,26,\"Create\",\"Cancel\")"
+        f"#ebox[%L](x:245,y:100,w:450,h:210)"
+        f"#font(BC12,RC12,RC12)"
+        f"#txt[%L_NAME](%L[x:11,y:48,w:160,h:20],{{}},\"Game Title:\")"
+        f"#pan[%P_NAME](%L[x:15,y:68,w:382,h:14],1)"
+        f"#font(BC12,GC12,GC12)"
+        f"#edit[%E_NAME](%L[x:19,y:67,w:377,h:18],{{%GV_VE_TITLE}},0,0,0,1)"
+        f"#font(BC12,RC12,RC12)"
+        f"#txt[%L_PASS](%L[x:11,y:95,w:160,h:20],{{}},\"Password:\")"
+        f"#pan[%P_PASS](%L[x:15,y:114,w:382,h:14],1)"
+        f"#font(BC12,GC12,GC12)"
+        f"#edit[%E_PASS](%L[x:19,y:113,w:377,h:18],{{%GV_VE_PASSWD}},0,0,1)"
+        f"#font(BC14,RC14,RC14)"
+        f"#txt[%L_MAXPL](%L[x:11,y:145,w:150,h:24],{{}},\"Max Players:\")"
+        f"#cbb[%E_MAXPL](%L[x:130,y:139,w:273,h:24],{{%GV_VE_MAX_PL}},2,3,4,5,6,7,0)"
+        f"#font(BC14,RC14,RC14)"
+        f"#txt[%L_MAXPL](%L[x:11,y:175,w:151,h:24],{{}},\"Type:\")"
+        f"#cbb[%E_TYPE](%L[x:130,y:169,w:273,h:24],{{%GV_VE_TYPE}},{''.join([f'{type[0]},' for type in types])})"
+        f"<NGDLG>"
+    )
+
 
 def news(database: Engine, **_) -> str:
     with database.connect() as connection:
@@ -1746,92 +1798,93 @@ def news(database: Engine, **_) -> str:
                     #txt[%TEXT0](%SB[x:85,y:8,w:100%-90,h:24],{{}},\"{news[0][1]}\")\
                     #font(BC14,BC14,RC14)\
                     #ctxt[%DATE0](%SB[x:0,y:8,w:78,h:24],{{}},\
-                    {' - ' if not isinstance(news[0][0], datetime) else news[0][0].strftime('%d/%m/%Y')})") # type: ignore
+                    {' - ' if not isinstance(news[0][0], datetime) else news[0][0].strftime('%d/%m/%Y')})")  # type: ignore
         if len(news) > 1:
             for idx, n in enumerate(news[1:]):
                 news_board.append(f"\
                     #font(BC12,BC12,RC12)\
-                    #txt[%TEXT{idx+1}](%SB[x:85,y:%TEXT{idx}+27,w:100%-90,h:24],{{}},\"{n[1]}\")\
+                    #txt[%TEXT{idx + 1}](%SB[x:85,y:%TEXT{idx}+27,w:100%-90,h:24],{{}},\"{n[1]}\")\
                     #font(BC14,BC14,RC14)\
-                    #ctxt[%DATE{idx+1}](%SB[x:0,y:%TEXT{idx}+27,w:78,h:24],{{}},\
-                    {' - ' if not isinstance(news[0][0], datetime) else n[0].strftime('%d/%m/%Y')})") # type: ignore
+                    #ctxt[%DATE{idx + 1}](%SB[x:0,y:%TEXT{idx}+27,w:78,h:24],{{}},\
+                    {' - ' if not isinstance(news[0][0], datetime) else n[0].strftime('%d/%m/%Y')})")  # type: ignore
         news_board = "".join(news_board)
     return (
-    f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
-    f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)"
-    f"#pix[%PXT2](%TB[x:0,y:263,w:100%,h:100%],{{}},Internet/pix/i_pri0,13,13,13,13)"
-    f"#pan[%P1](%TB[x:42,y:0-22,w:0,h:80],10)"
-    f"#font(RG18,RG18,RG18)"
-    f"#txt[%PL](%TB[x:737,y:0,w:150,h:20],{{}},\"Players\")\""
-    f"#font(BG18,BG18,BG18)"
-    f"#ctxt[%TTTEXT](%TB[x:0-62,y:0-32,w:1024,h:20],{{}},\"NEWS & EVENTS\")"
-    f"#font(R2C12,R2C12,R2C12)"
-    f"#txt[%TMTEXT](%TB[x:0,y:514,w:100,h:20],{{}},\"Message:\")"
-    f"#font(RC12,RC12,RC12)"
-    f"#def_gp_btn(Internet/pix/i_pri0,51,51,0,1)"
-    f"#gpbtn[%BT1](%TB[x:74,y:22,w:-22,h:-18],{{}},\"News & Events\")"
-    f"#hint(%BT1,\"News, events, forum and punishment list\")"
-    f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)"
-    f"#font(RC12,R2C12,RC12)"
-    f"#gpbtn[%BT2](%TB[x:196,y:23,w:-22,h:-18],{{GW|open&users_list.dcml\\00|LW_lockall}},\"Player List\")"
-    f"#hint(%BT2,\"Player list, personal mail and clan information\")"
-    f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)"
-    f"#font(RC12,R2C12,RC12)"
-    f"#gpbtn[%BT4](%TB[x:318,y:23,w:-22,h:-18],{{GW|open&games.dcml\\00|LW_lockall}},\"Custom Games\")"
-    f"#hint(%BT4,\"Play custom games\")"
-    f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)"
-    f"#font(RC12,R2C12,RC12)"
-    f"#gpbtn[%BT5](%TB[x:440,y:23,w:-22,h:-18],{{GW|open&scored_games.dcml\\00&player_id=0\\00|LW_lockall}},\"Scored Games\")"
-    f"#hint(%BT5,\"Played games and their scores\")"
-    f"#ebox[%B_VOTE](x:5,y:396,w:140,h:103)"
-    f"<VOTING>"
-    f"#exec(GW|open&voting.dcml\\00&question=46\\00)"
-    f"<VOTING>"
-    f"#ebox[%B](x:0,y:0,w:100%,h:100%)"
-    f"#font(RC14,GC14,RC14)"
-    f"#ctxt[%LIST1](%B[x:0,y:106,w:146,h:24],{{GW|open&news.dcml\\00|LW_lockall}},\"{{News & Events}}\")"
-    f"#font(R2C14,R2C14,RC14)"
-    f"#ctxt[%LIST2](%B[x:0,y:%LIST1-9,w:146,h:24],{{GW|open&punishments.dcml\\00|LW_lockall}},\"{{Punishments}}\")"
-    f"#hint(%LIST2,\"List of punished players\")"
-    f"#edit[%E_FT](%B[x:0,y:0,w:0,h:0],{{%GV_FORUM_LAST_TIME}})"
-    f"#ctxt[%LIST3](%B[x:0,y:%LIST2-9,w:146,h:24],{{GW|open&forum.dcml\\00&last_view=<%GV_FORUM_LAST_TIME>\\00|LW_lockall}},\"{{Forum}}\")"
-    f"#hint(%LIST3,\"Read and write forum messages\")"
-    f"#pan[%PAN](%B[x:154,y:42,w:526-3,h:291],7)"
-    f"#sbox[%SB](x:150,y:46,w:526+4,h:291-8)"
-    f"{news_board}"
-    f"#ebox[%B1](x:0,y:0,w:100%,h:100%)"
-    f"#pan[%PANV](%B1[x:260,y:8,w:0,h:359],10)"
-    f"<NGDLG>"
-    f"<NGDLG>"
-    f"#block(cancel.cml,CAN)<NGDLG>"
-    f"<NGDLG>"
-    f"#end(CAN)"
-)
+        f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
+        f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)"
+        f"#pix[%PXT2](%TB[x:0,y:263,w:100%,h:100%],{{}},Internet/pix/i_pri0,13,13,13,13)"
+        f"#pan[%P1](%TB[x:42,y:0-22,w:0,h:80],10)"
+        f"#font(RG18,RG18,RG18)"
+        f"#txt[%PL](%TB[x:737,y:0,w:150,h:20],{{}},\"Players\")\""
+        f"#font(BG18,BG18,BG18)"
+        f"#ctxt[%TTTEXT](%TB[x:0-62,y:0-32,w:1024,h:20],{{}},\"NEWS & EVENTS\")"
+        f"#font(R2C12,R2C12,R2C12)"
+        f"#txt[%TMTEXT](%TB[x:0,y:514,w:100,h:20],{{}},\"Message:\")"
+        f"#font(RC12,RC12,RC12)"
+        f"#def_gp_btn(Internet/pix/i_pri0,51,51,0,1)"
+        f"#gpbtn[%BT1](%TB[x:74,y:22,w:-22,h:-18],{{}},\"News & Events\")"
+        f"#hint(%BT1,\"News, events, forum and punishment list\")"
+        f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)"
+        f"#font(RC12,R2C12,RC12)"
+        f"#gpbtn[%BT2](%TB[x:196,y:23,w:-22,h:-18],{{GW|open&users_list.dcml\\00|LW_lockall}},\"Player List\")"
+        f"#hint(%BT2,\"Player list, personal mail and clan information\")"
+        f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)"
+        f"#font(RC12,R2C12,RC12)"
+        f"#gpbtn[%BT4](%TB[x:318,y:23,w:-22,h:-18],{{GW|open&games.dcml\\00|LW_lockall}},\"Custom Games\")"
+        f"#hint(%BT4,\"Play custom games\")"
+        f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)"
+        f"#font(RC12,R2C12,RC12)"
+        f"#gpbtn[%BT5](%TB[x:440,y:23,w:-22,h:-18],{{GW|open&scored_games.dcml\\00&player_id=0\\00|LW_lockall}},\"Scored Games\")"
+        f"#hint(%BT5,\"Played games and their scores\")"
+        f"#ebox[%B_VOTE](x:5,y:396,w:140,h:103)"
+        f"<VOTING>"
+        f"#exec(GW|open&voting.dcml\\00&question=46\\00)"
+        f"<VOTING>"
+        f"#ebox[%B](x:0,y:0,w:100%,h:100%)"
+        f"#font(RC14,GC14,RC14)"
+        f"#ctxt[%LIST1](%B[x:0,y:106,w:146,h:24],{{GW|open&news.dcml\\00|LW_lockall}},\"{{News & Events}}\")"
+        f"#font(R2C14,R2C14,RC14)"
+        f"#ctxt[%LIST2](%B[x:0,y:%LIST1-9,w:146,h:24],{{GW|open&punishments.dcml\\00|LW_lockall}},\"{{Punishments}}\")"
+        f"#hint(%LIST2,\"List of punished players\")"
+        f"#edit[%E_FT](%B[x:0,y:0,w:0,h:0],{{%GV_FORUM_LAST_TIME}})"
+        f"#ctxt[%LIST3](%B[x:0,y:%LIST2-9,w:146,h:24],{{GW|open&forum.dcml\\00&last_view=<%GV_FORUM_LAST_TIME>\\00|LW_lockall}},\"{{Forum}}\")"
+        f"#hint(%LIST3,\"Read and write forum messages\")"
+        f"#pan[%PAN](%B[x:154,y:42,w:526-3,h:291],7)"
+        f"#sbox[%SB](x:150,y:46,w:526+4,h:291-8)"
+        f"{news_board}"
+        f"#ebox[%B1](x:0,y:0,w:100%,h:100%)"
+        f"#pan[%PANV](%B1[x:260,y:8,w:0,h:359],10)"
+        f"<NGDLG>"
+        f"<NGDLG>"
+        f"#block(cancel.cml,CAN)<NGDLG>"
+        f"<NGDLG>"
+        f"#end(CAN)"
+    )
+
 
 def punishments(database: Engine, **_) -> str:
     with database.connect() as connection:
         punishment_list = []
         punishments = connection.execute(text(
             "CALL get_punishments()"
-            )).fetchall()
+        )).fetchall()
         for idx, entry in enumerate(punishments):
             punishment = entry._mapping
             punishment_list.append(
                 f"#font(R2C12,BC12,RC12)"
-                f"#txt[%MSG{idx+1}](%SB[x:8,y:{'4' if idx == 0 else f'%P{idx}-21'},w:570,h:20],{{}},\"Cancelled game {punishment.game_id} (#).\")"
+                f"#txt[%MSG{idx + 1}](%SB[x:8,y:{'4' if idx == 0 else f'%P{idx}-21'},w:570,h:20],{{}},\"Cancelled game {punishment.game_id} (#).\")"
                 f"#font(R2C12,BC12,BC12)"
-                f"#txt[%DAT{idx+1}](%SB[x:8,y:{'4' if idx == 0 else f'%P{idx}-21'}+29,w:90,h:20],{{}},\"Date:\")"
+                f"#txt[%DAT{idx + 1}](%SB[x:8,y:{'4' if idx == 0 else f'%P{idx}-21'}+29,w:90,h:20],{{}},\"Date:\")"
                 f"#font(BC12,BC12,BC12)"
-                f"#txt[%DATE{idx+1}](%SB[x:%DAT{idx+1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'}+29,w:200,h:20],{{}},\"{punishment.published_at}\")"
+                f"#txt[%DATE{idx + 1}](%SB[x:%DAT{idx + 1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'}+29,w:200,h:20],{{}},\"{punishment.published_at}\")"
                 f"#font(R2C12,BC12,BC12)"
-                f"#txt[%MD{idx+1}](%SB[x:8,y:{'4' if idx == 0 else f'%P{idx}-21'}+43,w:90,h:20],{{}},\"Moderator:\")"
+                f"#txt[%MD{idx + 1}](%SB[x:8,y:{'4' if idx == 0 else f'%P{idx}-21'}+43,w:90,h:20],{{}},\"Moderator:\")"
                 f"#font(R2C12,BC12,RC12)"
-                f"#txt[%MDR{idx+1}](%SB[x:%MD{idx+1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'}+43,w:200,h:20],{{GW|open&user_details.dcml\\00&ID={punishment.moderator_id}\\00|LW_lockall}},\"{{{punishment.nick}}}\")"
+                f"#txt[%MDR{idx + 1}](%SB[x:%MD{idx + 1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'}+43,w:200,h:20],{{GW|open&user_details.dcml\\00&ID={punishment.moderator_id}\\00|LW_lockall}},\"{{{punishment.nick}}}\")"
                 f"#font(R2C12,BC12,BC12)"
-                f"#txt[%CM{idx+1}](%SB[x:210,y:{'4' if idx == 0 else f'%P{idx}-21'}+29,w:100,h:20],{{}},\"Comments:\")"
+                f"#txt[%CM{idx + 1}](%SB[x:210,y:{'4' if idx == 0 else f'%P{idx}-21'}+29,w:100,h:20],{{}},\"Comments:\")"
                 f"#font(BC12,BC12,BC12)"
-                f"#txt[%CMT{idx+1}](%SB[x:%CM{idx+1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'}+29,w:256,h:20],{{}},\"{punishment.comment}\")"
-                f"#pan[%P{idx+1}](%SB[x:0-32,y:%MDR{idx+1}>%CMT{idx+1}+38,w:100%+65,h:0],9)"
+                f"#txt[%CMT{idx + 1}](%SB[x:%CM{idx + 1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'}+29,w:256,h:20],{{}},\"{punishment.comment}\")"
+                f"#pan[%P{idx + 1}](%SB[x:0-32,y:%MDR{idx + 1}>%CMT{idx + 1}+38,w:100%+65,h:0],9)"
             )
     punishment_list = "".join(punishment_list)
     return (
@@ -1886,16 +1939,17 @@ def punishments(database: Engine, **_) -> str:
         f"#end(CAN)"
     )
 
+
 def rating_calculator(variables: dict, **_) -> str:
     error = False
-    if (variables['score1'] and variables['score2']) and (variables['score1'].isdigit() and variables['score2'].isdigit()):
+    if (variables['score1'] and variables['score2']) and (
+            variables['score1'].isdigit() and variables['score2'].isdigit()):
         you, opponent = int(clip_string(variables['score1'], 9)), int(clip_string(variables['score2'], 9))
         win = abs(floor(clip(you + 10 * 1 * (opponent + 100) / (you + 100) - you, 1, 100)))
         loss = abs(ceil(clip(you + 10 * -1 * (you + 100) / (opponent + 100) - you, -100, -1)))
     else:
         error = True
         win, loss, you, opponent = 0, 0, 0, 0
-
     return (
         f"<RGDLG>"
         f"#ebox[%B2](x:427,y:266,w:288,h:72)"
@@ -1905,8 +1959,8 @@ def rating_calculator(variables: dict, **_) -> str:
         f"#pan[%P6](%B2[x:223,y:0-32,w:0,h:137],10)"
         f"#font(R2C12,BC12,BC12)"
         f"#ctxt[%I1](%B2[x:96,y:1,w:96,h:20],{{}},\"You\")"
-        f"#ctxt[%I2](%B2[x:192,y:1,w:96,h:20],{{}},\"Enemy\")"
-        f"#pan[%P1](%B2[x:64,y:49,w:257,h:0],9)" if not win or not loss else ""
+        f"#ctxt[%I2](%B2[x:192,y:1,w:96,h:20],{{}},\"Enemy\")" +
+        ("#pan[%P1](%B2[x:64,y:49,w:257,h:0],9)" if not win or not loss else "") +
         f"#pan[%P2](%B2[x:0-32,y:67,w:353,h:0],9)"
         f"#pan[%P3](%B2[x:0-32,y:85,w:353,h:0],9)"
         f"#font(R2C14,R2C14,R2C14)"
@@ -1914,21 +1968,23 @@ def rating_calculator(variables: dict, **_) -> str:
         f"#font(R2C12,R2C12,R2C12)"
         f"#ctxt[%I3](%B2[x:0,y:36,w:96,h:20],{{}},\"You win\")"
         f"#ctxt[%I3](%B2[x:0,y:54,w:96,h:20],{{}},\"You lose\")"
-        f"#font(BC12,R2C12,R2C12)"
-        f"#stbl[%TBL](%B2[x:96,y:36,w:192,h:36],{{}},2,0,50,1,50,1,17,\"+{win} pt\",\"-{win} pt\",17,\"-{loss} pt\",\"+{loss} pt\")" if not error else ""
+        f"#font(BC12,R2C12,R2C12)" +
+        (f'#stbl[%TBL](%B2[x:96,y:36,w:192,h:36],{{}},2,0,50,1,50,1,17,\"+{win} pt\",\"-{win} pt\",17,\"-{loss} pt\",\"+{loss} pt\")' if not error else '') +
         f"#pan[%P1](%B2[x:104,y:18,w:80,h:10],1)"
         f"#font(BC12,RC12,RC12)"
         f"#edit[%E1](%B2[x:104,y:15,w:80,h:17],{{%GV_SCORE1}},0,1)"
         f"#pan[%P2](%B2[x:200,y:18,w:80,h:10],1)"
         f"#edit[%E2](%B2[x:200,y:15,w:80,h:17],{{%GV_SCORE2}},0,1,0,1)"
-        f"#exec(LW_cfile&{variables['score1']}\\00&Cookies/%GV_SCORE1)"
-        f"#exec(LW_cfile&{variables['score2']}\\00&Cookies/%GV_SCORE2)" if not error else ""
+        f"#exec(LW_cfile&{variables['score1']}\\00&Cookies/%GV_SCORE1)" +
+        (f"#exec(LW_cfile&{variables['score2']}\\00&Cookies/%GV_SCORE2)" if not error else '') +
         f"#exec(LW_cfile&0\\00&Cookies/%GV_SCORE1)"
         f"#exec(LW_cfile&0\\00&Cookies/%GV_SCORE2)"
         f"#font(BC14,WC14,BC14)"
-        f"#sbtn[%BT](%B2[x:242,y:110,w:45,h:205],{{GW|open&rating_calculator.dcml\\00&score1=<%GV_SCORE1>^score2=<%GV_SCORE2>\\00|LW_lockall}},\"Calculate\")"
+        f"#sbtn[%BT](%B2[x:242,y:110,w:45,h:205],"
+        f"{{GW|open&rating_calculator.dcml\\00&score1=<%GV_SCORE1>^score2=<%GV_SCORE2>\\00|LW_lockall}},\"Calculate\")"
         f"<RGDLG>"
     )
+
 
 def rating_help(**_) -> str:
     return (
@@ -1964,10 +2020,18 @@ def rating_help(**_) -> str:
         f"<VOTING>"
         f"#ebox[%B](x:0,y:0,w:100%,h:100%)"
         f"#font(R2C14,R2C14,RC14)"
-        f"#ctxt[%LIST1](%B[x:0,y:106,w:146,h:24],{{GW|open&map.dcml\\00|LW_lockall}},\"{{Rating Games}}\")"
-        f"#hint(%LIST1,\"Play rating games\")"
+        
+        # f"#ctxt[%LIST1](%B[x:0,y:106,w:146,h:24],{{GW|open&rating_help.dcml\\00|LW_lockall}},\"{{Rating Games}}\")"
+        # # f"#ctxt[%LIST1](%B[x:0,y:106,w:146,h:24],{{GW|open&map.dcml\\00|LW_lockall}},\"{{Rating Games}}\")"
+        # f"#hint(%LIST1,\"Play rating games\")"
+        # f"#font(RC14,GC14,RC14)"
+        # f"#ctxt[%LIST2](%B[x:0,y:%LIST1-9,w:146,h:24],{{GW|open&rating_help.dcml\\00|LW_lockall}},\"{{Rating describe}}\")"
+        
+        f"#ctxt[%TIT1](%B[x:0,y:106,w:146,h:24],{{GW|open&games.dcml\\00|LW_lockall}},\"{{Custom Games}}\")"
+        f"#hint(%TIT1,\"Play custom games\")"
         f"#font(RC14,GC14,RC14)"
-        f"#ctxt[%LIST2](%B[x:0,y:%LIST1-9,w:146,h:24],{{GW|open&rating_help.dcml\\00|LW_lockall}},\"{{Rating describe}}\")"
+        f"#ctxt[%LIST33](%B[x:0,y:%TIT1-9,w:146,h:24],{{GW|open&rating_help.dcml\\00|LW_lockall}},\"{{Rating Describe}}\")"
+        
         f"#ebox[%B1](x:154,y:42,w:559,h:291)"
         f"#def_panel(9,Internet/pix/i_pri0,-1,-1,-1,-1,-1,-1,30,-1,-1,-1)"
         f"#pan[%P](%B1[x:0,y:0,w:100%,h:100%],5)"
@@ -2010,18 +2074,22 @@ def rating_help(**_) -> str:
         f"#end(CAN)"
     )
 
+
 def reg_new_user(variables: dict, database: Engine, **_) -> str | None:
     try:
         with database.connect() as connection:
             connection.execute(text(
                 f"CALL reg_new_user("
-                f"'{variables['VE_MODE']}', '{variables['VE_NICK']}', '{variables['VE_NAME']}', '{variables['VE_MAIL']}', '{variables['VE_ICQ']}', "
-                f"'{variables['VE_HOMP']}', {variables['VE_SEX']}, {variables['VE_CNTRY']}, '{variables['VE_PHON']}', '{variables['VE_BIRTH']}', "
-                f"'{variables['VE_GMID']}', '{variables['VE_PASS']}', '{variables['VE_RASS']}')"))
+                f"'{variables['VE_MODE']}','{variables['VE_NICK']}','{variables['VE_NAME']}','{variables['VE_MAIL']}',"
+                f"'{variables['VE_ICQ']}','{variables['VE_HOMP']}',{variables['VE_SEX']},{variables['VE_CNTRY']},"
+                f"'{variables['VE_PHON']}','{variables['VE_BIRTH']}','{variables['VE_GMID']}','{variables['VE_PASS']}',"
+                f"'{variables['VE_RASS']}')"))
             connection.commit()
 
         if variables['VE_MODE'] == 'edit':
-            new_password = f"Your new password is: {variables['VE_RASS']}\\Please keep it in safety and make sure it does not get lost.\\" if variables['VE_PASS'] != variables['VE_RASS'] else ''
+            new_password = (f"Your new password is: {variables['VE_RASS']}\\Please keep it in safety and make sure it "
+                            f"does not get lost.\\") if \
+                variables['VE_PASS'] != variables['VE_RASS'] else ''
             return (
                 f"<MESDLG>"
                 f"#ebox[%MBG](x:0,y:0,w:1024,h:768)"
@@ -2066,7 +2134,9 @@ def reg_new_user(variables: dict, database: Engine, **_) -> str | None:
                 f"\\00|LW_lockall}},2,0,3,13,252,"
                 f"\"INFORMATION\",\"Your personal profile data has been successfully updated!\\"
                 f"{new_password}"
-                f"Press OK button to save password, in other case press Cancel.\\This option saves your password and Game Box #ID. Don't use it, if you play from computer accessible for other people.\",26,\"OK\",\"Cancel\")"
+                f"Press OK button to save password, in other case press Cancel.\\This option saves your password and "
+                f"Game Box #ID. Don't use it, if you play from computer accessible for other people.\",26,\"OK\","
+                f"\"Cancel\")"
                 f"<MESDLG>")
 
         elif variables['VE_MODE'] in ('creat', None):
@@ -2112,7 +2182,9 @@ def reg_new_user(variables: dict, database: Engine, **_) -> str | None:
                 f"VE_BIRTH={variables['VE_BIRTH']}^"
                 f"VE_GMID={variables['VE_GMID']}"
                 f"\\00|LW_lockall}},2,0,3,13,252,"
-                f"\"INFORMATION\",\"Your personal profile data has been successfully created!\\Press OK button to save password, in other case press Cancel.\\This option saves your password and Game Box #ID. Don't use it, if you play from computer accessible for other people.\",26,\"OK\",\"Cancel\")"
+                f"\"INFORMATION\",\"Your personal profile data has been successfully created!\\Press OK button to "
+                f"save password, in other case press Cancel.\\This option saves your password and Game Box #ID. Don't "
+                f"use it, if you play from computer accessible for other people.\",26,\"OK\",\"Cancel\")"
                 f"<MESDLG>")
 
     except DBAPIError as err:
@@ -2121,62 +2193,130 @@ def reg_new_user(variables: dict, database: Engine, **_) -> str | None:
         if err.orig:
             error_code = mysql_error_messages[err.orig.args[1]]
             if error_code == "ERR_PASS_MISMATCH":
-                    return (
-                        f"<MESDLG>"
-                        f"#ebox[%MBG](x:0,y:0,w:1024,h:768)"
-                        f"#def_dtbl_button_hotkey(13,27)"
-                        f"#table[%TBL](%MBG[x:306,y:325,w:415,h:205],{{}}{{}}{{GW|open&log_new_form.dcml\\00&"
-                        f"logs={variables['logs']}^"
-                        f"cansel={variables['cansel']}^"
-                        f"VE_MODE=edit^"
-                        f"VE_NAME={variables['VE_NAME']}^"
-                        f"VE_NICK={variables['VE_NICK']}^"
-                        f"VE_MAIL={variables['VE_MAIL']}^"
-                        f"VE_ICQ={variables['VE_ICQ']}^"
-                        f"VE_HOMP={variables['VE_HOMP']}^"
-                        f"VE_SEX={variables['VE_SEX']}^"
-                        f"VE_CNTRY={variables['VE_CNTRY']}^"
-                        f"VE_PHON={variables['VE_PHON']}^"
-                        f"VE_BIRTH={variables['VE_BIRTH']}^"
-                        f"accounts={variables['accounts']}"
-                        f"\\00|LW_lockall}}"
-                        f"{{LW_file&Internet/Cash/l_games_btn.cml}},2,0,3,13,252,"
-                        f"\"ERROR\",\"Passwords do not match. Please ensure both password fields are identical.\",26,\"Edit\",\"Cancel\")"
-                        f"<MESDLG>"
-                    )
+                return (
+                    f"<MESDLG>"
+                    f"#ebox[%MBG](x:0,y:0,w:1024,h:768)"
+                    f"#def_dtbl_button_hotkey(13,27)"
+                    f"#table[%TBL](%MBG[x:306,y:325,w:415,h:205],{{}}{{}}{{GW|open&log_new_form.dcml\\00&"
+                    f"logs={variables['logs']}^"
+                    f"cansel={variables['cansel']}^"
+                    f"VE_MODE=edit^"
+                    f"VE_NAME={variables['VE_NAME']}^"
+                    f"VE_NICK={variables['VE_NICK']}^"
+                    f"VE_MAIL={variables['VE_MAIL']}^"
+                    f"VE_ICQ={variables['VE_ICQ']}^"
+                    f"VE_HOMP={variables['VE_HOMP']}^"
+                    f"VE_SEX={variables['VE_SEX']}^"
+                    f"VE_CNTRY={variables['VE_CNTRY']}^"
+                    f"VE_PHON={variables['VE_PHON']}^"
+                    f"VE_BIRTH={variables['VE_BIRTH']}^"
+                    f"accounts={variables['accounts']}"
+                    f"\\00|LW_lockall}}"
+                    f"{{LW_file&Internet/Cash/l_games_btn.cml}},2,0,3,13,252,"
+                    f"\"ERROR\",\"Passwords do not match. Please ensure both password fields are identical.\",26,"
+                    f"\"Edit\",\"Cancel\")"
+                    f"<MESDLG>"
+                )
             elif error_code == "ERR_ACC_NOTFOUND":
                 return (
-                        f"<MESDLG>"
-                        f"#ebox[%MBG](x:0,y:0,w:1024,h:768)"
-                        f"#def_dtbl_button_hotkey(13,27)"
-                        f"#table[%TBL](%MBG[x:306,y:325,w:415,h:205],{{}}{{}}{{GW|open&log_new_form.dcml\\00&"
-                        f"logs={variables['logs']}^"
-                        f"cansel={variables['cansel']}^"
-                        f"VE_MODE=edit^"
-                        f"VE_NAME={variables['VE_NAME']}^"
-                        f"VE_NICK={variables['VE_NICK']}^"
-                        f"VE_MAIL={variables['VE_MAIL']}^"
-                        f"VE_ICQ={variables['VE_ICQ']}^"
-                        f"VE_HOMP={variables['VE_HOMP']}^"
-                        f"VE_SEX={variables['VE_SEX']}^"
-                        f"VE_CNTRY={variables['VE_CNTRY']}^"
-                        f"VE_PHON={variables['VE_PHON']}^"
-                        f"VE_BIRTH={variables['VE_BIRTH']}^"
-                        f"accounts={variables['accounts']}"
-                        f"\\00|LW_lockall}}"
-                        f"{{LW_file&Internet/Cash/l_games_btn.cml}},2,0,3,13,252,"
-                        f"\"ERROR\",\"Incorrect login data! Press Edit button to retry. Press Cancel button to exit\",26,\"Edit\",\"Cancel\")"
-                        f"<MESDLG>"
-                    )
+                    f"<MESDLG>"
+                    f"#ebox[%MBG](x:0,y:0,w:1024,h:768)"
+                    f"#def_dtbl_button_hotkey(13,27)"
+                    f"#table[%TBL](%MBG[x:306,y:325,w:415,h:205],{{}}{{}}{{GW|open&log_new_form.dcml\\00&"
+                    f"logs={variables['logs']}^"
+                    f"cansel={variables['cansel']}^"
+                    f"VE_MODE=edit^"
+                    f"VE_NAME={variables['VE_NAME']}^"
+                    f"VE_NICK={variables['VE_NICK']}^"
+                    f"VE_MAIL={variables['VE_MAIL']}^"
+                    f"VE_ICQ={variables['VE_ICQ']}^"
+                    f"VE_HOMP={variables['VE_HOMP']}^"
+                    f"VE_SEX={variables['VE_SEX']}^"
+                    f"VE_CNTRY={variables['VE_CNTRY']}^"
+                    f"VE_PHON={variables['VE_PHON']}^"
+                    f"VE_BIRTH={variables['VE_BIRTH']}^"
+                    f"accounts={variables['accounts']}"
+                    f"\\00|LW_lockall}}"
+                    f"{{LW_file&Internet/Cash/l_games_btn.cml}},2,0,3,13,252,"
+                    f"\"ERROR\",\"Incorrect login data! Press Edit button to retry. Press Cancel button to exit\",26,"
+                    f"\"Edit\",\"Cancel\")"
+                    f"<MESDLG>"
+                )
         return (
-            f"<MESDLG> " 
-            f"#ebox[%MBG](x:0,y:0,w:1024,h:768) " 
-            f"#def_dtbl_button_hotkey(13,27) " 
-            f"#table[%TBL](%MBG[x:287,y:285,w:450,h:200],{{}}{{}}{{LW_file&Internet/Cash/l_games_btn.cml}}{{LW_file&Internet/Cash/l_games_btn.cml}},1,0,11,362,\"ERROR\",\"{error_code}\",24,\"Edit\",\"Cancel\") "
+            f"<MESDLG> "
+            f"#ebox[%MBG](x:0,y:0,w:1024,h:768) "
+            f"#def_dtbl_button_hotkey(13,27) "
+            f"#table[%TBL](%MBG[x:287,y:285,w:450,h:200],{{}}{{}}{{LW_file&Internet/Cash/l_games_btn.cml}}{{"
+            f"LW_file&Internet/Cash/l_games_btn.cml}},1,0,11,362,\"ERROR\",\"{error_code}\",24,\"Edit\",\"Cancel\")"
             f"<MESDLG> "
         )
 
-def scored_games(**_) -> str:
+
+def scored_games(variables: defaultdict, database: Engine, **_) -> str:
+    thread_strings = ""
+    thread_list = []
+    with database.connect() as connection:
+        threads = connection.execute(text(
+            f"CALL get_scored_games({int(variables['next_message']) if variables['next_message'] else 0})")).fetchall()
+        if threads:
+
+            return (
+            f'#ebox[%TB](x:0,y:0,w:100%,h:100%)'
+            f'#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)'
+            f'#pix[%PXT2](%TB[x:0,y:263,w:100%,h:100%],{{}},Internet/pix/i_pri0,13,13,13,13)'
+            f'#pan[%P1](%TB[x:42,y:0-22,w:0,h:80],10)'
+            f'#font(RG18,RG18,RG18)'
+            f'#txt[%PL](%TB[x:737,y:0,w:150,h:20],{{}},"Players")"'
+            f'#font(BG18,BG18,BG18)'
+            f'#ctxt[%TTTEXT](%TB[x:0-62,y:0-32,w:1024,h:20],{{}},"SCORED GAMES")'
+            f'#font(R2C12,R2C12,R2C12)'
+            f'#txt[%TMTEXT](%TB[x:0,y:514,w:100,h:20],{{}},"Message:")'
+            f'#def_gp_btn(Internet/pix/i_pri0,53,53,0,1)'
+            f'#font(RC12,R2C12,RC12)'
+            f'#gpbtn[%BT1](%TB[x:74,y:23,w:-22,h:-18],{{GW|open&news.dcml\\00|LW_lockall}},"News & Events")'
+            f'#hint(%BT1,"News, events, forum and punishment list")'
+            f'#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)'
+            f'#font(RC12,R2C12,RC12)'
+            f'#gpbtn[%BT2](%TB[x:196,y:23,w:-22,h:-18],{{GW|open&users_list.dcml\\00|LW_lockall}},"Player List")'
+            f'#hint(%BT2,"Player list, personal mail and clan information")'
+            f'#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)'
+            f'#font(RC12,R2C12,RC12)'
+            f'#gpbtn[%BT4](%TB[x:318,y:23,w:-22,h:-18],{{GW|open&games.dcml\\00|LW_lockall}},"Custom Games")'
+            f'#hint(%BT4,"Play custom games")'
+            f'#font(RC12,RC12,RC12)'
+            f'#def_gp_btn(Internet/pix/i_pri0,51,51,0,1)'
+            f'#gpbtn[%BT5](%TB[x:440,y:22,w:-22,h:-18],{{}},"Scored Games")#hint(%BT5,"Played games and their scores")'
+            f'#ebox[%B_VOTE](x:5,y:396,w:140,h:103)'
+            f'<VOTING>'
+            f'#exec(GW|open&voting.dcml\\00&question=46\\00)'
+            f'<VOTING>'
+            f'#ebox[%B](x:0,y:0,w:100%,h:100%)'
+            f'#font(RC14,GC14,RC14)'
+            f'#ctxt[%LIST1](%B[x:0,y:106,w:146,h:24],{{GW|open&scored_games.dcml\\00|LW_lockall}},"{{Scored Games}}")'
+            f'#hint(%LIST1,"Played games and their scores")'
+            # f'#font(RC14,R2C14,RC14)'
+            # f'#ctxt[%LIST2](%B[x:0,y:%LIST1-9,w:146,h:24],{{GW|open&scored_games2x2.dcml\\00|LW_lockall}},"{{Scored Games 2x2}}")'
+            # f'#hint(%LIST2,"Played games and their scores 2x2")'
+            f'#font(BC14,WC14,BC14)'
+            f'#sbtn[%BTXT2](%B[x:401,y:377,w:100,h:305],{{GW|open&scored_games.dcml\\00&player_id=0^player_nick=\\00|LW_lockall}},"First Page")'
+            f'#sbtn[%BTXT3](%B[x:521,y:377,w:100,h:305],{{<!goback!>}},"Back")'
+            f'#font(R0C14,R0C14,R0C14)'
+            f'#pix[%BTXT10](%B[x:601,y:352,w:118,h:25],{{}},Internet/pix/i_pri0,54,54,54,54)'
+            f'#ctxt[%BTIT10](%B[x:601,y:358,w:115,h:20],{{}},"Next")'
+            f'#font(R2C12,RC12,RC12)'
+            f'#ebox[%BB](x:0,y:0,w:100%,h:100%)'
+            f'#stbl[%TBL0](%BB[x:154,y:42,w:559,h:291],{{}},5,7,34,1,26,1,15,1,15,1,10,1,20,"Game / Start time","Player","Result","Nation","Scores")'
+            f'#font(BC12,RC12,RC12)'
+            f'#stbl[%TBL1](%BB[x:154,y:42+20,w:559,h:291-20],{{}},5,0,34,1,26,1,15,1,15,1,10,1,5,,,,,,16," (#)","","","","",16,"","","","","",13,,,,,,16," (#)","","","","",16,"","","","","",13,,,,,,16," (#)","","","","",16,"","","","","",13,,,,,,16," (#)","","","","",16,"","","","","",13,,,,,,16," (#)","","","","",16,"","","","","",13,,,,,,16," (#)","","","","",16,"","","","","",13,,,,,)'+
+            (f'')+
+            f'#font(BC14,WC14,BC14)'
+            f'#sbtn[%BTXT1](%B[x:641,y:377,w:100,h:305],{{GW|open&scored_games.dcml\\00&player_id=0^player_nick=^next_game=12^games_total=923\\00|LW_lockall}},"Next")'
+            f'<NGDLG>'
+            f'<NGDLG>'
+            f'#block(cancel.cml,CAN)<NGDLG>'
+            f'<NGDLG>'
+            f'#end(CAN)'
+            )
     return (
         f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
         f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)"
@@ -2212,9 +2352,10 @@ def scored_games(**_) -> str:
         f"#font(RC14,GC14,RC14)"
         f"#ctxt[%LIST1](%B[x:0,y:106,w:146,h:24],{{GW|open&scored_games.dcml\\00|LW_lockall}},\"{{Scored Games}}\")"
         f"#hint(%LIST1,\"Played games and their scores\")"
-        f"#font(RC14,R2C14,RC14)"
-        f"#ctxt[%LIST2](%B[x:0,y:%LIST1-9,w:146,h:24],{{GW|open&scored_games2x2.dcml\\00|LW_lockall}},\"{{Scored Games 2x2}}\")"
-        f"#hint(%LIST2,\"Played games and their scores 2x2\")"
+        # f"#font(RC14,R2C14,RC14)"
+        # f"#ctxt[%LIST2](%B[x:0,y:%LIST1-9,w:146,h:24],{{GW|open&scored_games2x2.dcml\\00|LW_lockall}},\"{{Scored "
+        # f"Games 2x2}}\")"
+        # f"#hint(%LIST2,\"Played games and their scores 2x2\")"
         f"#pan[%PAN](%B[x:154,y:42,w:559,h:291],7)"
         f"#font(RG18,RG18,RG18)"
         f"#ctxt[%T0](%B[x:154,y:179,w:559,h:20],{{}},\"No search results\")"
@@ -2225,6 +2366,7 @@ def scored_games(**_) -> str:
         f"<NGDLG>"
         f"#end(CAN)"
     )
+
 
 def scored_games2x2(**_) -> str:
     return (
@@ -2275,6 +2417,7 @@ def scored_games2x2(**_) -> str:
         f"<NGDLG>"
         f"#end(CAN)"
     )
+
 
 def startup(**_) -> str:
     return (
@@ -2330,6 +2473,7 @@ def startup(**_) -> str:
         f"#end(CAN)"
     )
 
+
 def user_details(variables: dict, database: Engine, player_id, **_) -> str | None:
     with database.connect() as connection:
         profile = connection.execute(text(
@@ -2354,29 +2498,18 @@ def user_details(variables: dict, database: Engine, player_id, **_) -> str | Non
             f"LEFT JOIN ranks ON ranks.id = get_rank(players.score) "
             f"LEFT JOIN sexes ON sexes.id = players.sex "
             f"WHERE players.player_id = {variables['ID']} "
-            )).fetchone()
+        )).fetchone()
         if profile:
             profile = profile._mapping
             can_be_excluded = connection.execute(text(
-            f"SELECT "
-            f"(CASE  "
-                f"WHEN clan_id = {profile.clan_id} "
-                f"AND clans.creator != {profile.player_id}  "
-                f"AND clans.creator = {player_id} "
-                f"AND {profile.player_id} != {player_id} "
-                f"THEN 'true' "
-                f"ELSE 'false' "
-            f"END) AS result "
-            f"FROM players "
-            f"INNER JOIN clans ON clan_id = {profile.clan_id} "
-            f"WHERE players.player_id = {profile.player_id} "
+                f"CALL can_be_excluded({variables['ID']}, {player_id})"
             )).fetchone()
             exclude_button = ""
             if can_be_excluded == 'true':
                 can_be_excluded = can_be_excluded._mapping
                 exclude_button = \
-                "#sbtn[%BTXT3](%B[x:521,y:377,w:100,h:305],{GW|open&clan_users.dcml\\00&clanID=6854^exclude_from_clan=81917\\00|LW_lockall},\"Exclude from clan\")" \
-                if can_be_excluded.result else ""
+                    "#sbtn[%BTXT3](%B[x:521,y:377,w:100,h:305],{GW|open&clan_users.dcml\\00&clanID=6854^exclude_from_clan=81917\\00|LW_lockall},\"Exclude from clan\")" \
+                        if can_be_excluded.result else ""
             clan_str = f"{{GW|open&clan_users.dcml\\00&clanID={profile.clan_id}\\00|LW_lockall}},\"{{{profile.signature}\")" if profile.clan_id else "{},\"\")"
             return (
                 f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
@@ -2488,7 +2621,7 @@ def user_details(variables: dict, database: Engine, player_id, **_) -> str | Non
                 f"#hint(%LIST4,\"Clans, their members and details\")"
                 f"#font(BC14,WC14,BC14)"
                 f"{exclude_button}"
-                #sbtn[%BTXT2](%B[x:401,y:377,w:100,h:305],{GW|open&clan_users.dcml\\00&clanID=6854^include_to_clan=81917\\00|LW_lockall},"Include in clan")
+                # sbtn[%BTXT2](%B[x:401,y:377,w:100,h:305],{GW|open&clan_users.dcml\\00&clanID=6854^include_to_clan=81917\\00|LW_lockall},"Include in clan")
                 f"<OPENURL>"
                 f"<OPENURL>"
                 f"<NGDLG>"
@@ -2499,6 +2632,7 @@ def user_details(variables: dict, database: Engine, player_id, **_) -> str | Non
                 f"#end(CAN)"
             )
 
+
 def url_open(variables: dict, **_) -> str:
     return (
         f"<OPENURL>"
@@ -2506,11 +2640,12 @@ def url_open(variables: dict, **_) -> str:
         f"<OPENURL>"
     )
 
+
 def users_list(variables: dict, database: Engine, **_) -> str:
     user_list = []
     user_buttons = []
-    page=variables.get("next_user", 0)
-    resort=variables.get("resort", "1")
+    page = variables.get("next_user", 0)
+    resort = variables.get("resort", "1")
     order = variables.get("order", "score")
     if order == 'nick':
         order_by = 'players.nick'
@@ -2526,14 +2661,18 @@ def users_list(variables: dict, database: Engine, **_) -> str:
     players = None
     with database.connect() as connection:
         players = connection.execute(text(
-                        f"SELECT get_display_nick(player_id), players.name, players.player_id, countries.name, players.score, ranks.name, row_number()\
+            f"SELECT get_display_nick(player_id), players.name, players.player_id, countries.name, players.score, ranks.name, row_number()\
                         OVER ( order by {order_by} {order} ) AS 'pos'\
                         FROM players\
                         INNER JOIN ranks ON players.clan_rank = ranks.id\
                         LEFT JOIN countries ON players.country = countries.id\
-                        ORDER BY {order_by} {order} LIMIT 14 OFFSET {13*page};")).fetchall()
-    user_buttons = "".join([f"#apan[%APAN0](%BB[x:150,y:{60+(21*idx)}-1,w:100%-161,h:20],{{GW|open&user_details.dcml\\00&ID={player[2]}\\00|LW_lockall}},8)" for idx, player in enumerate(players[:13])])
-    user_list = "".join([f"21,\"{player[6]}\",\"{player[0]}\",\"{player[1]}\",\"{player[2]}\",\"{player[3]}\",\"{player[4]}\",\"{player[5]}\"," for idx, player in enumerate(players[:13])])
+                        ORDER BY {order_by} {order} LIMIT 14 OFFSET {13 * page};")).fetchall()
+    user_buttons = "".join([
+        f"#apan[%APAN0](%BB[x:150,y:{60 + (21 * idx)}-1,w:100%-161,h:20],{{GW|open&user_details.dcml\\00&ID={player[2]}\\00|LW_lockall}},8)"
+        for idx, player in enumerate(players[:13])])
+    user_list = "".join([
+        f"21,\"{player[6]}\",\"{player[0]}\",\"{player[1]}\",\"{player[2]}\",\"{player[3]}\",\"{player[4]}\",\"{player[5]}\","
+        for idx, player in enumerate(players[:13])])
     return "".join((
         f"#ebox[%TB](x:0,y:0,w:100%,h:100%)",
         f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)",
@@ -2597,13 +2736,15 @@ def users_list(variables: dict, database: Engine, **_) -> str:
         f")",
         f"#font(RC12,R2C12,RC12)",
         f"#font(BC14,WC14,BC14)",
-        f"#sbtn[%BT](%BB[x:641,y:377,w:100,h:305],{{GW|open&users_list.dcml\\00&page={page+1}^order={order}^resort=\\00|LW_lockall}},\"Next\")" if len(players) > 13 else '',
+        f"#sbtn[%BT](%BB[x:641,y:377,w:100,h:305],{{GW|open&users_list.dcml\\00&page={page + 1}^order={order}^resort=\\00|LW_lockall}},\"Next\")" if len(
+            players) > 13 else '',
         f"<NGDLG>",
         f"<NGDLG>",
         f"#block(cancel.cml,CAN)<NGDLG>",
         f"<NGDLG>",
         f"#end(CAN)"
     ))
+
 
 def voting_view(database: Engine, **_) -> str:
     output = []
@@ -2614,17 +2755,18 @@ def voting_view(database: Engine, **_) -> str:
         for idx, voting in enumerate(votings):
             output.append(
                 f'#font(R2C12,R2C12,RC12)\
-                #rtxt[%DATE{idx}](%SB[x:100%-210,y:{25-20 if not output else f"%ANS{idx-1}_{n}+40-20"},w:200,h:20],{{}},"Published {voting[2].strftime("%m.%d.%Y") if type(voting[2]) == datetime else voting[2]}")\
+                #rtxt[%DATE{idx}](%SB[x:100%-210,y:{25 - 20 if not output else f"%ANS{idx - 1}_{n}+40-20"},w:200,h:20],{{}},"Published {voting[2].strftime("%m.%d.%Y") if type(voting[2]) == datetime else voting[2]}")\
                 #font(GC14,R2C14,RC14)\
-                #ctxt[%ANS{idx}_0](%SB[x:5,y:{25-3 if not output else f"%ANS{idx-1}_{n}+40-3"},w:100%-10,h:20],{{}},"{voting[1]}")\
+                #ctxt[%ANS{idx}_0](%SB[x:5,y:{25 - 3 if not output else f"%ANS{idx - 1}_{n}+40-3"},w:100%-10,h:20],{{}},"{voting[1]}")\
                 #font(BC12,R2C12,RC12)')
             n = 0
-            answers = connection.execute(text(f"SELECT text, votes FROM vote_answers WHERE vote_id = {voting[0]} LIMIT 4;")).fetchall()
+            answers = connection.execute(
+                text(f"SELECT text, votes FROM vote_answers WHERE vote_id = {voting[0]} LIMIT 4;")).fetchall()
             for idy, answer in enumerate(answers):
                 n = idy + 1
                 output.append(
-                    f'#txt[%ANS{idx}_{idy+1}](%SB[x:10,y:%ANS{idx}_{idy},w:100%-30,h:20],{{}},"- {answer[0]}")\
-                    #rtxt[%RES{idx}_{idy+1}](%SB[x:100%-110,y:%ANS{idx}_{idy},w:100,h:20],{{}},"{answer[1]}")')
+                    f'#txt[%ANS{idx}_{idy + 1}](%SB[x:10,y:%ANS{idx}_{idy},w:100%-30,h:20],{{}},"- {answer[0]}")\
+                    #rtxt[%RES{idx}_{idy + 1}](%SB[x:100%-110,y:%ANS{idx}_{idy},w:100,h:20],{{}},"{answer[1]}")')
             output.append(f'#pan[%HPAN{idx}](%SB[x:0-32,y:%ANS{idx}_{n}+40,w:100%+65,h:0],9)')
     output = "".join(output)
     return " ".join((
@@ -2678,6 +2820,7 @@ def voting_view(database: Engine, **_) -> str:
         f"<NGDLG>",
         f"#end(CAN)"))
 
+
 # TODO: HANDLE THE ACTUAL VOTING
 def voting(variables: dict, database: Engine, **_) -> str:
     with database.connect() as connection:
@@ -2693,11 +2836,11 @@ def voting(variables: dict, database: Engine, **_) -> str:
                 f"#font(GC12,R2C12,RC12)",
                 f"#txt[%ANS0](%B_VOTE[x:5,y:3,w:100%-10,h:14],{{}},\"{latest_vote[1]}\")",
                 "".join([
-                f'#apan[%PAN{idx+1}](%B_VOTE[x:0-3,y:%ANS0+{idx*14},w:100%-4,h:13],{{GW|open&voting.dcml\\00&question={latest_vote[0]}^answer={answer[0]}\\00|LW_lockall}},14,\"\")\
+                    f'#apan[%PAN{idx + 1}](%B_VOTE[x:0-3,y:%ANS0+{idx * 14},w:100%-4,h:13],{{GW|open&voting.dcml\\00&question={latest_vote[0]}^answer={answer[0]}\\00|LW_lockall}},14,\"\")\
                 #font(R2C12,R2C12,RC12)\
-                #txt[%ANS{idx+1}](%B_VOTE[x:0,y:%ANS0+{idx*14}+1,w:100%,h:20],{{}},\"{idx+1}. {answer[1]} \")\
-                #ctxt[%RES{idx+1}](%B_VOTE[x:105,y:%ANS0+{idx*14}+1,w:40,h:20],{{}},\"{answer[2]}\")'
-                for idx, answer in enumerate(answers)]),
+                #txt[%ANS{idx + 1}](%B_VOTE[x:0,y:%ANS0+{idx * 14}+1,w:100%,h:20],{{}},\"{idx + 1}. {answer[1]} \")\
+                #ctxt[%RES{idx + 1}](%B_VOTE[x:105,y:%ANS0+{idx * 14}+1,w:40,h:20],{{}},\"{answer[2]}\")'
+                    for idx, answer in enumerate(answers)]),
                 "#font(RC12,R2C12,RC12)",
                 "#txt[%VIEW](%B_VOTE[x:5,y:100%-17,w:100%,h:20],{GW|open&voting_view.dcml\\00|LW_lockall},\"{View all votes}\")",
                 f"<VOTING>"
@@ -2712,29 +2855,32 @@ def voting(variables: dict, database: Engine, **_) -> str:
                 f"<VOTING>"
             )
 
+
 def create_game(variables: dict, database: Engine, player_id: str | int, **_) -> str:
     gameTitle = variables.get('title', 'Lobby')
     gameType = variables.get('type', 0)
     with database.connect() as connection:
-        output = connection.execute(text(f"SELECT allow_designed, allow_ai FROM lobby_types WHERE id = {int(gameType)+1} LIMIT 1")).fetchone()
+        output = connection.execute(
+            text(f"SELECT allow_designed, allow_ai FROM lobby_types WHERE id = {int(gameType) + 1} LIMIT 1")).fetchone()
         if output:
             allow_designed, allow_ai = output
         else:
             allow_designed, allow_ai = False, False
-        gameMaxPlayers = int(variables['max_players'])+2
+        gameMaxPlayers = int(variables['max_players']) + 2
         password = variables.get('password', '')
         result = connection.execute(text(f'INSERT INTO lobbies (title, host_id, type, max_players, password)\
-                VALUES ("{gameTitle}", "{player_id}", "{int(gameType)+1}", "{gameMaxPlayers}", "{password}")\
-                ON DUPLICATE KEY UPDATE title = "{gameTitle}", type = "{int(gameType)+1}", max_players = "{gameMaxPlayers}", password = "{password}"'))
+                VALUES ("{gameTitle}", "{player_id}", "{int(gameType) + 1}", "{gameMaxPlayers}", "{password}")\
+                ON DUPLICATE KEY UPDATE title = "{gameTitle}", type = "{int(gameType) + 1}", max_players = "{gameMaxPlayers}", password = "{password}"'))
         connection.commit()
         gameID = result.lastrowid
+
     return (
         f"<NGDLG>"
         f"#ebox[%L0](x:0,y:0,w:100%,h:100%)"
         f"#exec(LW_file&Internet/Cash/cancel.cml|LW_gvar&"
         f"%GOPT&"
-        f"{ ' /OPT00 /OPT10 /OPT20 /OPT30 /OPT60 ' if allow_designed == 0 and allow_ai == 0 else ' '} "
-        f"/PAGE{ '0' if allow_designed == 1 else '2'} /{'' if allow_ai == 1 else 'NO'}COMP&"
+        f"{' /OPT00 /OPT10 /OPT20 /OPT30 /OPT60 ' if allow_designed == 0 and allow_ai == 0 else ' '} "
+        f"/PAGE{'0' if allow_designed == 1 else '2'} /{'' if allow_ai == 1 else 'NO'}COMP&"
         f"%CG_GAMEID&{gameID}&"
         f"%CG_MAXPL&{gameMaxPlayers}&"
         f"%CG_GAMENAME&\"{gameTitle}\"&"
@@ -2743,59 +2889,64 @@ def create_game(variables: dict, database: Engine, player_id: str | int, **_) ->
         f"<NGDLG>"
     )
 
-def get_response(filename) -> str:
+
+def get_response(filename) -> Callable:
     return {
-    "log_user.dcml": log_user,
-    "log_conf_dlg.dcml" : log_conf_dlg,
-    "dbtbl.dcml" : dbtbl,
-    "cancel.dcml" : cancel,
-    "startup.dcml" : startup,
-    "voting.dcml" : voting,
-    "voting_view.dcml" : voting_view,
-    "reg_new_user.dcml" : reg_new_user,
-    "games.dcml" : games,
-    "change.dcml" : change,
-    "change_account2.dcml" : change_account2,
-    "log_new_form.dcml" : log_new_form,
-    "news.dcml" : news,
-    "users_list.dcml" : users_list,
-    "user_details.dcml" : user_details,
-    "join_game.dcml" : join_game,
-    "new_game_dlg.dcml" : new_game_dlg,
-    "punishments.dcml" : punishments,
-    "forum.dcml" : forum,
-    "forum_add.dcml" : forum_add,
-    "forum_search.dcml" : forum_search,
-    "forum_view.dcml" : forum_view,
-    "mail_list.dcml" : mail_list,
-    "mail_new.dcml" : mail_new,
-    "mail_view.dcml" : mail_view,
-    "clans_list.dcml" : clans_list,
-    "map.dcml" : map_,
-    "mclick.dcml" : mclick,
-    "url_open.dcml" : url_open,
-    "rating_help.dcml" : rating_help,
-    "rating_calculator.dcml" : rating_calculator,
-    "clan_new.dcml" : clan_new,
-    "clan_load_image.dcml" : clan_load_image,
-    "clan_users.dcml" : clan_users,
-    "clan_admin2.dcml" : clan_admin2,
-    "scored_games.dcml" : scored_games,
-    "scored_games2x2.dcml" : scored_games2x2,
-    "new_game_dlg_create.dcml" : create_game
+        "log_user.dcml": log_user,
+        "log_conf_dlg.dcml": log_conf_dlg,
+        "dbtbl.dcml": dbtbl,
+        "cancel.dcml": cancel,
+        "startup.dcml": startup,
+        "voting.dcml": voting,
+        "voting_view.dcml": voting_view,
+        "reg_new_user.dcml": reg_new_user,
+        "games.dcml": games,
+        "change.dcml": change,
+        "change_account2.dcml": change_account2,
+        "log_new_form.dcml": log_new_form,
+        "news.dcml": news,
+        "users_list.dcml": users_list,
+        "user_details.dcml": user_details,
+        "join_game.dcml": join_game,
+        "new_game_dlg.dcml": new_game_dlg,
+        "punishments.dcml": punishments,
+        "forum.dcml": forum,
+        "forum_add.dcml": forum_add,
+        "forum_search.dcml": forum_search,
+        "forum_view.dcml": forum_view,
+        "mail_list.dcml": mail_list,
+        "mail_new.dcml": mail_new,
+        "mail_view.dcml": mail_view,
+        "clans_list.dcml": clans_list,
+        "map.dcml": map_,
+        "mclick.dcml": mclick,
+        "url_open.dcml": url_open,
+        "rating_help.dcml": rating_help,
+        "rating_calculator.dcml": rating_calculator,
+        "clan_new.dcml": clan_new,
+        "clan_load_image.dcml": clan_load_image,
+        "clan_users.dcml": clan_users,
+        "clan_admin2.dcml": clan_admin2,
+        "scored_games.dcml": scored_games,
+        "scored_games2x2.dcml": scored_games2x2,
+        "new_game_dlg_create.dcml": create_game
     }.get(filename, cancel)
 
-def LW_time(time: str|int, url: str) -> list:
+
+def LW_time(time: str | int, url: str) -> list:
     return ['LW_time', time, f'open:{url}']
+
 
 def LW_show(content: str) -> list:
     return ['LW_show', content]
+
 
 def extract_variables(destination: defaultdict, variable_string: str) -> None:
     for option in variable_string.split(sep="^"):
         t = (option.strip("'").split(sep="="))
         if len(t) == 2:
-            destination[t[0]] = t[1] # type: ignore
+            destination[t[0]] = t[1]  # type: ignore
+
 
 def command_open(parameters: list[bytes], database: Engine, player_id: str | int) -> str:
     filename = parameters[0].decode()
@@ -2803,19 +2954,17 @@ def command_open(parameters: list[bytes], database: Engine, player_id: str | int
     if len(parameters) > 1:
         variable_string = parameters[1].decode()
         extract_variables(variables, variable_string)
-    return get_response(filename)(
-        variables = variables,
-        database = database,
-        player_id = player_id) # type: ignore
+    return get_response(filename)(variables=variables, database=database, player_id=player_id)
+
 
 def command_login(parameters: list[bytes], database: Engine) -> str:
     lgd = parameters[0].decode()
     if lgd:
         with database.connect() as connection:
             profileid = connection.execute(text(f"SELECT player_id "
-                                                           f"FROM sessions "
-                                                           f"WHERE session_key = '{lgd}' "
-                                                           f"LIMIT 1")).fetchone()
+                                                f"FROM sessions "
+                                                f"WHERE session_key = '{lgd}' "
+                                                f"LIMIT 1")).fetchone()
             if profileid:
                 profileid = profileid._mapping
                 profile = connection.execute(text(
@@ -2834,7 +2983,7 @@ def command_login(parameters: list[bytes], database: Engine) -> str:
                     f"FROM players "
                     f"LEFT JOIN clans ON clan_id = clans.id "
                     f"WHERE player_id = '{profileid.player_id}' LIMIT 1"
-                    )).fetchone()
+                )).fetchone()
                 if profile:
                     return (
                         f"#ebox[%EBG](x:0,y:0,w:1024,h:768)"
@@ -2842,9 +2991,11 @@ def command_login(parameters: list[bytes], database: Engine) -> str:
                         f"#edit[%E_CUP](%EBG[x:0,y:0,w:0,h:0],{{%GV_CLANS_LAST_UPDATE}})"
                         f"#edit[%E_LUP](%EBG[x:0,y:0,w:0,h:0],{{%GV_LAST_UPDATE}})"
                         f"#edit[%E_AC2](%EBG[x:0,y:0,w:0,h:0],{{%GV_VE_AC}})"
+                        f"#edit[%E_AC2](%EBG[x:0,y:0,w:0,h:0],{{%GV_LGD}})"
                         f"#exec(LW_cfile&&Cookies/%GV_VE_AC)"
                         f"#exec(LW_time&10&l_games_btn.cml\\00)"
-                        f"#block(l_games_btn.cml,l_g):GW|open&log_conf_dlg.dcml\\00&logs=true^last_update=<%GV_LAST_UPDATE>"
+                        f"#block(l_games_btn.cml,l_g):GW|open&log_conf_dlg.dcml\\00&logs=true^last_update"
+                        f"=<%GV_LAST_UPDATE>"
                         f"^accounts=<%GV_VE_ACCOUNTS>"
                         f"^VE_PROF={profile.player_id}"
                         f"^VE_NAME={profile.name}"
@@ -2863,19 +3014,22 @@ def command_login(parameters: list[bytes], database: Engine) -> str:
         f"#ebox[%EBG](x:0,y:0,w:1024,h:768)"
         f"#edit[%E_LUP](%EBG[x:0,y:0,w:0,h:0],{{%GV_LAST_UPDATE}})"
         f"#exec(LW_time&10&l_games_btn.cml\\00)"
-        f"#block(l_games_btn.cml,l_g):GW|open&log_new_form.dcml\\00&logs=2^VE_MODE=creat^last_update=<%GV_LAST_UPDATE>\\00|LW_lockall"
+        f"#block(l_games_btn.cml,l_g):GW|open&log_new_form.dcml\\00&logs=2^VE_MODE=creat^last_update=<%GV_LAST_UPDATE"
+        f">\\00|LW_lockall"
         f"#end(l_g)"
     )
+
 
 def command_url(parameters: list[bytes]) -> str:
     return parameters[0].decode()
 
+
 def command_alive(parameters: list[bytes], database: Engine) -> None:
     data = bytearray(parameters[0])
-    data.extend(b'\x00'*(4-len(data)%4))
+    data.extend(b'\x00' * (4 - len(data) % 4))
     values = []
-    for n in range(0, len(data)//4):
-        src = data[n*4:n*4+4]
+    for n in range(0, len(data) // 4):
+        src = data[n * 4:n * 4 + 4]
         values.append(unpack('<I', src)[0])
     reported_player_count, host_id = values[0], values[1]
     with database.connect() as connection:
@@ -2884,50 +3038,62 @@ def command_alive(parameters: list[bytes], database: Engine) -> None:
         ))
         connection.commit()
 
+
 def command_leave(database: Engine, player_id: str | int) -> None:
     with database.connect() as connection:
         connection.execute(text(f"DELETE FROM lobbies WHERE host_id={player_id};"))
         connection.commit()
+
 
 def command_setipaddr(database: Engine, lobby_id: str, address: str) -> None:
     with database.connect() as connection:
         connection.execute(text(f"UPDATE lobbies SET ip = '{address}' WHERE id = {lobby_id}"))
         connection.commit()
 
+
 def verbose_sql_error(requested_file: str, error_message: str) -> str:
-        
-        if error_message == "ERR_NICK_EXISTS":
-            message = "User with that nickname already exists! Press Edit button to change nickname. Press Cancel button to exit"
+    if error_message == "ERR_NICK_EXISTS":
+        message = ("User with that nickname already exists! Press Edit button to change nickname. Press Cancel button "
+                   "to exit")
 
-        elif error_message == "ERR_NICK_LENGTH":
-            message = "Nickname too short. Press Cancel button to exit"
+    elif error_message == "ERR_NICK_LENGTH":
+        message = "Nickname too short. Press Cancel button to exit"
 
-        elif error_message == "ERR_BIRTH_FORMAT":
-            message = "Incorrect birthday date! Birthday must be in DD/MM/YYYY or DD.MM.YYYY format. Where DD - day (1-31), MM - month (1-12), YYYY - year. Press Edit button to check birthday date. Press Cancel to exit"
+    elif error_message == "ERR_BIRTH_FORMAT":
+        message = ("Incorrect birthday date! Birthday must be in DD/MM/YYYY or DD.MM.YYYY format. Where DD - day ("
+                   "1-31), MM - month (1-12), YYYY - year. Press Edit button to check birthday date. Press Cancel to "
+                   "exit")
 
-        elif error_message == "ERR_GMID_INVALID":
-            message = "An invalid Game Box Identifier was entered! Please enter more carefully. The number of attempts is limited. Press Edit button to check Game Box Identifier. Press Cancel to exit"
+    elif error_message == "ERR_GMID_INVALID":
+        message = ("An invalid Game Box Identifier was entered! Please enter more carefully. The number of attempts is "
+                   "limited. Press Edit button to check Game Box Identifier. Press Cancel to exit")
 
-        elif error_message == "ERR_GMID_USED":
-            message = "The provided Game Box Identifier has already been used. The number of attempts is limited. Press Edit button to check Game Box Identifier. Press Cancel to exit"
+    elif error_message == "ERR_GMID_USED":
+        message = ("The provided Game Box Identifier has already been used. The number of attempts is limited."
+                   "Press Edit button to check Game Box Identifier. Press Cancel to exit")
 
-        elif error_message == "ERR_EMAIL_USED":
-            message = "The provided E-Mail address has already been used. Press Edit button to check E-Mail address. Press Cancel to exit"
+    elif error_message == "ERR_EMAIL_USED":
+        message = ("The provided E-Mail address has already been used. Press Edit button to check E-Mail address. "
+                   "Press Cancel to exit")
 
-        elif error_message == "ERR_MAIL_NOSUB":
-            message = "ERROR"
+    elif error_message == "ERR_MAIL_NOSUB":
+        message = "ERROR"
 
-        else:
-            message = "INTERNAL ERROR"
-            print(error_message)
+    else:
+        message = "INTERNAL ERROR"
+        print(error_message)
 
-        return " ".join((f"<MESDLG>",
-            f"#ebox[%MBG](x:0,y:0,w:1024,h:768) ",
-            f"#def_dtbl_button_hotkey(13,27) ",
-            f"#table[%TBL](%MBG[x:306,y:325,w:415,h:205],{{}}{{}}{{GW|open&{requested_file}\\00|LW_lockall}}{{LW_file&Internet/Cash/l_games_btn.cml}},2,0,3,13,252,\"ERROR\",\"{message}\",26,\"Edit\",\"Cancel\")",
-            f"<MESDLG>"))
+    return (
+            f"<MESDLG>"
+            f"#ebox[%MBG](x:0,y:0,w:1024,h:768) "
+            f"#def_dtbl_button_hotkey(13,27) "
+            f"#table[%TBL](%MBG[x:306,y:325,w:415,h:205],{{}}{{}}{{GW|open&{requested_file}\\00|LW_lockall}}{{"
+            f"LW_file&Internet/Cash/l_games_btn.cml}},2,0,3,13,252,\"ERROR\",\"{message}\",26,\"Edit\",\"Cancel\")"
+            f"<MESDLG>"
+            )
 
-def process_request(request, database, player_id) -> list:
+
+def process_request(request, database, address) -> list:
     command, parameters, player_id = request[0], request[1:-2], request[-1].decode()
     response = []
 
@@ -2936,7 +3102,7 @@ def process_request(request, database, player_id) -> list:
 
     elif command == "leave":
         command_leave(database, player_id)
-        
+
     elif command == "start":
         pass
 
@@ -2948,7 +3114,7 @@ def process_request(request, database, player_id) -> list:
 
     elif command == "stats":
         pass
-    
+
     elif command == "setclan":
         print("SIGNATURE ", parameters)
         # signature = parameters[]
@@ -2971,8 +3137,8 @@ def process_request(request, database, player_id) -> list:
         except SQLAlchemyError as error:
             print(error)
             response.append(LW_show(verbose_sql_error(parameters[0].decode(), error._message())))
-            
-        except Exception as exception: 
+
+        except Exception as exception:
             print(exception)
 
     return response

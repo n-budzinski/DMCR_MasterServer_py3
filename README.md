@@ -1,4 +1,4 @@
-# DMCR_MasterServer
+# DMCR_MasterServer_py3
 A master server emulator for games based on GSC's DMCR server (ex. anubis.2gw.net)
 <br />
 
@@ -17,7 +17,7 @@ A master server emulator for games based on GSC's DMCR server (ex. anubis.2gw.ne
 
  2. Replace the GGW hosts in /Data/Internet/**ggwdc.ini**
 
->
+
         #################################################################
         # This is configuration file for GSC Game World client software #
         ################################################################# 
