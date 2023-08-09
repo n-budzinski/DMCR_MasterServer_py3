@@ -4,16 +4,16 @@ from socket import socket, AF_INET, SOCK_DGRAM
 from traceback import print_exc
 from struct import pack, unpack, unpack_from
 from zlib import compress, decompress
-from config import SERVER, TCP_MAX_PACKET_SIZE, TCP_TIMEOUT, UDP_MAX_PACKET_SIZE, ALEX_DB, ALEX_DEMO_DB
+from config import SERVER, TCP_MAX_PACKET_SIZE, TCP_TIMEOUT, UDP_MAX_PACKET_SIZE
 import alexander.process as alex
 import alexander.process as alexdemo
 from collections import defaultdict
 from typing import Any
 
-GAME_VERSIONS = defaultdict(lambda: (alex, ALEX_DB),{
-    13: (alexdemo, ALEX_DEMO_DB),
+GAME_VERSIONS = defaultdict(lambda: alex,{
+    13: alexdemo,
     # '14': (c2nw, C2NWDB)
-    16: (alex, ALEX_DB),
+    16: alex,
     # '30': (hoae, HOAEDB)
 })
 
@@ -107,8 +107,7 @@ async def handle_tcp(reader: StreamReader, writer: StreamWriter) -> None:
 
 async def process_packet(packet, writer):
     (sequence, language, version), data = unpack_packet(packet)
-    game, db = GAME_VERSIONS[version]
-    response = game.process_request(data, db, writer.get_extra_info(name='peername')[0])
+    response = GAME_VERSIONS[version].process_request(data)
     if response:
         send_packet(writer, add_header(pack_packet(response, data[-2].decode()), sequence, language, version))
     await writer.drain()

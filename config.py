@@ -6,6 +6,7 @@ TCP_MAX_PACKET_SIZE = 1440
 TCP_TIMEOUT = 120
 UDP_MAX_PACKET_SIZE = 64
 
+
 class Server():
     def __init__(self, 
                 address: str = "0.0.0.0", 
@@ -14,40 +15,77 @@ class Server():
                 ) -> None:
         self.address, self.udp_port, self.tcp_port = address, udp_port, tcp_port
 
+
 class Irc():
     def __init__(self, address: str, ch1: str, ch2: str) -> None:
         self.address, self.ch1, self.ch2 = address, ch1, ch2
 
-DB_HOST = environ.get("DCMLEMU_DB_URL", "localhost")
-DB_USERNAME = environ.get("DCMLEMU_DB_USERNAME", "admin")
-DB_PASSWORD = environ.get("DCMLEMU_DB_PASSWORD", "password")
 
-ALEX_HOST = environ.get("DCMLEMU_ALEX_URL", DB_HOST)
-ALEX_SCHEME = environ.get("DCMLEMU_ALEX_SCHEME", "alexander")
-ALEX_USERNAME = environ.get("DCMLEMU_ALEX_USERNAME", DB_USERNAME)
-ALEX_PASSWORD = environ.get("DCMLEMU_ALEX_PASSWORD", DB_PASSWORD)
-ALEX_IRC = Irc(address = "127.0.0.1", ch1 = "#GSP!conquest_m!5", ch2 = "#GSP!conquest!3")
-ALEX_DBTBL_INTERVAL = 15
+class Database:
+    # DEFAULTS
+    host = environ.get("DCMLEMU_DB_URL", "localhost")
+    username = environ.get("DCMLEMU_DB_USERNAME", "admin")
+    password = environ.get("DCMLEMU_DB_PASSWORD", "password")
+    scheme = environ.get("DCMLEMU_DB_SCHEME", "alexander")
 
-ALEX_DEMO_HOST = environ.get("DCMLEMU_ALEX_DEMO_URL", DB_HOST)
-ALEX_DEMO_SCHEME = environ.get("DCMLEMU_ALEX_DEMO_SCHEME", "alexander_demo")
-ALEX_DEMO_USERNAME = environ.get("DCMLEMU_ALEX_DEMO_USERNAME", DB_USERNAME)
-ALEX_DEMO_PASSWORD =environ.get("DCMLEMU_ALEX_DEMO_PASSWORD", DB_PASSWORD)
-ALEX_DEMO_IRC = Irc(address = "127.0.0.1", ch1 = "#GSP!conquest_m!5", ch2 = "#GSP!conquest!3")
-ALEX_DEMO_DBTBL_INTERVAL = 15
 
-HOAE_HOST = environ.get("DCMLEMU_HOAE_URL", DB_HOST)
-HOAE_SCHEME = environ.get("DCMLEMU_HOAE_SCHEME", "heroes_of_annihilated_empires")
-HOAE_USERNAME = environ.get("DCMLEMU_HOAE_USERNAME", DB_USERNAME)
-HOAE_PASSWORD =environ.get("DCMLEMU_HOAE_PASSWORD", DB_PASSWORD)
-HOAE_IRC = Irc(address = "127.0.0.1", ch1 = "#GSP!conquest_m!5", ch2 = "#GSP!conquest!3")
-HOAE_DBTBL_INTERVAL = 15
+class Game:
 
-ALEX_DB = create_engine(f'mysql+pymysql://{ALEX_USERNAME}:{ALEX_PASSWORD}@{ALEX_HOST}/{ALEX_SCHEME}?charset=utf8mb4')
-ALEX_DEMO_DB = create_engine(f'mysql+pymysql://{ALEX_DEMO_USERNAME}:{ALEX_DEMO_PASSWORD}@{ALEX_DEMO_HOST}/{ALEX_DEMO_SCHEME}?charset=utf8mb4')
-HOAE_DB = create_engine(f'mysql+pymysql://{HOAE_USERNAME}:{HOAE_PASSWORD}@{HOAE_HOST}/{HOAE_SCHEME}?charset=utf8mb4')
+    route_map = {}
+
+    def route(self, dcml: str):
+        def inner(func):
+            self.route_map[dcml] = func
+            return func
+        return inner
+
+    def __init__(self,
+                 host: str,
+                 scheme: str,
+                 username: str,
+                 password: str,
+                 irc: Irc,
+                 dbtbl_interval: int) -> None:
+        self.scheme = scheme
+        self.username = username
+        self.password = password
+        self.irc = irc
+        self.dbtbl_interval = dbtbl_interval
+        self.engine = create_engine(f'mysql+pymysql://'
+                                    f'{environ.get(username, Database.username)}:{environ.get(password, Database.password)}'
+                                    f'@{environ.get(host, Database.host)}/{environ.get(scheme, "alexander")}?charset=utf8mb4')
+
+alexander = Game(
+    host = "DCMLEMU_ALEX_URL",
+    scheme = "DCMLEMU_ALEX_SCHEME",
+    username = "DCMLEMU_ALEX_USERNAME",
+    password = "DCMLEMU_ALEX_PASSWORD",
+    irc = Irc(address = "127.0.0.1", 
+              ch1 = "#GSP!conquest_m!5", 
+              ch2 = "#GSP!conquest!3"),
+    dbtbl_interval = 15)
+
+alexander_demo = Game(
+    host = "DCMLEMU_ALEX_DEMO_URL",
+    scheme = "DCMLEMU_ALEX_DEMO_SCHEME",
+    username = "DCMLEMU_ALEX_DEMO_USERNAME",
+    password = "DCMLEMU_ALEX_DEMO_PASSWORD",
+    irc = Irc(address = "127.0.0.1", 
+              ch1 = "#GSP!conquest_m!5", 
+              ch2 = "#GSP!conquest!3"),
+    dbtbl_interval = 15)
+
+heroes_of_annihilated_empires = Game(
+    host = "DCMLEMU_HOAE_URL",
+    scheme = "DCMLEMU_HOAE_SCHEME",
+    username = "DCMLEMU_HOAE_USERNAME",
+    password = "DCMLEMU_HOAE_PASSWORD",
+    irc = Irc(address = "127.0.0.1", 
+              ch1 = "#GSP!conquest_m!5", 
+              ch2 = "#GSP!conquest!3"),
+    dbtbl_interval = 15)
+
 SERVER = Server()
-
 
 mysql_error_messages = defaultdict(lambda: "ERR_INTERNAL",{
     "ERR_INTERNAL" : 45000,

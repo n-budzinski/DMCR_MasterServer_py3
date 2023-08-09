@@ -1,7 +1,7 @@
 from collections import defaultdict
 from datetime import datetime
 from common import clip, genID, clip_string, reverse_address
-from config import ALEX_DBTBL_INTERVAL, ALEX_IRC, mysql_error_messages
+from config import mysql_error_messages, alexander
 from sqlalchemy import Engine, text
 from sqlalchemy.exc import DBAPIError, SQLAlchemyError
 from math import floor, ceil
@@ -9,14 +9,17 @@ from struct import unpack
 from typing import Callable
 from sqlalchemy.engine.row import RowMapping, Row
 
-def cancel(**_) -> str:
+
+@alexander.route('cancel.dcml')
+def cancel(**kwargs) -> str:
     return (
         '<NGDLG>'
         '<NGDLG>'
     )
 
 
-def change_account2(**_) -> str:
+@alexander.route('change_account2.dcml')
+def change_account2(**kwargs) -> str:
     return (
         f'#ebox[%EBG](x:0,y:0,w:1024,h:768)'
         f'#edit[%E_CUP](%EBG[x:0,y:0,w:0,h:0],{{%GV_CLANS_LAST_UPDATE}})'
@@ -53,7 +56,8 @@ def change_account2(**_) -> str:
     )
 
 
-def change(variables: dict, **_) -> str:
+@alexander.route('change.dcml')
+def change(variables: dict, **kwargs) -> str:
     return (
         f'<MESDLG>'
         f'#ebox[%D](x:0,y:0,w:1024,h:768)'
@@ -73,10 +77,10 @@ def change(variables: dict, **_) -> str:
         f'<MESDLG>'
     )
 
-
-def clan_admin2(variables: dict, database: Engine, player_id, **_) -> str:
-    with database.connect() as connection:
-        has_clan: Row = connection.execute(text(
+@alexander.route('clan_admin2.dcml')
+def clan_admin2(variables: dict, player_id, **kwargs) -> str:
+    with alexander.engine.connect() as connection:
+        has_clan = connection.execute(text(
             f'SELECT '
             f'signature '
             f'FROM clans '
@@ -84,7 +88,7 @@ def clan_admin2(variables: dict, database: Engine, player_id, **_) -> str:
         )).fetchone()
     if variables['new_jointer'] == player_id:
         if has_clan:
-            has_clan: RowMapping = has_clan._mapping
+            has_clan = has_clan._mapping
             if variables['again'] == 'true':
                 pass
             else:
@@ -97,7 +101,7 @@ def clan_admin2(variables: dict, database: Engine, player_id, **_) -> str:
                     f'{has_clan["signature"]}]?\",26,\"OK\",\"Cancel\")'
                     f'<NGDLG>'
                 )
-        with database.connect() as connection:
+        with alexander.engine.connect() as connection:
             connection.execute(text(
                 f'DELETE '
                 f'FROM clans '
@@ -110,7 +114,7 @@ def clan_admin2(variables: dict, database: Engine, player_id, **_) -> str:
             ))
             connection.commit()
     elif variables['leaver']:
-        with database.connect() as connection:
+        with alexander.engine.connect() as connection:
             if has_clan:
                 connection.execute(text(
                     f'DELETE '
@@ -131,7 +135,8 @@ def clan_admin2(variables: dict, database: Engine, player_id, **_) -> str:
     )
 
 
-def clan_load_image(variables: dict, **_) -> str:
+@alexander.route('clan_load_image.dcml')
+def clan_load_image(variables: dict, **kwargs) -> str:
     if variables['signature'] and variables['icon_name']:
         return (
             f'<NGDLG>'
@@ -168,9 +173,10 @@ def clan_load_image(variables: dict, **_) -> str:
     )
 
 
-def clan_new(variables: dict, database: Engine, player_id: str | int, **_) -> str:
+@alexander.route('clan_new.dcml')
+def clan_new(variables: dict, player_id: str | int, **kwargs) -> str:
     if variables['title'] and variables['signature']:
-        with database.connect() as connection:
+        with alexander.engine.connect() as connection:
             connection.execute(text(
                 f'CALL create_clan({player_id}, "{variables["title"]}", "{variables["signature"]}", "{variables["info"]}")'))
             connection.commit()
@@ -285,10 +291,11 @@ def clan_new(variables: dict, database: Engine, player_id: str | int, **_) -> st
     )
 
 
-def clan_users(variables: dict, database: Engine, player_id, **_) -> str:
+@alexander.route('clan_users.dcml')
+def clan_users(variables: dict, player_id, **kwargs) -> str:
     members_list = []
     members_buttons = []
-    with database.connect() as connection:
+    with alexander.engine.connect() as connection:
         clan = connection.execute(text(
             f"CALL get_clan_summary({variables['clanID']}, {player_id})"
         )).fetchone()
@@ -380,7 +387,8 @@ def clan_users(variables: dict, database: Engine, player_id, **_) -> str:
     return ""
 
 
-def clans_list(variables: dict, database: Engine, **_) -> str:
+@alexander.route('clans_list.dcml')
+def clans_list(variables: dict, **kwargs) -> str:
     button_list = []
     clan_list = []
     icon_dialog = ""
@@ -389,7 +397,7 @@ def clans_list(variables: dict, database: Engine, **_) -> str:
             f"#ebox[%L0](x:0,y:0,w:100%,h:100%)"
             f"#table[%TBL](%L0[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&clan_load_image.dcml\\00&help=true^signature=SAM\\00|LW_lockall}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"CLAN ICON\",\"You are recommended to use a .jpg or .png 32x24 file as a clan icon.If the resolution of the file is greater, then it will be automatically miniaturized to 32x24 resolution saving the proportions. Size must be smaller than 16 KB. It is restricted to use pornographic or erotic images, nazi symbols and obscenities. The icon will be displayed in chat window within a day.\",26,\"OK\",\"Cancel\")"
         )
-    with database.connect() as connection:
+    with alexander.engine.connect() as connection:
         clans = connection.execute(text(
             "CALL get_clans()"
         )).fetchall()
@@ -462,8 +470,9 @@ def clans_list(variables: dict, database: Engine, **_) -> str:
     )
 
 
-def dbtbl(database: Engine, **_) -> str:
-    with database.connect() as connection:
+@alexander.route('dbtbl.dcml')
+def dbtbl(**kwargs) -> str:
+    with alexander.engine.connect() as connection:
         lobbies = connection.execute(text(
             f"CALL get_lobbies()")).fetchall()
     ping_list = "".join(
@@ -478,7 +487,7 @@ def dbtbl(database: Engine, **_) -> str:
          lobby in lobbies])
     return (
         f"<DBTBL>"
-        f"#exec(LW_time&{1000 * ALEX_DBTBL_INTERVAL}&l_games_btn.cml\\00)"
+        f"#exec(LW_time&{1000 * alexander.dbtbl_interval}&l_games_btn.cml\\00)"
         f"#block(l_games_btn.cml,l_g):GW|open&dbtbl.dcml\\00&order=r.hbtime^resort=\\00|LW_lockall"
         f"#end(l_g)"
         f"#ebox[%BB](x:0,y:0,w:100%,h:100%)"
@@ -499,9 +508,10 @@ def dbtbl(database: Engine, **_) -> str:
     )
 
 
-def forum_add(variables: dict, database: Engine, player_id: str | int, **_) -> str:
+@alexander.route('forum_add.dcml')
+def forum_add(variables: dict, player_id: str | int, **kwargs) -> str:
     if variables['add_message']:
-        with database.connect() as connection:
+        with alexander.engine.connect() as connection:
             if variables['theme'] != 'None':
                 connection.execute(text(
                     f'INSERT INTO thread_messages (author_id, thread_id, content) VALUES ({player_id}, {variables["theme"]}, "{variables["add_message"]}")'))
@@ -573,7 +583,8 @@ def forum_add(variables: dict, database: Engine, player_id: str | int, **_) -> s
     )
 
 
-def forum_search(**_) -> str:
+@alexander.route('forum_search.dcml')
+def forum_search(**kwargs) -> str:
     return (
         f"<NGDLG>"
         f"#ebox[%L0](x:0,y:0,w:100%,h:100%)"
@@ -595,8 +606,9 @@ def forum_search(**_) -> str:
     )
 
 
-def forum_view(variables: dict, database: Engine, **_) -> str:
-    with database.connect() as connection:
+@alexander.route('forum_view.dcml')
+def forum_view(variables: dict, **kwargs) -> str:
+    with alexander.engine.connect() as connection:
         if variables['theme']:
             thread = connection.execute(text(f"""CALL get_thread({variables['theme']})""")).fetchone()
             if thread:
@@ -689,7 +701,8 @@ def forum_view(variables: dict, database: Engine, **_) -> str:
         return ""
 
 
-def forum(variables: dict, database: Engine, **_) -> str:
+@alexander.route('forum.dcml')
+def forum(variables: dict, **kwargs) -> str:
     thread_strings = ""
     thread_list = []
     search = False
@@ -697,7 +710,7 @@ def forum(variables: dict, database: Engine, **_) -> str:
         variables['mode'] = '1'
     if variables['search_nick'] or variables['search_text']:
         search = True
-    with database.connect() as connection:
+    with alexander.engine.connect() as connection:
         threads = connection.execute(
             text(f'CALL forum_search(\"{variables["search_nick"]}\", \"{variables["search_text"]}\" )')).fetchall()
         threads = connection.execute(text(
@@ -800,7 +813,8 @@ def forum(variables: dict, database: Engine, **_) -> str:
     )
 
 
-def games(**_) -> str:
+@alexander.route('games.dcml')
+def games(**kwargs) -> str:
     return (
         f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
         f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)"
@@ -850,9 +864,10 @@ def games(**_) -> str:
     )
 
 
-def join_game(variables: dict, database: Engine, **_) -> str:
+@alexander.route('join_game.dcml')
+def join_game(variables: dict, **kwargs) -> str:
     id_room = variables.get("id_room", "")
-    with database.connect() as connection:
+    with alexander.engine.connect() as connection:
         lobby = connection.execute(text(
             f"SELECT players, max_players, ip, password, (SELECT nick FROM players WHERE players.player_id = "
             f"lobbies.host_id) as nick FROM lobbies WHERE id = {id_room} LIMIT 1")).fetchone()
@@ -1009,7 +1024,8 @@ def join_game(variables: dict, database: Engine, **_) -> str:
     )
 
 
-def join_pl_cmd(variables: dict, player_id: str | int, **_) -> str:
+@alexander.route('join_pl_cmd.dcml')
+def join_pl_cmd(variables: dict, player_id: str | int, **kwargs) -> str:
     if variables['VE_PLAYER'] == str(player_id):
         return (
             f"<NGDLG> "
@@ -1021,7 +1037,8 @@ def join_pl_cmd(variables: dict, player_id: str | int, **_) -> str:
         return ""
 
 
-def log_conf_dlg(variables: dict, **_) -> str:
+@alexander.route('log_conf_dlg.dcml')
+def log_conf_dlg(variables: dict, **kwargs) -> str:
     return (
         f"#ebox[%EBG](x:0,y:0,w:1024,h:768)"
         f"#edit[%E_AC](%EBG[x:0,y:0,w:0,h:0],{{%GV_VE_ACCOUNTS}})"
@@ -1072,10 +1089,11 @@ def log_conf_dlg(variables: dict, **_) -> str:
     )
 
 
-def log_new_form(variables: dict, database: Engine, **_) -> str:
+@alexander.route('log_new_form.dcml')
+def log_new_form(variables: dict, **kwargs) -> str:
     genders = []
     countries = []
-    with database.connect() as connection:
+    with alexander.engine.connect() as connection:
 
         cursor_out = connection.execute(text(f'select name from sexes')).fetchall()
         for row in cursor_out:
@@ -1236,9 +1254,10 @@ def log_new_form(variables: dict, database: Engine, **_) -> str:
     return ""
 
 
-def log_user(variables: dict, database: Engine, **_) -> str:
+@alexander.route('log_user.dcml')
+def log_user(variables: dict, **kwargs) -> str:
     try:
-        with database.connect() as connection:
+        with alexander.engine.connect() as connection:
             if variables['relogin'] == "true":
                 profile = connection.execute(
                     text(f"CALL relogin(\'{variables['VE_NICK']}\',\'{variables['VE_PASS']}\')")).fetchone()
@@ -1264,9 +1283,9 @@ def log_user(variables: dict, database: Engine, **_) -> str:
                     f"%MAIL&{variables['VE_MAIL']}&"
                     f"%PASS&{variables['VE_PASS']}&"
                     f"%GMID&{variables['VE_GMID']}&"
-                    f"%CHAT&{ALEX_IRC.address}&"
-                    f"%CHNL1&{ALEX_IRC.ch1}\\00&"
-                    f"%CHNL2&{ALEX_IRC.ch2}\\00)"
+                    f"%CHAT&{alexander.irc.address}&"
+                    f"%CHNL1&{alexander.irc.ch1}\\00&"
+                    f"%CHNL2&{alexander.irc.ch2}\\00)"
                     f"<MESDLG> ")
             else:
                 return (
@@ -1290,10 +1309,11 @@ def log_user(variables: dict, database: Engine, **_) -> str:
         )
 
 
-def mail_list(variables: dict, database: Engine, player_id, **_) -> str:
+@alexander.route('mail_list.dcml')
+def mail_list(variables: dict, player_id, **kwargs) -> str:
     panel_list = []
     message_list = []
-    with database.connect() as connection:
+    with alexander.engine.connect() as connection:
         if variables['delete']:
             sender = connection.execute(text(
                 f"SELECT id_from, id_to "
@@ -1419,8 +1439,9 @@ def mail_list(variables: dict, database: Engine, player_id, **_) -> str:
     return ""
 
 
-def mail_new(variables: dict, database: Engine, player_id, **_) -> str | None:
-    with database.connect() as connection:
+@alexander.route('mail_new.dcml')
+def mail_new(variables: dict, player_id, **kwargs) -> str | None:
+    with alexander.engine.connect() as connection:
         summary = connection.execute(text(
             f"CALL mail_stats({player_id}) "
         )).fetchone()
@@ -1545,8 +1566,9 @@ def mail_new(variables: dict, database: Engine, player_id, **_) -> str | None:
             ))
 
 
-def mail_view(variables: dict, database: Engine, player_id, **_) -> str:
-    with database.connect() as connection:
+@alexander.route('mail_view.dcml')
+def mail_view(variables: dict, player_id, **kwargs) -> str:
+    with alexander.engine.connect() as connection:
         summary = connection.execute(text(
             f"CALL mail_stats({player_id}) "
         )).fetchone()
@@ -1662,7 +1684,8 @@ def mail_view(variables: dict, database: Engine, player_id, **_) -> str:
     return ""
 
 
-def map_(**_) -> str:
+@alexander.route('map.dcml')
+def map_(**kwargs) -> str:
     return (
         f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
         f"#pan[%P1](%TB[x:42,y:0-22,w:0,h:80],10)"
@@ -1712,7 +1735,8 @@ def map_(**_) -> str:
     )
 
 
-def mclick(variables: dict, **_) -> str:
+@alexander.route('mclick.dcml')
+def mclick(variables: dict, **kwargs) -> str:
     print(variables)
     # <MCLICK> #ebox[%M](x:550,y:42,w:164,h:291) #font(RG18,WF16,WF16) #pan[%PAN1](%M[x:0,y:0,w:100%,h:100%],
     # 7) #ctxt[%TIT](%M[x:5,y:10,w:100%-10,h:30],{},"Persia") #font(BC12,RC12,RC12) #stbl[%TBL](%M[x:5,y:50,
@@ -1725,7 +1749,8 @@ def mclick(variables: dict, **_) -> str:
     )
 
 
-def enter_game_dlg(**_) -> str:
+@alexander.route('enter_game_dlg.dcml')
+def enter_game_dlg(**kwargs) -> str:
     # · ·· ·open· ·   enter_game_dlg.dcml
     # land_id=2 ·   02     35070762
     # HOST
@@ -1738,7 +1763,7 @@ def enter_game_dlg(**_) -> str:
     # #exec(LW_file&Internet/Cash/cancel.cml|LW_gvar&%GOPT&/NAT1&%CG_GAMEID&2852171&%CG_MAXPL&2&%CG_GAMENAME&"Rating Game"&%COMMAND&JGAME&%CG_IP&)
     # <NGDLG>
 
-    # with database.connect() as connection:
+    # with alexander.engine.connect() as connection:
     #     types = connection.execute(text(f"SELECT name FROM lobby_types")).fetchall()
     return (
         f"<NGDLG>"
@@ -1757,8 +1782,9 @@ def enter_game_dlg(**_) -> str:
     )
 
 
-def new_game_dlg(database: Engine, **_) -> str:
-    with database.connect() as connection:
+@alexander.route('new_game_dlg.dcml')
+def new_game_dlg(**kwargs) -> str:
+    with alexander.engine.connect() as connection:
         types = connection.execute(text(f"SELECT name FROM lobby_types")).fetchall()
     return (
         f"<NGDLG>"
@@ -1788,8 +1814,9 @@ def new_game_dlg(database: Engine, **_) -> str:
     )
 
 
-def news(database: Engine, **_) -> str:
-    with database.connect() as connection:
+@alexander.route('news.dcml')
+def news(**kwargs) -> str:
+    with alexander.engine.connect() as connection:
         news = connection.execute(text(f"SELECT posted_at, content FROM news ORDER BY id DESC")).fetchall()
     news_board = []
     if news:
@@ -1861,8 +1888,9 @@ def news(database: Engine, **_) -> str:
     )
 
 
-def punishments(database: Engine, **_) -> str:
-    with database.connect() as connection:
+@alexander.route('punishments.dcml')
+def punishments(**kwargs) -> str:
+    with alexander.engine.connect() as connection:
         punishment_list = []
         punishments = connection.execute(text(
             "CALL get_punishments()"
@@ -1940,7 +1968,8 @@ def punishments(database: Engine, **_) -> str:
     )
 
 
-def rating_calculator(variables: dict, **_) -> str:
+@alexander.route('rating_calculator.dcml')
+def rating_calculator(variables: dict, **kwargs) -> str:
     error = False
     if (variables['score1'] and variables['score2']) and (
             variables['score1'].isdigit() and variables['score2'].isdigit()):
@@ -1986,7 +2015,8 @@ def rating_calculator(variables: dict, **_) -> str:
     )
 
 
-def rating_help(**_) -> str:
+@alexander.route('rating_help.dcml')
+def rating_help(**kwargs) -> str:
     return (
         f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
         f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)"
@@ -2075,9 +2105,10 @@ def rating_help(**_) -> str:
     )
 
 
-def reg_new_user(variables: dict, database: Engine, **_) -> str | None:
+@alexander.route('reg_new_user.dcml')
+def reg_new_user(variables: dict, **kwargs) -> str | None:
     try:
-        with database.connect() as connection:
+        with alexander.engine.connect() as connection:
             connection.execute(text(
                 f"CALL reg_new_user("
                 f"'{variables['VE_MODE']}','{variables['VE_NICK']}','{variables['VE_NAME']}','{variables['VE_MAIL']}',"
@@ -2252,10 +2283,11 @@ def reg_new_user(variables: dict, database: Engine, **_) -> str | None:
         )
 
 
-def scored_games(variables: defaultdict, database: Engine, **_) -> str:
+@alexander.route('scored_games.dcml')
+def scored_games(variables: defaultdict, **kwargs) -> str:
     thread_strings = ""
     thread_list = []
-    with database.connect() as connection:
+    with alexander.engine.connect() as connection:
         threads = connection.execute(text(
             f"CALL get_scored_games({int(variables['next_message']) if variables['next_message'] else 0})")).fetchall()
         if threads:
@@ -2368,7 +2400,8 @@ def scored_games(variables: defaultdict, database: Engine, **_) -> str:
     )
 
 
-def scored_games2x2(**_) -> str:
+@alexander.route('scored_games2x2.dcml')
+def scored_games2x2(**kwargs) -> str:
     return (
         f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
         f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)"
@@ -2419,7 +2452,8 @@ def scored_games2x2(**_) -> str:
     )
 
 
-def startup(**_) -> str:
+@alexander.route('startup.dcml')
+def startup(**kwargs) -> str:
     return (
         f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
         f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)"
@@ -2474,8 +2508,9 @@ def startup(**_) -> str:
     )
 
 
-def user_details(variables: dict, database: Engine, player_id, **_) -> str | None:
-    with database.connect() as connection:
+@alexander.route('user_details.dcml')
+def user_details(variables: dict, player_id, **kwargs) -> str | None:
+    with alexander.engine.connect() as connection:
         profile = connection.execute(text(
             f"SELECT "
             f"player_id, "
@@ -2633,7 +2668,8 @@ def user_details(variables: dict, database: Engine, player_id, **_) -> str | Non
             )
 
 
-def url_open(variables: dict, **_) -> str:
+@alexander.route('url_open.dcml')
+def url_open(variables: dict, **kwargs) -> str:
     return (
         f"<OPENURL>"
         f"#time(1,open:{variables['URL']})"
@@ -2641,7 +2677,8 @@ def url_open(variables: dict, **_) -> str:
     )
 
 
-def users_list(variables: dict, database: Engine, **_) -> str:
+@alexander.route('users_list.dcml')
+def users_list(variables: dict, **kwargs) -> str:
     user_list = []
     user_buttons = []
     page = variables.get("next_user", 0)
@@ -2659,7 +2696,7 @@ def users_list(variables: dict, database: Engine, **_) -> str:
         order_by = 'players.score'
     order = 'DESC' if resort == '1' else 'ASC'
     players = None
-    with database.connect() as connection:
+    with alexander.engine.connect() as connection:
         players = connection.execute(text(
             f"SELECT get_display_nick(player_id), players.name, players.player_id, countries.name, players.score, ranks.name, row_number()\
                         OVER ( order by {order_by} {order} ) AS 'pos'\
@@ -2746,10 +2783,11 @@ def users_list(variables: dict, database: Engine, **_) -> str:
     ))
 
 
-def voting_view(database: Engine, **_) -> str:
+@alexander.route('voting_view.dcml')
+def voting_view(**kwargs) -> str:
     output = []
 
-    with database.connect() as connection:
+    with alexander.engine.connect() as connection:
         votings = connection.execute(text(f"SELECT id, subject, published_at FROM votes;")).fetchall()
         n = None
         for idx, voting in enumerate(votings):
@@ -2822,8 +2860,9 @@ def voting_view(database: Engine, **_) -> str:
 
 
 # TODO: HANDLE THE ACTUAL VOTING
-def voting(variables: dict, database: Engine, **_) -> str:
-    with database.connect() as connection:
+@alexander.route('voting.dcml')
+def voting(variables: dict, **kwargs) -> str:
+    with alexander.engine.connect() as connection:
         question = variables.get("question")
         answer = variables.get("answer")
         latest_vote = connection.execute(text("SELECT votes.id, votes.subject\
@@ -2856,10 +2895,11 @@ def voting(variables: dict, database: Engine, **_) -> str:
             )
 
 
-def create_game(variables: dict, database: Engine, player_id: str | int, **_) -> str:
+@alexander.route('create_game.dcml')
+def create_game(variables: dict, player_id: str | int, **kwargs) -> str:
     gameTitle = variables.get('title', 'Lobby')
     gameType = variables.get('type', 0)
-    with database.connect() as connection:
+    with alexander.engine.connect() as connection:
         output = connection.execute(
             text(f"SELECT allow_designed, allow_ai FROM lobby_types WHERE id = {int(gameType) + 1} LIMIT 1")).fetchone()
         if output:
@@ -2890,49 +2930,6 @@ def create_game(variables: dict, database: Engine, player_id: str | int, **_) ->
     )
 
 
-def get_response(filename) -> Callable:
-    return {
-        "log_user.dcml": log_user,
-        "log_conf_dlg.dcml": log_conf_dlg,
-        "dbtbl.dcml": dbtbl,
-        "cancel.dcml": cancel,
-        "startup.dcml": startup,
-        "voting.dcml": voting,
-        "voting_view.dcml": voting_view,
-        "reg_new_user.dcml": reg_new_user,
-        "games.dcml": games,
-        "change.dcml": change,
-        "change_account2.dcml": change_account2,
-        "log_new_form.dcml": log_new_form,
-        "news.dcml": news,
-        "users_list.dcml": users_list,
-        "user_details.dcml": user_details,
-        "join_game.dcml": join_game,
-        "new_game_dlg.dcml": new_game_dlg,
-        "punishments.dcml": punishments,
-        "forum.dcml": forum,
-        "forum_add.dcml": forum_add,
-        "forum_search.dcml": forum_search,
-        "forum_view.dcml": forum_view,
-        "mail_list.dcml": mail_list,
-        "mail_new.dcml": mail_new,
-        "mail_view.dcml": mail_view,
-        "clans_list.dcml": clans_list,
-        "map.dcml": map_,
-        "mclick.dcml": mclick,
-        "url_open.dcml": url_open,
-        "rating_help.dcml": rating_help,
-        "rating_calculator.dcml": rating_calculator,
-        "clan_new.dcml": clan_new,
-        "clan_load_image.dcml": clan_load_image,
-        "clan_users.dcml": clan_users,
-        "clan_admin2.dcml": clan_admin2,
-        "scored_games.dcml": scored_games,
-        "scored_games2x2.dcml": scored_games2x2,
-        "new_game_dlg_create.dcml": create_game
-    }.get(filename, cancel)
-
-
 def LW_time(time: str | int, url: str) -> list:
     return ['LW_time', time, f'open:{url}']
 
@@ -2948,19 +2945,19 @@ def extract_variables(destination: defaultdict, variable_string: str) -> None:
             destination[t[0]] = t[1]  # type: ignore
 
 
-def command_open(parameters: list[bytes], database: Engine, player_id: str | int) -> str:
+def command_open(parameters: list[bytes], player_id: str | int) -> str:
     filename = parameters[0].decode()
     variables = defaultdict(lambda: None)
     if len(parameters) > 1:
         variable_string = parameters[1].decode()
         extract_variables(variables, variable_string)
-    return get_response(filename)(variables=variables, database=database, player_id=player_id)
+    return alexander.route_map.get(filename, cancel)(variables=variables, player_id=player_id)
 
 
 def command_login(parameters: list[bytes], database: Engine) -> str:
     lgd = parameters[0].decode()
     if lgd:
-        with database.connect() as connection:
+        with alexander.engine.connect() as connection:
             profileid = connection.execute(text(f"SELECT player_id "
                                                 f"FROM sessions "
                                                 f"WHERE session_key = '{lgd}' "
@@ -3032,21 +3029,19 @@ def command_alive(parameters: list[bytes], database: Engine) -> None:
         src = data[n * 4:n * 4 + 4]
         values.append(unpack('<I', src)[0])
     reported_player_count, host_id = values[0], values[1]
-    with database.connect() as connection:
+    with alexander.engine.connect() as connection:
         connection.execute(text(
             f"UPDATE lobbies SET players = '{reported_player_count}' WHERE host_id = {host_id}"
         ))
         connection.commit()
 
-
-def command_leave(database: Engine, player_id: str | int) -> None:
-    with database.connect() as connection:
+def command_leave(player_id: str | int) -> None:
+    with alexander.engine.connect() as connection:
         connection.execute(text(f"DELETE FROM lobbies WHERE host_id={player_id};"))
         connection.commit()
 
-
-def command_setipaddr(database: Engine, lobby_id: str, address: str) -> None:
-    with database.connect() as connection:
+def command_setipaddr(lobby_id: str, address: str) -> None:
+    with alexander.engine.connect() as connection:
         connection.execute(text(f"UPDATE lobbies SET ip = '{address}' WHERE id = {lobby_id}"))
         connection.commit()
 
@@ -3093,15 +3088,15 @@ def verbose_sql_error(requested_file: str, error_message: str) -> str:
             )
 
 
-def process_request(request, database, address) -> list:
+def process_request(request, **kwargs) -> list:
     command, parameters, player_id = request[0], request[1:-2], request[-1].decode()
     response = []
 
     if command == "setipaddr":
-        command_setipaddr(database, request[1].decode(), request[2].decode().split(':')[0])
+        command_setipaddr(request[1].decode(), request[2].decode().split(':')[0])
 
     elif command == "leave":
-        command_leave(database, player_id)
+        command_leave(player_id)
 
     elif command == "start":
         pass
@@ -3124,15 +3119,15 @@ def process_request(request, database, address) -> list:
         pass
 
     elif command == "alive":
-        command_alive(parameters, database)
+        command_alive(parameters, alexander.engine)
 
     elif command == "login":
-        response.append(LW_show(command_login(parameters, database)))
+        response.append(LW_show(command_login(parameters, alexander.engine)))
 
     elif command == "open":
         print(parameters)
         try:
-            response.append(LW_show(command_open(parameters, database, player_id)))
+            response.append(LW_show(command_open(parameters, player_id)))
 
         except SQLAlchemyError as error:
             print(error)
