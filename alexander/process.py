@@ -4,6 +4,7 @@ from common import clip, genID, clip_string, reverse_address
 from config import mysql_error_messages, alexander
 from sqlalchemy import Engine, text
 from sqlalchemy.exc import DBAPIError, SQLAlchemyError
+from pymysql import OperationalError
 from math import floor, ceil
 from struct import unpack
 from typing import Callable
@@ -58,24 +59,32 @@ def change_account2(**kwargs) -> str:
 
 @alexander.route('change.dcml')
 def change(variables: dict, **kwargs) -> str:
-    return (
-        f'<MESDLG>'
-        f'#ebox[%D](x:0,y:0,w:1024,h:768)'
-        f'#exec(LW_cfile&{variables["accounts"]}\\00&Cookies/%GV_VE_ACCOUNTS)'
-        f'#exec(GW|open&log_user.dcml\\00'
-        f'&cansel={variables["cansel"]}'
-        f'^save_pass={variables["save_pass"]}'
-        f'^icon_last_update=1098287226'
-        f'^VE_PROF={variables["VE_PROF"]}'
-        f'^VE_NAME={variables["VE_NAME"]}'
-        f'^VE_NICK={variables["VE_NICK"]}'
-        f'^VE_MAIL={variables["VE_MAIL"]}'
-        f'^VE_PASS={variables["VE_PASS"]}'
-        f'^VE_GMID={variables["VE_GMID"]}'
-        f'^accounts={variables["accounts"]}'
-        f'\\00|LW_lockall)'
-        f'<MESDLG>'
-    )
+    if not (variables["VE_NICK"], variables["VE_PASS"], variables["VE_GMID"]):
+        print("Not empty")
+        return (
+            "<MESDLG>"
+            "#ebox[%D](x:0,y:0,w:1024,h:768)"
+            "<MESDLG>"
+        )
+    else:
+        return (
+            f'<MESDLG>'
+            f'#ebox[%D](x:0,y:0,w:1024,h:768)'
+            f'#exec(LW_cfile&{variables["accounts"]}\\00&Cookies/%GV_VE_ACCOUNTS)'
+            f'#exec(GW|open&log_user.dcml\\00'
+            f'&cansel={variables["cansel"]}'
+            f'^save_pass={variables["save_pass"]}'
+            f'^icon_last_update=1098287226'
+            f'^VE_PROF={variables["VE_PROF"]}'
+            f'^VE_NAME={variables["VE_NAME"]}'
+            f'^VE_NICK={variables["VE_NICK"]}'
+            f'^VE_MAIL={variables["VE_MAIL"]}'
+            f'^VE_PASS={variables["VE_PASS"]}'
+            f'^VE_GMID={variables["VE_GMID"]}'
+            f'^accounts={variables["accounts"]}'
+            f'\\00|LW_lockall)'
+            f'<MESDLG>'
+        )
 
 @alexander.route('clan_admin2.dcml')
 def clan_admin2(variables: dict, player_id, **kwargs) -> str:
@@ -292,7 +301,7 @@ def clan_new(variables: dict, player_id: str | int, **kwargs) -> str:
 
 
 @alexander.route('clan_users.dcml')
-def clan_users(variables: dict, player_id, **kwargs) -> str:
+def clan_users(variables: dict, player_id, **kwargs) -> str | None:
     members_list = []
     members_buttons = []
     with alexander.engine.connect() as connection:
@@ -384,7 +393,6 @@ def clan_users(variables: dict, player_id, **kwargs) -> str:
                 f"<NGDLG> "
                 f"#end(CAN)"
             )
-    return ""
 
 
 @alexander.route('clans_list.dcml')
@@ -607,7 +615,7 @@ def forum_search(**kwargs) -> str:
 
 
 @alexander.route('forum_view.dcml')
-def forum_view(variables: dict, **kwargs) -> str:
+def forum_view(variables: dict, **kwargs) -> str | None:
     with alexander.engine.connect() as connection:
         if variables['theme']:
             thread = connection.execute(text(f"""CALL get_thread({variables['theme']})""")).fetchone()
@@ -698,7 +706,6 @@ def forum_view(variables: dict, **kwargs) -> str:
                     f"#block(cancel.cml,CAN)<NGDLG><NGDLG>"
                     f"#end(CAN)"
                 )
-        return ""
 
 
 @alexander.route('forum.dcml')
@@ -746,7 +753,6 @@ def forum(variables: dict, **kwargs) -> str:
             threads) > 29 else "",
     ]) if threads else "".join([
         f"#font(RG18,RG18,RG18)", f"#ctxt[%T0](%B[x:154,y:179,w:523,h:20],{{}},\"{{No search results}}\")"]),
-    print(thread_strings)
     return (
         f"#exec(LW_cfile&20230722144507&Cookies/%GV_FORUM_LAST_TIME)"
         f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
@@ -865,12 +871,12 @@ def games(**kwargs) -> str:
 
 
 @alexander.route('join_game.dcml')
-def join_game(variables: dict, **kwargs) -> str:
+def join_game(variables: dict, player_id: str, **kwargs) -> str:
     id_room = variables.get("id_room", "")
     with alexander.engine.connect() as connection:
         lobby = connection.execute(text(
             f"SELECT players, max_players, ip, password, (SELECT nick FROM players WHERE players.player_id = "
-            f"lobbies.host_id) as nick FROM lobbies WHERE id = {id_room} LIMIT 1")).fetchone()
+            f"lobbies.host_id) as nick, host_id FROM lobbies WHERE id = {id_room} LIMIT 1")).fetchone()
     if lobby:
         if lobby.max_players <= lobby.players:
             return (
@@ -926,12 +932,14 @@ def join_game(variables: dict, **kwargs) -> str:
                 f"#gpbtn[%PXBT](%BTABLE[x:520-433,y:303-16,w:100%,h:70],{{GW|open&cancel.dcml\\00|LW_lockall}},\"OK\")"
                 f"<NGDLG>"
             )
-        # TODO: PROBABLY NOT NEEDED elif lobby.host.profileID == player.profileID: id_room=variables.get("id_room",
-        #  "") return " ".join(( f"<NGDLG>", f"#exec(LW_cfile&\\00&Bastet/%GV_VE_PASSWD)", f"#ebox[%BF](x:0,y:0,
-        #  w:100%,h:100%)", f"#table[%TBL](%BF[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&cancel.dcml\\00&id_room={
-        #  id_room}\\00|LW_lockall}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"ERROR\",\"You cannot join
-        #  your own room!\",26,\"OK\")", f"<NGDLG>", ))
-
+        elif lobby.host_id == player_id:
+            return (
+                "<NGDLG>"
+                "#exec(LW_cfile&\\00&Bastet/%GV_VE_PASSWD)"
+                "#ebox[%BF](x:0,y:0,w:100%,h:100%)"
+                "#table[%TBL](%BF[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&cancel.dcml\\00&id_room={id_room}\\00|LW_lockall}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"ERROR\",\"You cannot join your own room!\",26,\"OK\")"
+                "<NGDLG>"
+            )
         else:
             if lobby.password:
                 if variables.get("password", "") == "":
@@ -1023,7 +1031,7 @@ def join_game(variables: dict, **kwargs) -> str:
         f"<NGDLG>"
     )
 
-
+# TODO: PLACEHOLDER
 @alexander.route('join_pl_cmd.dcml')
 def join_pl_cmd(variables: dict, player_id: str | int, **kwargs) -> str:
     if variables['VE_PLAYER'] == str(player_id):
@@ -1076,7 +1084,8 @@ def log_conf_dlg(variables: dict, **kwargs) -> str:
         f"#txt[%L_ESRB](%LBX[x:0-10,y:351,w:100%,h:24],{{}},\"ESRB Notice: Game Experience May Change During Online Play\")"
         f"<MESDLG>"
         f"<MESDLG>"
-        f"#block(l_games_btn.cml,CAN)<MESDLG>"
+        f"#block(l_games_btn.cml,CAN)"
+        f"<MESDLG>"
         f"<MESDLG>"
         f"#end(CAN)"
         f"#hint(%L_NAME,\"Enter your name\")"
@@ -1105,7 +1114,7 @@ def log_new_form(variables: dict, **kwargs) -> str:
             countries.append(f'\"{row[0]}\"')
         countries = ",".join(countries)
 
-    if variables['VE_MODE'] == "edit":
+    if variables['VE_MODE'] in (None, 'edit'):
         return (
             f"#ebox[%EBG](x:0,y:0,w:1024,h:768)"
             f"#edit[%E_LUP](%EBG[x:0,y:0,w:0,h:0],{{%GV_LAST_UPDATE}})"
@@ -1148,10 +1157,10 @@ def log_new_form(variables: dict, **kwargs) -> str:
             f"#exec(LW_cfile&{variables['VE_HOMP']}\\00&Cookies/%GV_VE_HOMP)"
             f"#edit[%E_HOMP](%LBX[x:164,y:249,w:302,h:18],{{%GV_VE_HOMP}})"
             f"#txt[%L_SEX](%LBX[x:4,y:280,w:100%,h:20],{{}},\"Gender\")"
-            f"#exec(LW_cfile&{int(variables['VE_SEX']) - 1}\\00&Cookies/%GV_VE_SEX)"
+            f"#exec(LW_cfile&{int(variables['VE_SEX'])}\\00&Cookies/%GV_VE_SEX)"
             f"#cbb[%E_SEX](%LBX[x:153,y:273,w:329,h:18],{{%GV_VE_SEX}},{genders},0)"
             f"#txt[%L_CNTRY](%LBX[x:4,y:308,w:100%,h:20],{{}},\"Country\")"
-            f"#exec(LW_cfile&{int(variables['VE_CNTRY']) - 1}\\00&Cookies/%GV_VE_CNTRY)"
+            f"#exec(LW_cfile&{int(variables['VE_CNTRY'])}\\00&Cookies/%GV_VE_CNTRY)"
             f"#cbb[%E_CNTRY](%LBX[x:153,y:301,w:329,h:18],{{%GV_VE_CNTRY}},{countries},0)"
             f"#txt[%L_PHON](%LBX[x:4,y:336,w:100%,h:20],{{}},\"Home Phone\")"
             f"#pan[%P_PHON](%LBX[x:159,y:336,w:317,h:14],1)"
@@ -1161,8 +1170,11 @@ def log_new_form(variables: dict, **kwargs) -> str:
             f"#pan[%P_BIRTH](%LBX[x:159,y:364,w:317,h:14],1)"
             f"#exec(LW_cfile&{variables['VE_BIRTH']}\\00&Cookies/%GV_VE_BIRTH)"
             f"#edit[%E_BIRTH](%LBX[x:164,y:361,w:302,h:18],{{%GV_VE_BIRTH}})"
-            f"<MESDLG><MESDLG>"
-            f"#block(l_games_btn.cml,CAN)<MESDLG><MESDLG>"
+            f"<MESDLG>"
+            f"<MESDLG>"
+            f"#block(l_games_btn.cml,CAN)"
+            f"<MESDLG>"
+            f"<MESDLG>"
             f"#end(CAN)"
             f"#hint(%L_NAME,\"Enter your name\")"
             f"#hint(%L_NICK,\"Enter your nickname\")"
@@ -1179,83 +1191,84 @@ def log_new_form(variables: dict, **kwargs) -> str:
             f"#hint(%New account,\"Create a new account\")"
         )
 
-    elif not variables['VE_MODE'] or variables['VE_MODE'] == "creat":
-        return " ".join((
-            f"#ebox[%EBG](x:0,y:0,w:1024,h:768)",
-            f"#edit[%E_LUP](%EBG[x:0,y:0,w:0,h:0],{{%GV_LAST_UPDATE}})",
-            f"#def_dtbl_button_hotkey(13,0,27)",
-            f"#table[%TBL](%EBG[x:251,y:247,w:523,h:381],{{}}{{}}{{GW|open&reg_new_user.dcml\\00&cansel=^VE_PROF=^VE_MODE=creat^VE_NAME=<%GV_VE_NAME>^VE_NICK=<%GV_VE_NICK>^VE_MAIL=<%GV_VE_MAIL>^VE_GMID=<%GV_VE_GMID>^VE_PASS=<%GV_VE_PASS>^VE_RASS=<%GV_VE_RASS>^VE_ICQ=<%GV_VE_ICQ>^VE_HOMP=<%GV_VE_HOMP>^VE_SEX=<%GV_VE_SEX>^VE_CNTRY=<%GV_VE_CNTRY>^VE_PHON=<%GV_VE_PHON>^VE_BIRTH=<%GV_VE_BIRTH>^accounts=\\00|LW_lockall}}{{GW|open&change_account2.dcml\\00&cansel=^accounts=\\00|LW_lockall}}{{LW_key&#CANCEL}},0,11,368,CREATE PERSONAL PROFILE,,26,Register,Old Profile,\"Cancel\")",
-            f"#ebox[%LBX](x:270,y:210,w:500,h:220)",
-            f"#font(BC14,RC14,RC14))",
-            f"#txt[%L_NAME](%LBX[x:4,y:56,w:100%,h:20],{{}},\"Full Name\")",
-            f"#pan[%P_NAME](%LBX[x:159,y:56,w:317,h:14],1)",
-            f"#exec(LW_cfile&\\00&Cookies/%GV_VE_NAME)",
-            f"#edit[%E_NAME](%LBX[x:164,y:53,w:302,h:18],{{%GV_VE_NAME}},0,0,0,1)",
-            f"#txt[%L_NICK](%LBX[x:4,y:84,w:100%,h:20],{{}},\"Nickname\")",
-            f"#pan[%P_NICK](%LBX[x:159,y:84,w:317,h:14],1)",
-            f"#exec(LW_cfile&\\00&Cookies/%GV_VE_NICK)",
-            f"#edit[%E_NICK](%LBX[x:164,y:81,w:302,h:18],{{%GV_VE_NICK}})",
-            f"#txt[%L_MAIL](%LBX[x:4,y:112,w:100%,h:20],{{}},\"E-Mail Address\")",
-            f"#pan[%P_MAIL](%LBX[x:159,y:112,w:317,h:14],1)",
-            f"#exec(LW_cfile&\\00&Cookies/%GV_VE_MAIL)",
-            f"#edit[%E_MAIL](%LBX[x:164,y:109,w:302,h:18],{{%GV_VE_MAIL}})",
-            f"#txt[%L_GMID](%LBX[x:4,y:140,w:100%,h:20],{{}},\"Game Box #ID\")",
-            f"#pan[%P_GMID](%LBX[x:159,y:140,w:317,h:14],1)",
-            f"#exec(LW_cfile&\\00&Cookies/%GV_VE_GMID)",
-            f"#edit[%E_GMID](%LBX[x:164,y:137,w:302,h:18],{{%GV_VE_GMID}},0,0,1)",
-            f"#txt[%L_PASS](%LBX[x:4,y:168,w:100%,h:20],{{}},\"User Password\")",
-            f"#pan[%P_PASS](%LBX[x:159,y:168,w:317,h:14],1)",
-            f"#exec(LW_cfile&\\00&Cookies/%GV_VE_PASS)",
-            f"#edit[%E_PASS](%LBX[x:164,y:165,w:302,h:18],{{%GV_VE_PASS}},0,0,1)",
-            f"#txt[%L_RASS](%LBX[x:4,y:196,w:100%,h:20],{{}},\"Retype Password\")",
-            f"#pan[%P_RASS](%LBX[x:159,y:196,w:317,h:14],1)",
-            f"#exec(LW_cfile&\\00&Cookies/%GV_VE_RASS)",
-            f"#edit[%E_RASS](%LBX[x:164,y:193,w:302,h:18],{{%GV_VE_RASS}},0,0,1)",
-            f"#txt[%L_ICQ](%LBX[x:4,y:224,w:100%,h:20],{{}},\"ICQ #ID\")",
-            f"#pan[%P_ICQ](%LBX[x:159,y:224,w:317,h:14],1)",
-            f"#exec(LW_cfile&\\00&Cookies/%GV_VE_ICQ)",
-            f"#edit[%E_ICQ](%LBX[x:164,y:221,w:302,h:18],{{%GV_VE_ICQ}})",
-            f"#txt[%L_HOMP](%LBX[x:4,y:252,w:100%,h:20],{{}},\"Internet Homepage\")",
-            f"#pan[%P_HOMP](%LBX[x:159,y:252,w:317,h:14],1)",
-            f"#exec(LW_cfile&\\00&Cookies/%GV_VE_HOMP)",
-            f"#edit[%E_HOMP](%LBX[x:164,y:249,w:302,h:18],{{%GV_VE_HOMP}})",
-            f"#txt[%L_SEX](%LBX[x:4,y:280,w:100%,h:20],{{}},\"Gender\")",
-            f"#exec(LW_cfile&\\00&Cookies/%GV_VE_SEX)",
-            f"#cbb[%E_SEX](%LBX[x:153,y:273,w:329,h:18],{{%GV_VE_SEX}},{genders},0)",
-            f"#txt[%L_CNTRY](%LBX[x:4,y:308,w:100%,h:20],{{}},\"Country\")",
-            f"#exec(LW_cfile&\\00&Cookies/%GV_VE_CNTRY)",
-            f"#cbb[%E_CNTRY](%LBX[x:153,y:301,w:329,h:18],{{%GV_VE_CNTRY}},{countries},0)",
-            f"#txt[%L_PHON](%LBX[x:4,y:336,w:100%,h:20],{{}},\"Home Phone\")",
-            f"#pan[%P_PHON](%LBX[x:159,y:336,w:317,h:14],1)",
-            f"#exec(LW_cfile&\\00&Cookies/%GV_VE_PHON)",
-            f"#edit[%E_PHON](%LBX[x:164,y:333,w:302,h:18],{{%GV_VE_PHON}})",
-            f"#txt[%L_BIRTH](%LBX[x:4,y:364,w:100%,h:20],{{}},\"Birthday (D/M/Y)\")",
-            f"#pan[%P_BIRTH](%LBX[x:159,y:364,w:317,h:14],1)",
-            f"#exec(LW_cfile&\\00&Cookies/%GV_VE_BIRTH)",
-            f"#edit[%E_BIRTH](%LBX[x:164,y:361,w:302,h:18],{{%GV_VE_BIRTH}})<MESDLG><MESDLG>",
-            f"#block(l_games_btn.cml,CAN)",
-            f"<MESDLG>",
-            f"<MESDLG>",
-            f"#end(CAN)",
-            f"#hint(%L_NAME,\"Enter your name\")",
-            f"#hint(%L_NICK,\"Enter your nickname\")",
-            f"#hint(%L_MAIL,\"Enter your e-mail address\")",
-            f"#hint(%L_PASS,\"Enter your password\")",
-            f"#hint(%L_RASS,\"Enter your password\")",
-            f"#hint(%L_GMID,\"Enter your GameBox ID#\")",
-            f"#hint(%L_ICQ,\"Enter your ICQ number\")",
-            f"#hint(%L_HOMP,\"Enter your homepage\")",
-            f"#hint(%L_SEX,\"Select your sex\")",
-            f"#hint(%L_CNTRY,\"Select country\")",
-            f"#hint(%L_PHON,\"Enter your home phone number\")",
-            f"#hint(%L_BIRTH,\"Enter your birth date (DD/MM/YYYY)\")",
-            f"#hint(%New account,\"Create a new account\")",
-        ))
+    elif variables['VE_MODE'] == "creat":
+        return (
+            f"#ebox[%EBG](x:0,y:0,w:1024,h:768)"
+            f"#edit[%E_LUP](%EBG[x:0,y:0,w:0,h:0],{{%GV_LAST_UPDATE}})"
+            f"#def_dtbl_button_hotkey(13,0,27)"
+            f"#table[%TBL](%EBG[x:251,y:247,w:523,h:381],{{}}{{}}{{GW|open&reg_new_user.dcml\\00&cansel=^VE_PROF=^VE_MODE=creat^VE_NAME=<%GV_VE_NAME>^VE_NICK=<%GV_VE_NICK>^VE_MAIL=<%GV_VE_MAIL>^VE_GMID=<%GV_VE_GMID>^VE_PASS=<%GV_VE_PASS>^VE_RASS=<%GV_VE_RASS>^VE_ICQ=<%GV_VE_ICQ>^VE_HOMP=<%GV_VE_HOMP>^VE_SEX=<%GV_VE_SEX>^VE_CNTRY=<%GV_VE_CNTRY>^VE_PHON=<%GV_VE_PHON>^VE_BIRTH=<%GV_VE_BIRTH>^accounts=\\00|LW_lockall}}{{GW|open&change_account2.dcml\\00&cansel=^accounts=\\00|LW_lockall}}{{LW_key&#CANCEL}},0,11,368,CREATE PERSONAL PROFILE,,26,Register,Old Profile,\"Cancel\")"
+            f"#ebox[%LBX](x:270,y:210,w:500,h:220)"
+            f"#font(BC14,RC14,RC14))"
+            f"#txt[%L_NAME](%LBX[x:4,y:56,w:100%,h:20],{{}},\"Full Name\")"
+            f"#pan[%P_NAME](%LBX[x:159,y:56,w:317,h:14],1)"
+            f"#exec(LW_cfile{variables['VE_NAME']}&\\00&Cookies/%GV_VE_NAME)"
+            f"#edit[%E_NAME](%LBX[x:164,y:53,w:302,h:18],{{%GV_VE_NAME}},0,0,0,1)"
+            f"#txt[%L_NICK](%LBX[x:4,y:84,w:100%,h:20],{{}},\"Nickname\")"
+            f"#pan[%P_NICK](%LBX[x:159,y:84,w:317,h:14],1)"
+            f"#exec(LW_cfile&{variables['VE_NICK']}\\00&Cookies/%GV_VE_NICK)"
+            f"#edit[%E_NICK](%LBX[x:164,y:81,w:302,h:18],{{%GV_VE_NICK}})"
+            f"#txt[%L_MAIL](%LBX[x:4,y:112,w:100%,h:20],{{}},\"E-Mail Address\")"
+            f"#pan[%P_MAIL](%LBX[x:159,y:112,w:317,h:14],1)"
+            f"#exec(LW_cfile&{variables['VE_MAIL']}\\00&Cookies/%GV_VE_MAIL)"
+            f"#edit[%E_MAIL](%LBX[x:164,y:109,w:302,h:18],{{%GV_VE_MAIL}})"
+            f"#txt[%L_GMID](%LBX[x:4,y:140,w:100%,h:20],{{}},\"Game Box #ID\")"
+            f"#pan[%P_GMID](%LBX[x:159,y:140,w:317,h:14],1)"
+            f"#exec(LW_cfile&\\00&Cookies/%GV_VE_GMID)"
+            f"#edit[%E_GMID](%LBX[x:164,y:137,w:302,h:18],{{%GV_VE_GMID}},0,0,1)"
+            f"#txt[%L_PASS](%LBX[x:4,y:168,w:100%,h:20],{{}},\"User Password\")"
+            f"#pan[%P_PASS](%LBX[x:159,y:168,w:317,h:14],1)"
+            f"#exec(LW_cfile&\\00&Cookies/%GV_VE_PASS)"
+            f"#edit[%E_PASS](%LBX[x:164,y:165,w:302,h:18],{{%GV_VE_PASS}},0,0,1)"
+            f"#txt[%L_RASS](%LBX[x:4,y:196,w:100%,h:20],{{}},\"Retype Password\")"
+            f"#pan[%P_RASS](%LBX[x:159,y:196,w:317,h:14],1)"
+            f"#exec(LW_cfile&\\00&Cookies/%GV_VE_RASS)"
+            f"#edit[%E_RASS](%LBX[x:164,y:193,w:302,h:18],{{%GV_VE_RASS}},0,0,1)"
+            f"#txt[%L_ICQ](%LBX[x:4,y:224,w:100%,h:20],{{}},\"ICQ #ID\")"
+            f"#pan[%P_ICQ](%LBX[x:159,y:224,w:317,h:14],1)"
+            f"#exec(LW_cfile&{variables['VE_ICQ']}\\00&Cookies/%GV_VE_ICQ)"
+            f"#edit[%E_ICQ](%LBX[x:164,y:221,w:302,h:18],{{%GV_VE_ICQ}})"
+            f"#txt[%L_HOMP](%LBX[x:4,y:252,w:100%,h:20],{{}},\"Internet Homepage\")"
+            f"#pan[%P_HOMP](%LBX[x:159,y:252,w:317,h:14],1)"
+            f"#exec(LW_cfile&{variables['VE_HOMP']}\\00&Cookies/%GV_VE_HOMP)"
+            f"#edit[%E_HOMP](%LBX[x:164,y:249,w:302,h:18],{{%GV_VE_HOMP}})"
+            f"#txt[%L_SEX](%LBX[x:4,y:280,w:100%,h:20],{{}},\"Gender\")"
+            f"#exec(LW_cfile&{variables['VE_SEX']}\\00&Cookies/%GV_VE_SEX)"
+            f"#cbb[%E_SEX](%LBX[x:153,y:273,w:329,h:18],{{%GV_VE_SEX}},{genders},0)"
+            f"#txt[%L_CNTRY](%LBX[x:4,y:308,w:100%,h:20],{{}},\"Country\")"
+            f"#exec(LW_cfile&{variables['VE_CNTRY']}\\00&Cookies/%GV_VE_CNTRY)"
+            f"#cbb[%E_CNTRY](%LBX[x:153,y:301,w:329,h:18],{{%GV_VE_CNTRY}},{countries},0)"
+            f"#txt[%L_PHON](%LBX[x:4,y:336,w:100%,h:20],{{}},\"Home Phone\")"
+            f"#pan[%P_PHON](%LBX[x:159,y:336,w:317,h:14],1)"
+            f"#exec(LW_cfile&{variables['VE_PHON']}\\00&Cookies/%GV_VE_PHON)"
+            f"#edit[%E_PHON](%LBX[x:164,y:333,w:302,h:18],{{%GV_VE_PHON}})"
+            f"#txt[%L_BIRTH](%LBX[x:4,y:364,w:100%,h:20],{{}},\"Birthday (D/M/Y)\")"
+            f"#pan[%P_BIRTH](%LBX[x:159,y:364,w:317,h:14],1)"
+            f"#exec(LW_cfile&{variables['VE_BIRTH']}\\00&Cookies/%GV_VE_BIRTH)"
+            f"#edit[%E_BIRTH](%LBX[x:164,y:361,w:302,h:18],{{%GV_VE_BIRTH}})"
+            f"<MESDLG>"
+            f"<MESDLG>"
+            f"#block(l_games_btn.cml,CAN)"
+            f"<MESDLG>"
+            f"<MESDLG>"
+            f"#end(CAN)"
+            f"#hint(%L_NAME,\"Enter your name\")"
+            f"#hint(%L_NICK,\"Enter your nickname\")"
+            f"#hint(%L_MAIL,\"Enter your e-mail address\")"
+            f"#hint(%L_PASS,\"Enter your password\")"
+            f"#hint(%L_RASS,\"Enter your password\")"
+            f"#hint(%L_GMID,\"Enter your GameBox ID#\")"
+            f"#hint(%L_ICQ,\"Enter your ICQ number\")"
+            f"#hint(%L_HOMP,\"Enter your homepage\")"
+            f"#hint(%L_SEX,\"Select your sex\")"
+            f"#hint(%L_CNTRY,\"Select country\")"
+            f"#hint(%L_PHON,\"Enter your home phone number\")"
+            f"#hint(%L_BIRTH,\"Enter your birth date (DD/MM/YYYY)\")"
+            f"#hint(%New account,\"Create a new account\")"
+        )
     return ""
 
-
 @alexander.route('log_user.dcml')
-def log_user(variables: dict, **kwargs) -> str:
+def log_user(variables: dict, **kwargs) -> str | None:
     try:
         with alexander.engine.connect() as connection:
             if variables['relogin'] == "true":
@@ -1264,53 +1277,50 @@ def log_user(variables: dict, **kwargs) -> str:
             else:
                 profile = connection.execute(text(
                     f"CALL login(\'{variables['VE_NICK']}\',\'{variables['VE_PASS']}\', \'{variables['VE_GMID']}\')")).fetchone()
+            connection.commit()
             if profile:
-                sid = genID()
-                connection.execute(
-                    text(f"REPLACE INTO sessions (session_key, player_id) VALUES ('{sid}', '{profile[0]}')"))
-                connection.commit()
+                profile = profile._mapping
+                print(profile)
+                print(variables)
                 return (
                     f"<MESDLG> "
                     f"#ebox[%MBG](x:0,y:0,w:1024,h:768)"
-                    f"#pix[%PX1](%MBG[x:0,y:0,w:1024,h:768],{{}},Interf3/internet,0,0,0,0)"
-                    f"#exec(LW_cfile&{sid if variables['save_pass'] else ''}&lgdta.log)"
-                    f"#exec(LW_cfile&{sid}&Cookies/%GV_SESSION_KEY)"
-                    f"#exec(LW_key&{profile[0]})"
+                    f"#pix[%PX1](%MBG[x:0,y:0,w:1024,h:768],{{}},Interf3/internet,0,0,0,0)" +
+                    (f"#exec(LW_cfile&{profile['session_key']}&lgdta.log)" if variables['save_pass'] == '1' else '') +
+                    # f"#exec(LW_cfile&{profile['session_key']}&Cookies/%GV_SESSION_KEY)"
+                    f"#exec(LW_key&{profile['player_id']})"
                     f"#exec(LW_gvar&"
-                    f"%PROF&{profile[0]}&"
-                    f"%NAME&{variables['VE_NAME']}&"
-                    f"%NICK&{profile[1]}&"
-                    f"%MAIL&{variables['VE_MAIL']}&"
+                    f"%PROF&{profile['player_id']}&"
+                    f"%NAME&{profile['nick']}&"
+                    f"%NICK&{profile['nick']}&"
+                    f"%MAIL&{profile['mail']}&"
                     f"%PASS&{variables['VE_PASS']}&"
                     f"%GMID&{variables['VE_GMID']}&"
                     f"%CHAT&{alexander.irc.address}&"
                     f"%CHNL1&{alexander.irc.ch1}\\00&"
                     f"%CHNL2&{alexander.irc.ch2}\\00)"
                     f"<MESDLG> ")
-            else:
+            # else:
+            #     return (
+            #         f"<MESDLG> "
+            #         f"#ebox[%D](x:0,y:0,w:1024,h:768) "
+            #         f"#def_dtbl_button_hotkey(13,27) "
+            #         f"#table[%TBL](%D[x:306,y:325,w:415,h:205],{{}}{{}}{{LW_file&Internet/Cash/l_games_btn.cml}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"ERROR\",\"{mysql_error_messages['ERR_ACC_NOTFOUND']}\",26,\"Edit\",\"Cancel\") "
+            #         f"<MESDLG> "
+            #     )
+    except DBAPIError as err:
+            if err.orig: 
                 return (
                     f"<MESDLG> "
-                    f"#ebox[%D](x:0,y:0,w:1024,h:768) "
+                    f"#ebox[%MBG](x:0,y:0,w:1024,h:768) "
                     f"#def_dtbl_button_hotkey(13,27) "
-                    f"#table[%TBL](%D[x:306,y:325,w:415,h:205],{{}}{{}}{{LW_file&Internet/Cash/l_games_btn.cml}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"ERROR\",\"{mysql_error_messages['ERR_ACC_NOTFOUND']}\",26,\"Edit\",\"Cancel\") "
+                    f"#table[%TBL](%MBG[x:287,y:285,w:450,h:200],{{}}{{}}{{LW_file&Internet/Cash/l_games_btn.cml}}{{LW_file&Internet/Cash/l_games_btn.cml}},1,0,11,362,\"ERROR\",\"{mysql_error_messages[err.orig.args[1]]}\",24,\"Edit\",\"Cancel\") "
                     f"<MESDLG> "
                 )
-    except DBAPIError as err:
-        print(err)
-        error_code = None
-        if err.orig:
-            error_code = mysql_error_messages[err.orig.args[1]]
-        return (
-            f"<MESDLG> "
-            f"#ebox[%MBG](x:0,y:0,w:1024,h:768) "
-            f"#def_dtbl_button_hotkey(13,27) "
-            f"#table[%TBL](%MBG[x:287,y:285,w:450,h:200],{{}}{{}}{{LW_file&Internet/Cash/l_games_btn.cml}}{{LW_file&Internet/Cash/l_games_btn.cml}},1,0,11,362,\"ERROR\",\"{error_code}\",24,\"Edit\",\"Cancel\") "
-            f"<MESDLG> "
-        )
 
 
 @alexander.route('mail_list.dcml')
-def mail_list(variables: dict, player_id, **kwargs) -> str:
+def mail_list(variables: dict, player_id, **kwargs) -> str | None:
     panel_list = []
     message_list = []
     with alexander.engine.connect() as connection:
@@ -1436,7 +1446,6 @@ def mail_list(variables: dict, player_id, **kwargs) -> str:
                 f"<NGDLG> "
                 f"#end(CAN)"
             )
-    return ""
 
 
 @alexander.route('mail_new.dcml')
@@ -1567,7 +1576,7 @@ def mail_new(variables: dict, player_id, **kwargs) -> str | None:
 
 
 @alexander.route('mail_view.dcml')
-def mail_view(variables: dict, player_id, **kwargs) -> str:
+def mail_view(variables: dict, player_id, **kwargs) -> str | None:
     with alexander.engine.connect() as connection:
         summary = connection.execute(text(
             f"CALL mail_stats({player_id}) "
@@ -1681,7 +1690,6 @@ def mail_view(variables: dict, player_id, **kwargs) -> str:
                     f"<NGDLG> "
                     f"#end(CAN)"
                 )
-    return ""
 
 
 @alexander.route('map.dcml')
@@ -1734,10 +1742,9 @@ def map_(**kwargs) -> str:
         f"#end(CAN)"
     )
 
-
+# TODO: PLACEHOLDER
 @alexander.route('mclick.dcml')
 def mclick(variables: dict, **kwargs) -> str:
-    print(variables)
     # <MCLICK> #ebox[%M](x:550,y:42,w:164,h:291) #font(RG18,WF16,WF16) #pan[%PAN1](%M[x:0,y:0,w:100%,h:100%],
     # 7) #ctxt[%TIT](%M[x:5,y:10,w:100%-10,h:30],{},"Persia") #font(BC12,RC12,RC12) #stbl[%TBL](%M[x:5,y:50,
     # w:100%-10,h:100%],{},2,0,70%,0,30%,1,20,"Total wins","615",20,"Total losses","439",20,"Country area","41246",
@@ -1748,7 +1755,7 @@ def mclick(variables: dict, **kwargs) -> str:
         f"<MCLICK>"
     )
 
-
+# TODO: PLACEHOLDER
 @alexander.route('enter_game_dlg.dcml')
 def enter_game_dlg(**kwargs) -> str:
     # · ·· ·open· ·   enter_game_dlg.dcml
@@ -1834,7 +1841,7 @@ def news(**kwargs) -> str:
                     #font(BC14,BC14,RC14)\
                     #ctxt[%DATE{idx + 1}](%SB[x:0,y:%TEXT{idx}+27,w:78,h:24],{{}},\
                     {' - ' if not isinstance(news[0][0], datetime) else n[0].strftime('%d/%m/%Y')})")  # type: ignore
-        news_board = "".join(news_board)
+    news_board = "".join(news_board)
     return (
         f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
         f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)"
@@ -1876,8 +1883,11 @@ def news(**kwargs) -> str:
         f"#ctxt[%LIST3](%B[x:0,y:%LIST2-9,w:146,h:24],{{GW|open&forum.dcml\\00&last_view=<%GV_FORUM_LAST_TIME>\\00|LW_lockall}},\"{{Forum}}\")"
         f"#hint(%LIST3,\"Read and write forum messages\")"
         f"#pan[%PAN](%B[x:154,y:42,w:526-3,h:291],7)"
-        f"#sbox[%SB](x:150,y:46,w:526+4,h:291-8)"
-        f"{news_board}"
+        f"#sbox[%SB](x:150,y:46,w:526+4,h:291-8)" +
+        (news_board if news_board else (
+            f"#font(RG18,RG18,RG18)"
+            f"#ctxt[%T0](%B[x:154,y:179,w:559,h:20],{{}},\"No search results\")"
+        ))+
         f"#ebox[%B1](x:0,y:0,w:100%,h:100%)"
         f"#pan[%PANV](%B1[x:260,y:8,w:0,h:359],10)"
         f"<NGDLG>"
@@ -1957,8 +1967,11 @@ def punishments(**kwargs) -> str:
         f"#ctxt[%LIST3](%B[x:0,y:%LIST2-9,w:146,h:24],{{GW|open&forum.dcml\\00&last_view=<%GV_FORUM_LAST_TIME>\\00|LW_lockall}},\"{{Forum}}\")"
         f"#hint(%LIST3,\"Read and write forum messages\")"
         f"#pan[%PAN](%B[x:154,y:42,w:526-3,h:291],7)"
-        f"#sbox[%SB](x:150,y:46,w:526+4,h:291-8)"
-        f"{punishment_list}"
+        f"#sbox[%SB](x:150,y:46,w:526+4,h:291-8)"+
+        (punishment_list if punishment_list else (
+            f"#font(RG18,RG18,RG18)"
+            f"#ctxt[%T0](%B[x:154,y:179,w:559,h:20],{{}},\"No search results\")"
+        ))+
         f"<NGDLG>"
         f"<NGDLG>"
         f"#block(cancel.cml,CAN)"
@@ -2217,70 +2230,20 @@ def reg_new_user(variables: dict, **kwargs) -> str | None:
                 f"save password, in other case press Cancel.\\This option saves your password and Game Box #ID. Don't "
                 f"use it, if you play from computer accessible for other people.\",26,\"OK\",\"Cancel\")"
                 f"<MESDLG>")
+        
+        return ""
 
     except DBAPIError as err:
-        print(err)
-        error_code = None
+        error_message = None
         if err.orig:
-            error_code = mysql_error_messages[err.orig.args[1]]
-            if error_code == "ERR_PASS_MISMATCH":
-                return (
-                    f"<MESDLG>"
-                    f"#ebox[%MBG](x:0,y:0,w:1024,h:768)"
-                    f"#def_dtbl_button_hotkey(13,27)"
-                    f"#table[%TBL](%MBG[x:306,y:325,w:415,h:205],{{}}{{}}{{GW|open&log_new_form.dcml\\00&"
-                    f"logs={variables['logs']}^"
-                    f"cansel={variables['cansel']}^"
-                    f"VE_MODE=edit^"
-                    f"VE_NAME={variables['VE_NAME']}^"
-                    f"VE_NICK={variables['VE_NICK']}^"
-                    f"VE_MAIL={variables['VE_MAIL']}^"
-                    f"VE_ICQ={variables['VE_ICQ']}^"
-                    f"VE_HOMP={variables['VE_HOMP']}^"
-                    f"VE_SEX={variables['VE_SEX']}^"
-                    f"VE_CNTRY={variables['VE_CNTRY']}^"
-                    f"VE_PHON={variables['VE_PHON']}^"
-                    f"VE_BIRTH={variables['VE_BIRTH']}^"
-                    f"accounts={variables['accounts']}"
-                    f"\\00|LW_lockall}}"
-                    f"{{LW_file&Internet/Cash/l_games_btn.cml}},2,0,3,13,252,"
-                    f"\"ERROR\",\"Passwords do not match. Please ensure both password fields are identical.\",26,"
-                    f"\"Edit\",\"Cancel\")"
-                    f"<MESDLG>"
-                )
-            elif error_code == "ERR_ACC_NOTFOUND":
-                return (
-                    f"<MESDLG>"
-                    f"#ebox[%MBG](x:0,y:0,w:1024,h:768)"
-                    f"#def_dtbl_button_hotkey(13,27)"
-                    f"#table[%TBL](%MBG[x:306,y:325,w:415,h:205],{{}}{{}}{{GW|open&log_new_form.dcml\\00&"
-                    f"logs={variables['logs']}^"
-                    f"cansel={variables['cansel']}^"
-                    f"VE_MODE=edit^"
-                    f"VE_NAME={variables['VE_NAME']}^"
-                    f"VE_NICK={variables['VE_NICK']}^"
-                    f"VE_MAIL={variables['VE_MAIL']}^"
-                    f"VE_ICQ={variables['VE_ICQ']}^"
-                    f"VE_HOMP={variables['VE_HOMP']}^"
-                    f"VE_SEX={variables['VE_SEX']}^"
-                    f"VE_CNTRY={variables['VE_CNTRY']}^"
-                    f"VE_PHON={variables['VE_PHON']}^"
-                    f"VE_BIRTH={variables['VE_BIRTH']}^"
-                    f"accounts={variables['accounts']}"
-                    f"\\00|LW_lockall}}"
-                    f"{{LW_file&Internet/Cash/l_games_btn.cml}},2,0,3,13,252,"
-                    f"\"ERROR\",\"Incorrect login data! Press Edit button to retry. Press Cancel button to exit\",26,"
-                    f"\"Edit\",\"Cancel\")"
-                    f"<MESDLG>"
-                )
-        return (
-            f"<MESDLG> "
-            f"#ebox[%MBG](x:0,y:0,w:1024,h:768) "
-            f"#def_dtbl_button_hotkey(13,27) "
-            f"#table[%TBL](%MBG[x:287,y:285,w:450,h:200],{{}}{{}}{{LW_file&Internet/Cash/l_games_btn.cml}}{{"
-            f"LW_file&Internet/Cash/l_games_btn.cml}},1,0,11,362,\"ERROR\",\"{error_code}\",24,\"Edit\",\"Cancel\")"
-            f"<MESDLG> "
-        )
+            error_message = mysql_error_messages[err.orig.args[1]]
+            return (
+                f"<MESDLG>"
+                f"#ebox[%MBG](x:0,y:0,w:1024,h:768) "
+                f"#def_dtbl_button_hotkey(13,27) "
+                f"#table[%TBL](%MBG[x:306,y:325,w:415,h:205],{{}}{{}}{{GW|open&log_new_form.dcml\\00&logs={variables['logs']}^cansel={variables['cansel']}^VE_MODE={variables['VE_MODE']}^VE_NAME={variables['VE_NAME']}^VE_NICK={variables['VE_NICK']}^VE_MAIL={variables['VE_MAIL']}^VE_ICQ={variables['VE_ICQ']}^VE_HOMP={variables['VE_HOMP']}^VE_SEX={variables['VE_SEX']}^VE_CNTRY={variables['VE_CNTRY']}^VE_PHON={variables['VE_PHON']}^VE_BIRTH={variables['VE_BIRTH']}^accounts={variables['accounts']}\\00|LW_lockall}}{{LW_file&Internet/Cash/l_games_btn.cml}},2,0,3,13,252,\"ERROR\",\"{error_message}\",26,\"Edit\",\"Cancel\")"
+                f"<MESDLG>"
+            )
 
 
 @alexander.route('scored_games.dcml')
@@ -2291,7 +2254,6 @@ def scored_games(variables: defaultdict, **kwargs) -> str:
         threads = connection.execute(text(
             f"CALL get_scored_games({int(variables['next_message']) if variables['next_message'] else 0})")).fetchall()
         if threads:
-
             return (
             f'#ebox[%TB](x:0,y:0,w:100%,h:100%)'
             f'#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)'
@@ -2492,9 +2454,11 @@ def startup(**kwargs) -> str:
         f"#font(RC14,GC14,RC14)"
         f"#ctxt[%TIT1](%B[x:0,y:106,w:146,h:24],{{GW|open&games.dcml\\00|LW_lockall}},\"{{Custom Games}}\")"
         f"#hint(%TIT1,\"Play custom games\")"
-        f"#ctxt[%LIST33](%B[x:0,y:%TIT1-9,w:146,h:24],{{GW|open&map.dcml\\00|LW_lockall}},\"{{Rating Games}}\")"
+        f"#ctxt[%LIST33](%B[x:0,y:%TIT1-9,w:146,h:24],{{GW|open&rating_help.dcml\\00|LW_lockall}},\"{{Rating Describe}}\")"
+        # f"#ctxt[%LIST33](%B[x:0,y:%TIT1-9,w:146,h:24],{{GW|open&map.dcml\\00|LW_lockall}},\"{{Rating Games}}\")"
         f"#pan[%PAN](%B[x:154,y:42,w:523,h:291],7)"
         f"#font(BC14,WC14,BC14)"
+        f"#sbtn[%B_R](%B[x:521,y:377,w:100,h:305],{{GW|open&random_game_dlg.dcml\\00|LW_lockall}},\"Fight\")"
         f"#sbtn[%B_C](%B[x:641,y:377,w:100,h:305],{{GW|open&new_game_dlg.dcml\\00&delete_old=true\\00|LW_lockall}},\"Create\")"
         f"<DBTBL>"
         f"#exec(GW|open&dbtbl.dcml\\00)"
@@ -2786,7 +2750,6 @@ def users_list(variables: dict, **kwargs) -> str:
 @alexander.route('voting_view.dcml')
 def voting_view(**kwargs) -> str:
     output = []
-
     with alexander.engine.connect() as connection:
         votings = connection.execute(text(f"SELECT id, subject, published_at FROM votes;")).fetchall()
         n = None
@@ -2947,7 +2910,7 @@ def extract_variables(destination: defaultdict, variable_string: str) -> None:
 
 def command_open(parameters: list[bytes], player_id: str | int) -> str:
     filename = parameters[0].decode()
-    variables = defaultdict(lambda: None)
+    variables = defaultdict(lambda: '')
     if len(parameters) > 1:
         variable_string = parameters[1].decode()
         extract_variables(variables, variable_string)
@@ -3035,10 +2998,12 @@ def command_alive(parameters: list[bytes], database: Engine) -> None:
         ))
         connection.commit()
 
+
 def command_leave(player_id: str | int) -> None:
     with alexander.engine.connect() as connection:
         connection.execute(text(f"DELETE FROM lobbies WHERE host_id={player_id};"))
         connection.commit()
+
 
 def command_setipaddr(lobby_id: str, address: str) -> None:
     with alexander.engine.connect() as connection:
@@ -3046,45 +3011,14 @@ def command_setipaddr(lobby_id: str, address: str) -> None:
         connection.commit()
 
 
-def verbose_sql_error(requested_file: str, error_message: str) -> str:
-    if error_message == "ERR_NICK_EXISTS":
-        message = ("User with that nickname already exists! Press Edit button to change nickname. Press Cancel button "
-                   "to exit")
-
-    elif error_message == "ERR_NICK_LENGTH":
-        message = "Nickname too short. Press Cancel button to exit"
-
-    elif error_message == "ERR_BIRTH_FORMAT":
-        message = ("Incorrect birthday date! Birthday must be in DD/MM/YYYY or DD.MM.YYYY format. Where DD - day ("
-                   "1-31), MM - month (1-12), YYYY - year. Press Edit button to check birthday date. Press Cancel to "
-                   "exit")
-
-    elif error_message == "ERR_GMID_INVALID":
-        message = ("An invalid Game Box Identifier was entered! Please enter more carefully. The number of attempts is "
-                   "limited. Press Edit button to check Game Box Identifier. Press Cancel to exit")
-
-    elif error_message == "ERR_GMID_USED":
-        message = ("The provided Game Box Identifier has already been used. The number of attempts is limited."
-                   "Press Edit button to check Game Box Identifier. Press Cancel to exit")
-
-    elif error_message == "ERR_EMAIL_USED":
-        message = ("The provided E-Mail address has already been used. Press Edit button to check E-Mail address. "
-                   "Press Cancel to exit")
-
-    elif error_message == "ERR_MAIL_NOSUB":
-        message = "ERROR"
-
-    else:
-        message = "INTERNAL ERROR"
-        print(error_message)
-
+def verbose_sql_error(requested_file: str, variables: dict, error_message: str) -> str:
     return (
-            f"<MESDLG>"
+            f"<MESDLG> "
             f"#ebox[%MBG](x:0,y:0,w:1024,h:768) "
             f"#def_dtbl_button_hotkey(13,27) "
-            f"#table[%TBL](%MBG[x:306,y:325,w:415,h:205],{{}}{{}}{{GW|open&{requested_file}\\00|LW_lockall}}{{"
-            f"LW_file&Internet/Cash/l_games_btn.cml}},2,0,3,13,252,\"ERROR\",\"{message}\",26,\"Edit\",\"Cancel\")"
-            f"<MESDLG>"
+            # {{GW|open&{requested_file}\\00|LW_lockall}}
+            f"#table[%TBL](%MBG[x:306,y:325,w:415,h:205],{{}}{{}}{{LW_file&Internet/Cash/l_games_btn.cml}}{{LW_file&Internet/Cash/l_games_btn.cml}},2,0,3,13,252,\"ERROR\",\"{mysql_error_messages[error_message]}\",26,\"Edit\",\"Cancel\") "
+            f"<MESDLG> "
             )
 
 
@@ -3125,15 +3059,18 @@ def process_request(request, **kwargs) -> list:
         response.append(LW_show(command_login(parameters, alexander.engine)))
 
     elif command == "open":
-        print(parameters)
         try:
-            response.append(LW_show(command_open(parameters, player_id)))
-
-        except SQLAlchemyError as error:
-            print(error)
-            response.append(LW_show(verbose_sql_error(parameters[0].decode(), error._message())))
+            result = command_open(parameters, player_id)
+            response.append(LW_show(result))
 
         except Exception as exception:
-            print(exception)
+            print('ex')
+            response.append(LW_show(
+                    f'<MESDLG> '
+                    f'#ebox[%D](x:0,y:0,w:1024,h:768) '
+                    f'#def_dtbl_button_hotkey(13,27) '
+                    f'#table[%TBL](%D[x:306,y:325,w:415,h:205],{{}}{{}}{{GW|open&{parameters[0].decode()}\\00|LW_lockall}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,"CRITICAL ERROR","Server error occurred while processing your request! Press Try Again button to attempt process request again. Press Cancel to exit",26,"Try Again","Cancel") '
+                    f'<MESDLG> '
+                ))
 
     return response

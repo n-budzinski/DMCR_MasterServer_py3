@@ -4,11 +4,15 @@ from socket import socket, AF_INET, SOCK_DGRAM
 from traceback import print_exc
 from struct import pack, unpack, unpack_from
 from zlib import compress, decompress
-from config import SERVER, TCP_MAX_PACKET_SIZE, TCP_TIMEOUT, UDP_MAX_PACKET_SIZE
+from config import Server
 import alexander.process as alex
 import alexander.process as alexdemo
 from collections import defaultdict
 from typing import Any
+
+TCP_MAX_PACKET_SIZE = 1440
+TCP_TIMEOUT = 120
+UDP_MAX_PACKET_SIZE = 64
 
 GAME_VERSIONS = defaultdict(lambda: alex,{
     13: alexdemo,
@@ -16,6 +20,8 @@ GAME_VERSIONS = defaultdict(lambda: alex,{
     16: alex,
     # '30': (hoae, HOAEDB)
 })
+
+SERVER = Server()
 
 
 def unpack_packet(packet: bytes) -> tuple[Any, list[bytes]]:
