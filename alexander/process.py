@@ -2519,6 +2519,7 @@ def user_details(variables: dict, player_id, **kwargs) -> str | None:
             f"sexes.name AS sex, "
             f"countries.name AS country, "
             f"phone, "
+            f"get_rank(players.score) AS player_rank, "
             f"birthday, "
             f"score, "
             f"ranks.name AS rank_name "
@@ -2580,7 +2581,7 @@ def user_details(variables: dict, player_id, **kwargs) -> str | None:
                 f"#stbl[%TBL0](%B[x:154,y:42,w:559,h:291],{{}},1,7,100,0,20,\"Player {profile.nick}\")"
                 f"#ebox[%BG](x:431,y:40,w:177,h:118)"
                 f"#pix[%PXGB](%BG[x:0,y:0,w:100%,h:100%],{{}},Internet/pix/awards,24,24,24,24)"
-                f"#pix[%PXG](%BG[x:0,y:0,w:100%,h:100%],{{}},Internet/pix/awards,6,6,6,6)"
+                f"#pix[%PXG](%BG[x:0,y:0,w:100%,h:100%],{{}},Internet/pix/awards{(','+str(clip(profile.player_rank-1, 0, 23)))*4})"
                 f"#ebox[%B1](x:154,y:42,w:559,h:291)"
                 f"#pan[%PAN2](%B1[x:277+32,y:0-34,w:0,h:100%+68],10)"
                 f"#pan[%PAN3](%B1[x:159,y:0-14,w:0,h:100%+48],10)"
@@ -3053,7 +3054,7 @@ def process_request(request, **kwargs) -> list:
             response.append(LW_show(result))
 
         except Exception as exception:
-            print('ex')
+            print(exception)
             response.append(LW_show(
                     f'<MESDLG> '
                     f'#ebox[%D](x:0,y:0,w:1024,h:768) '
