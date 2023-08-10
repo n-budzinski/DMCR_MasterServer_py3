@@ -1,10 +1,9 @@
 from collections import defaultdict
 from datetime import datetime
-from common import clip, genID, clip_string, reverse_address
+from common import clip, clip_string, reverse_address, extract_variables
 from config import mysql_error_messages, alexander
 from sqlalchemy import Engine, text
-from sqlalchemy.exc import DBAPIError, SQLAlchemyError
-from pymysql import OperationalError
+from sqlalchemy.exc import DBAPIError
 from math import floor, ceil
 from struct import unpack
 from typing import Callable
@@ -302,6 +301,7 @@ def clan_new(variables: dict, player_id: str | int, **kwargs) -> str:
 
 @alexander.route('clan_users.dcml')
 def clan_users(variables: dict, player_id, **kwargs) -> str | None:
+    print('clan')
     members_list = []
     members_buttons = []
     with alexander.engine.connect() as connection:
@@ -309,6 +309,7 @@ def clan_users(variables: dict, player_id, **kwargs) -> str | None:
             f"CALL get_clan_summary({variables['clanID']}, {player_id})"
         )).fetchone()
         if clan:
+            print('clan exists')
             clan = clan._mapping
             members = connection.execute(text(
                 f"CALL get_clan_members({variables['clanID']})"
@@ -1790,35 +1791,65 @@ def enter_game_dlg(**kwargs) -> str:
 
 
 @alexander.route('new_game_dlg.dcml')
-def new_game_dlg(**kwargs) -> str:
-    with alexander.engine.connect() as connection:
-        types = connection.execute(text(f"SELECT name FROM lobby_types")).fetchall()
-    return (
-        f"<NGDLG>"
-        f"#ebox[%L0](x:0,y:0,w:100%,h:100%)"
-        # f"#exec(LW_cfile&{player.nickname}\\00&Bastet/%GV_VE_TITLE)"
-        f"#exec(LW_cfile&\\00&Bastet/%GV_VE_PASSWD)"
-        f"#exec(LW_cfile&\\00&Bastet/%GV_VE_MAX_PL)"
-        f"#table[%TBL](%L0[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&new_game_dlg_create.dcml\\00&max_players=<%GV_VE_MAX_PL>^type=<%GV_VE_TYPE>^password=<%GV_VE_PASSWD>^title=<%GV_VE_TITLE>\\00|LW_lockall}}{{GW|open&cancel.dcml\\00|LW_lockall}},1,0,13,252,\"CREATE NEW GAME\",,26,\"Create\",\"Cancel\")"
-        f"#ebox[%L](x:245,y:100,w:450,h:210)"
-        f"#font(BC12,RC12,RC12)"
-        f"#txt[%L_NAME](%L[x:11,y:48,w:160,h:20],{{}},\"Game Title:\")"
-        f"#pan[%P_NAME](%L[x:15,y:68,w:382,h:14],1)"
-        f"#font(BC12,GC12,GC12)"
-        f"#edit[%E_NAME](%L[x:19,y:67,w:377,h:18],{{%GV_VE_TITLE}},0,0,0,1)"
-        f"#font(BC12,RC12,RC12)"
-        f"#txt[%L_PASS](%L[x:11,y:95,w:160,h:20],{{}},\"Password:\")"
-        f"#pan[%P_PASS](%L[x:15,y:114,w:382,h:14],1)"
-        f"#font(BC12,GC12,GC12)"
-        f"#edit[%E_PASS](%L[x:19,y:113,w:377,h:18],{{%GV_VE_PASSWD}},0,0,1)"
-        f"#font(BC14,RC14,RC14)"
-        f"#txt[%L_MAXPL](%L[x:11,y:145,w:150,h:24],{{}},\"Max Players:\")"
-        f"#cbb[%E_MAXPL](%L[x:130,y:139,w:273,h:24],{{%GV_VE_MAX_PL}},2,3,4,5,6,7,0)"
-        f"#font(BC14,RC14,RC14)"
-        f"#txt[%L_MAXPL](%L[x:11,y:175,w:151,h:24],{{}},\"Type:\")"
-        f"#cbb[%E_TYPE](%L[x:130,y:169,w:273,h:24],{{%GV_VE_TYPE}},{''.join([f'{type[0]},' for type in types])})"
-        f"<NGDLG>"
-    )
+def new_game_dlg(variables: dict, player_id, **kwargs) -> str:
+    print(variables)
+    if variables['max_players'] and variables['type']:
+        gameType = variables.get('type', 0)
+        with alexander.engine.connect() as connection:
+            output = connection.execute(
+                text(f"SELECT allow_designed, allow_ai FROM lobby_types WHERE id = {int(gameType) + 1} LIMIT 1")).fetchone()
+            if output:
+                allow_designed, allow_ai = output
+            else:
+                allow_designed, allow_ai = False, False
+            result = connection.execute(text(f'INSERT INTO lobbies (title, host_id, type, max_players, password)\
+                    VALUES ("{variables["title"]}", "{player_id}", "{int(gameType) + 1}", "{int(variables["max_players"])+2}", "{variables["password"]}")\
+                    ON DUPLICATE KEY UPDATE title = "{variables["title"]}", type = "{int(gameType) + 1}", max_players = "{int(variables["max_players"])+2}", password = "{variables["password"]}"'))
+            connection.commit()
+            gameID = result.lastrowid
+            return (
+                f'<NGDLG>'
+                f'#ebox[%L0](x:0,y:0,w:100%,h:100%)'
+                f'#exec(LW_file&Internet/Cash/cancel.cml|LW_gvar&'
+                f'%GOPT&'
+                f'{" /OPT00 /OPT10 /OPT20 /OPT30 /OPT60 " if allow_designed == 0 and allow_ai == 0 else " "} '
+                f'/PAGE{"0" if allow_designed == 1 else "2"} /{"" if allow_ai == 1 else "NO"}COMP&'
+                f'%CG_GAMEID&{gameID}&'
+                f'%CG_MAXPL&{int(variables["max_players"])+2}&'
+                f'%CG_GAMENAME&\"{variables["title"]}\"&'
+                f'%COMMAND&'
+                f'CGAME)'
+                f'<NGDLG>'
+            )
+    else:
+        with alexander.engine.connect() as connection:
+            types = connection.execute(text(f"SELECT name FROM lobby_types")).fetchall()
+        return (
+            f"<NGDLG>"
+            f"#ebox[%L0](x:0,y:0,w:100%,h:100%)"
+            # f"#exec(LW_cfile&{player.nickname}\\00&Bastet/%GV_VE_TITLE)"
+            f"#exec(LW_cfile&\\00&Bastet/%GV_VE_PASSWD)"
+            f"#exec(LW_cfile&\\00&Bastet/%GV_VE_MAX_PL)"
+            f"#table[%TBL](%L0[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&new_game_dlg.dcml\\00&max_players=<%GV_VE_MAX_PL>^type=<%GV_VE_TYPE>^password=<%GV_VE_PASSWD>^title=<%GV_VE_TITLE>\\00|LW_lockall}}{{GW|open&cancel.dcml\\00|LW_lockall}},1,0,13,252,\"CREATE NEW GAME\",,26,\"Create\",\"Cancel\")"
+            f"#ebox[%L](x:245,y:100,w:450,h:210)"
+            f"#font(BC12,RC12,RC12)"
+            f"#txt[%L_NAME](%L[x:11,y:48,w:160,h:20],{{}},\"Game Title:\")"
+            f"#pan[%P_NAME](%L[x:15,y:68,w:382,h:14],1)"
+            f"#font(BC12,GC12,GC12)"
+            f"#edit[%E_NAME](%L[x:19,y:67,w:377,h:18],{{%GV_VE_TITLE}},0,0,0,1)"
+            f"#font(BC12,RC12,RC12)"
+            f"#txt[%L_PASS](%L[x:11,y:95,w:160,h:20],{{}},\"Password:\")"
+            f"#pan[%P_PASS](%L[x:15,y:114,w:382,h:14],1)"
+            f"#font(BC12,GC12,GC12)"
+            f"#edit[%E_PASS](%L[x:19,y:113,w:377,h:18],{{%GV_VE_PASSWD}},0,0,1)"
+            f"#font(BC14,RC14,RC14)"
+            f"#txt[%L_MAXPL](%L[x:11,y:145,w:150,h:24],{{}},\"Max Players:\")"
+            f"#cbb[%E_MAXPL](%L[x:130,y:139,w:273,h:24],{{%GV_VE_MAX_PL}},2,3,4,5,6,7,0)"
+            f"#font(BC14,RC14,RC14)"
+            f"#txt[%L_MAXPL](%L[x:11,y:175,w:151,h:24],{{}},\"Type:\")"
+            f"#cbb[%E_TYPE](%L[x:130,y:169,w:273,h:24],{{%GV_VE_TYPE}},{''.join([f'{type[0]},' for type in types])})"
+            f"<NGDLG>"
+        )
 
 
 @alexander.route('news.dcml')
@@ -2858,54 +2889,12 @@ def voting(variables: dict, **kwargs) -> str:
             )
 
 
-@alexander.route('create_game.dcml')
-def create_game(variables: dict, player_id: str | int, **kwargs) -> str:
-    gameTitle = variables.get('title', 'Lobby')
-    gameType = variables.get('type', 0)
-    with alexander.engine.connect() as connection:
-        output = connection.execute(
-            text(f"SELECT allow_designed, allow_ai FROM lobby_types WHERE id = {int(gameType) + 1} LIMIT 1")).fetchone()
-        if output:
-            allow_designed, allow_ai = output
-        else:
-            allow_designed, allow_ai = False, False
-        gameMaxPlayers = int(variables['max_players']) + 2
-        password = variables.get('password', '')
-        result = connection.execute(text(f'INSERT INTO lobbies (title, host_id, type, max_players, password)\
-                VALUES ("{gameTitle}", "{player_id}", "{int(gameType) + 1}", "{gameMaxPlayers}", "{password}")\
-                ON DUPLICATE KEY UPDATE title = "{gameTitle}", type = "{int(gameType) + 1}", max_players = "{gameMaxPlayers}", password = "{password}"'))
-        connection.commit()
-        gameID = result.lastrowid
-
-    return (
-        f"<NGDLG>"
-        f"#ebox[%L0](x:0,y:0,w:100%,h:100%)"
-        f"#exec(LW_file&Internet/Cash/cancel.cml|LW_gvar&"
-        f"%GOPT&"
-        f"{' /OPT00 /OPT10 /OPT20 /OPT30 /OPT60 ' if allow_designed == 0 and allow_ai == 0 else ' '} "
-        f"/PAGE{'0' if allow_designed == 1 else '2'} /{'' if allow_ai == 1 else 'NO'}COMP&"
-        f"%CG_GAMEID&{gameID}&"
-        f"%CG_MAXPL&{gameMaxPlayers}&"
-        f"%CG_GAMENAME&\"{gameTitle}\"&"
-        f"%COMMAND&"
-        f"CGAME)"
-        f"<NGDLG>"
-    )
-
-
 def LW_time(time: str | int, url: str) -> list:
     return ['LW_time', time, f'open:{url}']
 
 
 def LW_show(content: str) -> list:
     return ['LW_show', content]
-
-
-def extract_variables(destination: defaultdict, variable_string: str) -> None:
-    for option in variable_string.split(sep="^"):
-        t = (option.strip("'").split(sep="="))
-        if len(t) == 2:
-            destination[t[0]] = t[1]  # type: ignore
 
 
 def command_open(parameters: list[bytes], player_id: str | int) -> str:

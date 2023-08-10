@@ -6,11 +6,6 @@ from collections import defaultdict
 def getFile(filename: str) -> str:
     return open(f'res/{filename}', 'rb').read().decode()
 
-def checkAlpha(text: str):
-    if text.isalnum():
-        return True
-    return False
-
 def reverse_address(address):
     address = address.split(".")
     address = [octet for octet in address[::-1]]
@@ -30,4 +25,4 @@ def extract_variables(destination: defaultdict, variable_string: str) -> None:
     for option in variable_string.split(sep="^"):
         t = (option.strip("'").split(sep="="))
         if len(t) == 2:
-            destination[t[0]] = t[1] # type: ignore
+            destination[t[0]] = t[1]  # type: ignore

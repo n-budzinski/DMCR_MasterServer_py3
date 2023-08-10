@@ -7750,7 +7750,7 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-08-09 21:48:51
+-- Dump completed on 2023-08-10 16:24:47
 -- MySQL dump 10.13  Distrib 8.0.33, for Win64 (x86_64)
 --
 -- Host: 192.168.0.153    Database: alexander
@@ -7934,7 +7934,7 @@ CREATE TABLE `lobbies` (
   UNIQUE KEY `host_id_UNIQUE` (`host_id`),
   KEY `lobbies_ibfk_1_idx` (`host_id`),
   CONSTRAINT `lobbies_ibfk_1` FOREIGN KEY (`host_id`) REFERENCES `players` (`player_id`) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=70 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=73 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -8129,7 +8129,6 @@ CREATE TABLE `players` (
   `clan_rank` bigint DEFAULT NULL,
   `clan_state` bigint DEFAULT NULL,
   `pass` varchar(32) NOT NULL,
-  `display_name` varchar(64) NOT NULL DEFAULT '""',
   PRIMARY KEY (`player_id`),
   KEY `clan_rank` (`clan_rank`),
   KEY `clan_state` (`clan_state`),
@@ -8151,7 +8150,7 @@ CREATE TABLE `players` (
 
 LOCK TABLES `players` WRITE;
 /*!40000 ALTER TABLE `players` DISABLE KEYS */;
-INSERT INTO `players` VALUES (18,'Norbert Budzinski','kuledude34','norbudzinski@gmail.com','','',2,138,'14/01/1999','','1111-1111-1111-1111',NULL,NULL,0,NULL,1,NULL,'nickman22','\"\"');
+INSERT INTO `players` VALUES (18,'Norbert Budzinski','kuledude34','norbudzinski@gmail.com','','',2,138,'14/01/1999','','1111-1111-1111-1111',NULL,NULL,0,NULL,1,NULL,'password');
 /*!40000 ALTER TABLE `players` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
@@ -8315,7 +8314,7 @@ CREATE TABLE `sessions` (
 
 LOCK TABLES `sessions` WRITE;
 /*!40000 ALTER TABLE `sessions` DISABLE KEYS */;
-INSERT INTO `sessions` VALUES (18,'fc8abafc-36e2-11ee-a63b-00ffbe07e06c',NULL);
+INSERT INTO `sessions` VALUES (18,'b5844566-3784-11ee-a63b-00ffbe07e06c',NULL);
 /*!40000 ALTER TABLE `sessions` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -8812,18 +8811,19 @@ DELIMITER ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
 CREATE DEFINER=`root`@`%` PROCEDURE `get_clan_summary`(
-	clan_id bigint,
+	_clan_id bigint,
     _player_id bigint
 )
 BEGIN
-	(SELECT
+	SELECT
 	clans.title,
 	clans.signature,
 	clans.creator,
     clans.info,
     IF(EXISTS(SELECT 1 FROM (SELECT player_id FROM players WHERE players.clan_id = clans.id) AS members WHERE player_id = _player_id), TRUE, FALSE) as is_member
-	FROM clans
-	INNER JOIN players ON clans.creator = players.player_id);
+    FROM clans
+    LEFT JOIN players ON clans.creator = players.player_id
+    WHERE clans.id = _clan_id;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -9483,4 +9483,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-08-09 21:48:51
+-- Dump completed on 2023-08-10 16:24:48
