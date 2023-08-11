@@ -1,5 +1,1819 @@
 -- MySQL dump 10.13  Distrib 8.0.33, for Win64 (x86_64)
 --
+-- Host: 192.168.0.153    Database: alexander
+-- ------------------------------------------------------
+-- Server version	8.0.33
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!50503 SET NAMES utf8 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `clan_states`
+--
+
+DROP TABLE IF EXISTS `clan_states`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `clan_states` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `name` varchar(32) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `clan_states`
+--
+
+LOCK TABLES `clan_states` WRITE;
+/*!40000 ALTER TABLE `clan_states` DISABLE KEYS */;
+INSERT INTO `clan_states` VALUES (1,'Novice'),(2,'Member'),(3,'Father');
+/*!40000 ALTER TABLE `clan_states` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `clans`
+--
+
+DROP TABLE IF EXISTS `clans`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `clans` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `creator` bigint DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `title` varchar(64) NOT NULL,
+  `signature` varchar(64) NOT NULL,
+  `info` varchar(256) NOT NULL DEFAULT '""',
+  `games` bigint NOT NULL DEFAULT '0',
+  `total_score` bigint NOT NULL DEFAULT '0',
+  `average_score` bigint NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id` (`id`),
+  UNIQUE KEY `title` (`title`),
+  UNIQUE KEY `signature` (`signature`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `clans`
+--
+
+LOCK TABLES `clans` WRITE;
+/*!40000 ALTER TABLE `clans` DISABLE KEYS */;
+/*!40000 ALTER TABLE `clans` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `countries`
+--
+
+DROP TABLE IF EXISTS `countries`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `countries` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `name` varchar(64) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=195 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `countries`
+--
+
+LOCK TABLES `countries` WRITE;
+/*!40000 ALTER TABLE `countries` DISABLE KEYS */;
+INSERT INTO `countries` VALUES (1,'Not specified'),(2,'Afghanistan'),(3,'Albania'),(4,'Algeria'),(5,'Andorra'),(6,'Angola'),(7,'Antigua and Barbuda'),(8,'Argentina'),(9,'Armenia'),(10,'Austria'),(11,'Azerbaijan'),(12,'Bahrain'),(13,'Bangladesh'),(14,'Barbados'),(15,'Belarus'),(16,'Belgium'),(17,'Belize'),(18,'Benin'),(19,'Bhutan'),(20,'Bolivia'),(21,'Bosnia and Herzegovina'),(22,'Botswana'),(23,'Brazil'),(24,'Brunei'),(25,'Bulgaria'),(26,'Burkina Faso'),(27,'Burundi'),(28,'Cabo Verde'),(29,'Cambodia'),(30,'Cameroon'),(31,'Canada'),(32,'Central African Republic'),(33,'Chad'),(34,'Channel Islands'),(35,'Chile'),(36,'China'),(37,'Colombia'),(38,'Comoros'),(39,'Congo'),(40,'Costa Rica'),(41,'Cote d\'Ivoire'),(42,'Croatia'),(43,'Cuba'),(44,'Cyprus'),(45,'Czech Republic'),(46,'Denmark'),(47,'Djibouti'),(48,'Dominica'),(49,'Dominican Republic'),(50,'DR Congo'),(51,'Ecuador'),(52,'Egypt'),(53,'El Salvador'),(54,'Equatorial Guinea'),(55,'Eritrea'),(56,'Estonia'),(57,'Eswatini'),(58,'Ethiopia'),(59,'Faeroe Islands'),(60,'Finland'),(61,'France'),(62,'French Guiana'),(63,'Gabon'),(64,'Gambia'),(65,'Georgia'),(66,'Germany'),(67,'Ghana'),(68,'Gibraltar'),(69,'Greece'),(70,'Grenada'),(71,'Guatemala'),(72,'Guinea'),(73,'Guinea-Bissau'),(74,'Guyana'),(75,'Haiti'),(76,'Holy See'),(77,'Honduras'),(78,'Hong Kong'),(79,'Hungary'),(80,'Iceland'),(81,'India'),(82,'Indonesia'),(83,'Iran'),(84,'Iraq'),(85,'Ireland'),(86,'Isle of Man'),(87,'Israel'),(88,'Italy'),(89,'Jamaica'),(90,'Japan'),(91,'Jordan'),(92,'Kazakhstan'),(93,'Kenya'),(94,'Kuwait'),(95,'Kyrgyzstan'),(96,'Laos'),(97,'Latvia'),(98,'Lebanon'),(99,'Lesotho'),(100,'Liberia'),(101,'Libya'),(102,'Liechtenstein'),(103,'Lithuania'),(104,'Luxembourg'),(105,'Macao'),(106,'Madagascar'),(107,'Malawi'),(108,'Malaysia'),(109,'Maldives'),(110,'Mali'),(111,'Malta'),(112,'Mauritania'),(113,'Mauritius'),(114,'Mayotte'),(115,'Mexico'),(116,'Moldova'),(117,'Monaco'),(118,'Mongolia'),(119,'Montenegro'),(120,'Morocco'),(121,'Mozambique'),(122,'Myanmar'),(123,'Namibia'),(124,'Nepal'),(125,'Netherlands'),(126,'Nicaragua'),(127,'Niger'),(128,'Nigeria'),(129,'North Korea'),(130,'North Macedonia'),(131,'Norway'),(132,'Oman'),(133,'Pakistan'),(134,'Panama'),(135,'Paraguay'),(136,'Peru'),(137,'Philippines'),(138,'Poland'),(139,'Portugal'),(140,'Qatar'),(141,'Reunion'),(142,'Romania'),(143,'Russia'),(144,'Rwanda'),(145,'Saint Helena'),(146,'Saint Kitts and Nevis'),(147,'Saint Lucia'),(148,'Saint Vincent and the Grenadines'),(149,'San Marino'),(150,'Sao Tome & Principe'),(151,'Saudi Arabia'),(152,'Senegal'),(153,'Serbia'),(154,'Seychelles'),(155,'Sierra Leone'),(156,'Singapore'),(157,'Slovakia'),(158,'Slovenia'),(159,'Somalia'),(160,'South Africa'),(161,'South Korea'),(162,'South Sudan'),(163,'Spain'),(164,'Sri Lanka'),(165,'State of Palestine'),(166,'Sudan'),(167,'Suriname'),(168,'Sweden'),(169,'Switzerland'),(170,'Syria'),(171,'Taiwan'),(172,'Tajikistan'),(173,'Tanzania'),(174,'Thailand'),(175,'The Bahamas'),(176,'Timor-Leste'),(177,'Togo'),(178,'Trinidad and Tobago'),(179,'Tunisia'),(180,'Turkey'),(181,'Turkmenistan'),(182,'Uganda'),(183,'Ukraine'),(184,'United Arab Emirates'),(185,'United Kingdom'),(186,'United States'),(187,'Uruguay'),(188,'Uzbekistan'),(189,'Venezuela'),(190,'Vietnam'),(191,'Western Sahara'),(192,'Yemen'),(193,'Zambia'),(194,'Zimbabwe');
+/*!40000 ALTER TABLE `countries` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `game_log`
+--
+
+DROP TABLE IF EXISTS `game_log`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `game_log` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `as_clan` bigint unsigned DEFAULT NULL COMMENT 'This field is used to track if member has played for the specific clan. The result of this field is used to determine the ''clan state'' of a given player (ie. ''Novice'' | ''Member'')',
+  `winner_id` bigint unsigned NOT NULL,
+  `loser_id` bigint unsigned NOT NULL,
+  `type` tinyint unsigned NOT NULL,
+  `title` varchar(32) NOT NULL DEFAULT '""',
+  `winner_nat` tinyint unsigned NOT NULL,
+  `loser_nat` tinyint unsigned NOT NULL,
+  `points_won` int NOT NULL DEFAULT '0',
+  `points_lost` int NOT NULL DEFAULT '0',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id_UNIQUE` (`id`) /*!80000 INVISIBLE */,
+  KEY `player1_id` (`winner_id`),
+  KEY `player2_id` (`loser_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `game_log`
+--
+
+LOCK TABLES `game_log` WRITE;
+/*!40000 ALTER TABLE `game_log` DISABLE KEYS */;
+/*!40000 ALTER TABLE `game_log` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `gmids`
+--
+
+DROP TABLE IF EXISTS `gmids`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `gmids` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `gmid` varchar(20) NOT NULL,
+  `hasBeenUsed` tinyint NOT NULL DEFAULT '0',
+  UNIQUE KEY `id` (`id`),
+  UNIQUE KEY `gmid` (`gmid`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `gmids`
+--
+
+LOCK TABLES `gmids` WRITE;
+/*!40000 ALTER TABLE `gmids` DISABLE KEYS */;
+INSERT INTO `gmids` VALUES (3,'TEST-TEST-TEST-TEST',0),(4,'1111-1111-1111-1111',1);
+/*!40000 ALTER TABLE `gmids` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `lobbies`
+--
+
+DROP TABLE IF EXISTS `lobbies`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `lobbies` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `title` varchar(32) NOT NULL,
+  `host_id` bigint NOT NULL,
+  `heartbeat` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `type` int unsigned NOT NULL DEFAULT '0',
+  `max_players` int unsigned NOT NULL DEFAULT '7',
+  `players` int unsigned NOT NULL DEFAULT '1',
+  `password` varchar(45) DEFAULT NULL,
+  `ip` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id` (`id`),
+  UNIQUE KEY `host_id_UNIQUE` (`host_id`),
+  KEY `lobbies_ibfk_1_idx` (`host_id`),
+  CONSTRAINT `lobbies_ibfk_1` FOREIGN KEY (`host_id`) REFERENCES `players` (`player_id`) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `lobbies`
+--
+
+LOCK TABLES `lobbies` WRITE;
+/*!40000 ALTER TABLE `lobbies` DISABLE KEYS */;
+/*!40000 ALTER TABLE `lobbies` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `lobby_types`
+--
+
+DROP TABLE IF EXISTS `lobby_types`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `lobby_types` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `allow_designed` tinyint unsigned DEFAULT '0',
+  `allow_ai` tinyint unsigned NOT NULL DEFAULT '0',
+  `name` varchar(16) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `lobby_types`
+--
+
+LOCK TABLES `lobby_types` WRITE;
+/*!40000 ALTER TABLE `lobby_types` DISABLE KEYS */;
+INSERT INTO `lobby_types` VALUES (1,0,0,'Scored'),(2,0,1,'Custom'),(3,1,1,'Designed');
+/*!40000 ALTER TABLE `lobby_types` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `mail_messages`
+--
+
+DROP TABLE IF EXISTS `mail_messages`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `mail_messages` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `sent_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `id_from` bigint unsigned NOT NULL,
+  `id_to` bigint unsigned NOT NULL,
+  `subject` varchar(32) NOT NULL,
+  `content` varchar(256) NOT NULL,
+  `status` bigint unsigned NOT NULL DEFAULT '1',
+  `removed_by_sender` tinyint unsigned DEFAULT '0',
+  `removed_by_recipient` tinyint unsigned DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id` (`id`),
+  KEY `id_from` (`id_from`),
+  KEY `id_to` (`id_to`),
+  KEY `statuses_idx` (`status`),
+  CONSTRAINT `statuses` FOREIGN KEY (`status`) REFERENCES `mail_statuses` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `mail_messages`
+--
+
+LOCK TABLES `mail_messages` WRITE;
+/*!40000 ALTER TABLE `mail_messages` DISABLE KEYS */;
+/*!40000 ALTER TABLE `mail_messages` ENABLE KEYS */;
+UNLOCK TABLES;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER `mail_messages_BEFORE_INSERT` BEFORE INSERT ON `mail_messages` FOR EACH ROW BEGIN
+	IF NEW.subject = '' THEN
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = "ERR_MAIL_NOSUB"; -- NO SUBJECT
+    ELSEIF NEW.content = '' THEN
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = "ERR_MAIL_NOCON"; -- NO CONTENT
+    END IF;
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+
+--
+-- Table structure for table `mail_statuses`
+--
+
+DROP TABLE IF EXISTS `mail_statuses`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `mail_statuses` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(32) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `mail_statuses`
+--
+
+LOCK TABLES `mail_statuses` WRITE;
+/*!40000 ALTER TABLE `mail_statuses` DISABLE KEYS */;
+INSERT INTO `mail_statuses` VALUES (1,'unread'),(2,'read'),(3,'removed');
+/*!40000 ALTER TABLE `mail_statuses` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `nations`
+--
+
+DROP TABLE IF EXISTS `nations`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `nations` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `nations`
+--
+
+LOCK TABLES `nations` WRITE;
+/*!40000 ALTER TABLE `nations` DISABLE KEYS */;
+INSERT INTO `nations` VALUES (1,'India'),(2,'Macedonia'),(3,'Persia'),(4,'Egypt');
+/*!40000 ALTER TABLE `nations` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `news`
+--
+
+DROP TABLE IF EXISTS `news`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `news` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `posted_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `content` varchar(4096) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `news`
+--
+
+LOCK TABLES `news` WRITE;
+/*!40000 ALTER TABLE `news` DISABLE KEYS */;
+INSERT INTO `news` VALUES (1,'2023-07-15 07:20:05','This is a news entry'),(6,'2023-08-03 06:32:44','This is another news entry');
+/*!40000 ALTER TABLE `news` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `players`
+--
+
+DROP TABLE IF EXISTS `players`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `players` (
+  `player_id` bigint NOT NULL AUTO_INCREMENT,
+  `name` varchar(64) DEFAULT NULL,
+  `nick` varchar(64) DEFAULT NULL,
+  `mail` varchar(128) NOT NULL,
+  `icq` varchar(32) DEFAULT NULL,
+  `site` varchar(255) DEFAULT NULL,
+  `sex` bigint DEFAULT '1',
+  `country` bigint NOT NULL DEFAULT '1',
+  `birthday` varchar(10) NOT NULL,
+  `phone` varchar(32) DEFAULT NULL,
+  `gmid` varchar(20) NOT NULL,
+  `creatip` varchar(16) DEFAULT NULL,
+  `lastip` varchar(16) DEFAULT NULL,
+  `score` bigint unsigned NOT NULL DEFAULT '0',
+  `clan_id` bigint DEFAULT NULL,
+  `clan_rank` bigint DEFAULT NULL,
+  `clan_state` bigint DEFAULT NULL,
+  `pass` varchar(32) NOT NULL,
+  PRIMARY KEY (`player_id`),
+  KEY `clan_rank` (`clan_rank`),
+  KEY `clan_state` (`clan_state`),
+  KEY `players_ibfk_2` (`country`),
+  KEY `players_ibfk_1` (`sex`) /*!80000 INVISIBLE */,
+  KEY `fk1` (`clan_id`) /*!80000 INVISIBLE */,
+  KEY `mod_id` (`player_id`),
+  CONSTRAINT `fk3` FOREIGN KEY (`clan_id`) REFERENCES `clans` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `players_ibfk_1` FOREIGN KEY (`sex`) REFERENCES `sexes` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `players_ibfk_2` FOREIGN KEY (`country`) REFERENCES `countries` (`id`) ON UPDATE CASCADE,
+  CONSTRAINT `players_ibfk_4` FOREIGN KEY (`clan_rank`) REFERENCES `ranks` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `players_ibfk_5` FOREIGN KEY (`clan_state`) REFERENCES `clan_states` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `players`
+--
+
+LOCK TABLES `players` WRITE;
+/*!40000 ALTER TABLE `players` DISABLE KEYS */;
+/*!40000 ALTER TABLE `players` ENABLE KEYS */;
+UNLOCK TABLES;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `players_BEFORE_INSERT` BEFORE INSERT ON `players` FOR EACH ROW BEGIN
+
+    IF new.score < 10 THEN
+	SET new.clan_rank = 1;
+	ELSEIF new.score < 25 THEN
+	SET new.clan_rank = 2;
+	ELSEIF new.score < 50 THEN
+	SET new.clan_rank = 3;
+	ELSEIF new.score < 75 THEN
+	SET new.clan_rank = 4;
+	ELSEIF new.score < 100 THEN
+	SET new.clan_rank = 5;
+	ELSEIF new.score < 125 THEN
+	SET new.clan_rank = 6;
+	ELSE
+	SET new.clan_rank = 7;
+	END IF;
+
+	CALL validate_player(NEW.nick, NEW.pass, NEW.mail);
+    
+	IF EXISTS(SELECT * FROM players WHERE players.nick = NEW.nick) THEN
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERR_NICK_EXISTS';
+
+    ELSEIF NOT EXISTS(SELECT * FROM gmids WHERE gmid = NEW.gmid) THEN
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = "ERR_GMID_INVALID";
+        
+	ELSEIF EXISTS(SELECT * FROM players WHERE mail = NEW.mail) THEN
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = "ERR_EMAIL_USED";
+        
+	ELSEIF EXISTS(SELECT * FROM gmids WHERE gmid = NEW.gmid and hasBeenUsed = 1) THEN
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = "ERR_GMID_USED";
+	ELSE
+		UPDATE gmids
+		SET hasBeenUsed = 1
+		WHERE gmid = new.gmid; 
+    END IF;
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `players_BEFORE_UPDATE` BEFORE UPDATE ON `players` FOR EACH ROW BEGIN
+
+	IF NEW.clan_id != OLD.clan_id THEN
+		IF (SELECT creator FROM clans WHERE clans.id = OLD.clan_id)  = OLD.player_id THEN
+			DELETE FROM clans WHERE id = OLD.clan_id;
+        END IF;
+    END IF;
+    
+	CALL validate_player(NEW.nick, NEW.pass, NEW.mail);
+
+	IF EXISTS(SELECT * FROM players WHERE players.nick = NEW.nick AND NOT(players.nick = NEW.nick)) THEN
+			SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERR_NICK_EXISTS';
+	END IF;
+		IF EXISTS(SELECT * FROM players WHERE players.mail = NEW.mail AND NOT(players.mail = NEW.mail)) THEN
+				SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = "ERR_EMAIL_USED";
+	END IF;
+	
+    
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+
+--
+-- Table structure for table `punishments`
+--
+
+DROP TABLE IF EXISTS `punishments`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `punishments` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `published_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `moderator_id` bigint NOT NULL,
+  `game_id` bigint NOT NULL,
+  `comment` varchar(45) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id_UNIQUE` (`id`) /*!80000 INVISIBLE */,
+  KEY `mod_id` (`moderator_id`),
+  CONSTRAINT `mod_id` FOREIGN KEY (`moderator_id`) REFERENCES `players` (`player_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `punishments`
+--
+
+LOCK TABLES `punishments` WRITE;
+/*!40000 ALTER TABLE `punishments` DISABLE KEYS */;
+/*!40000 ALTER TABLE `punishments` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `ranks`
+--
+
+DROP TABLE IF EXISTS `ranks`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ranks` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `name` varchar(32) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `ranks`
+--
+
+LOCK TABLES `ranks` WRITE;
+/*!40000 ALTER TABLE `ranks` DISABLE KEYS */;
+INSERT INTO `ranks` VALUES (1,'Recruit'),(2,'Warrior'),(3,'Veteran'),(4,'Guardsman'),(5,'Corporal'),(6,'Veteran Corporal'),(7,'Guardsmen Corporal'),(8,'Captain'),(9,'Veteran Captain'),(10,'Chief Captain'),(11,'Major'),(12,'Colonel'),(13,'Veteran Colonel');
+/*!40000 ALTER TABLE `ranks` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `sessions`
+--
+
+DROP TABLE IF EXISTS `sessions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `sessions` (
+  `player_id` bigint NOT NULL,
+  `session_key` char(36) NOT NULL,
+  `ip` varchar(16) DEFAULT NULL,
+  PRIMARY KEY (`player_id`),
+  CONSTRAINT `sessions_ibfk_1` FOREIGN KEY (`player_id`) REFERENCES `players` (`player_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `sessions`
+--
+
+LOCK TABLES `sessions` WRITE;
+/*!40000 ALTER TABLE `sessions` DISABLE KEYS */;
+/*!40000 ALTER TABLE `sessions` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `sexes`
+--
+
+DROP TABLE IF EXISTS `sexes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `sexes` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `name` varchar(32) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `sexes`
+--
+
+LOCK TABLES `sexes` WRITE;
+/*!40000 ALTER TABLE `sexes` DISABLE KEYS */;
+INSERT INTO `sexes` VALUES (1,'Not specified'),(2,'Male'),(3,'Female');
+/*!40000 ALTER TABLE `sexes` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `thread_messages`
+--
+
+DROP TABLE IF EXISTS `thread_messages`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `thread_messages` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `author_id` bigint NOT NULL,
+  `thread_id` bigint NOT NULL,
+  `content` varchar(512) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id` (`id`),
+  KEY `thread_messages_ibfk_1` (`author_id`),
+  KEY `thread_messages_ibfk_2` (`thread_id`),
+  CONSTRAINT `thread_messages_ibfk_1` FOREIGN KEY (`author_id`) REFERENCES `players` (`player_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `thread_messages_ibfk_2` FOREIGN KEY (`thread_id`) REFERENCES `threads` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `thread_messages`
+--
+
+LOCK TABLES `thread_messages` WRITE;
+/*!40000 ALTER TABLE `thread_messages` DISABLE KEYS */;
+/*!40000 ALTER TABLE `thread_messages` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `threads`
+--
+
+DROP TABLE IF EXISTS `threads`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `threads` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `author_id` bigint NOT NULL,
+  `content` varchar(512) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id` (`id`),
+  KEY `threads_ibfk_1` (`author_id`),
+  CONSTRAINT `threads_ibfk_1` FOREIGN KEY (`author_id`) REFERENCES `players` (`player_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `threads`
+--
+
+LOCK TABLES `threads` WRITE;
+/*!40000 ALTER TABLE `threads` DISABLE KEYS */;
+/*!40000 ALTER TABLE `threads` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `vote_answers`
+--
+
+DROP TABLE IF EXISTS `vote_answers`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `vote_answers` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `vote_id` bigint NOT NULL,
+  `text` varchar(64) NOT NULL,
+  `votes` bigint NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id` (`id`),
+  KEY `vote_answers_ibfk_1` (`vote_id`),
+  CONSTRAINT `vote_answers_ibfk_1` FOREIGN KEY (`vote_id`) REFERENCES `votes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `vote_answers`
+--
+
+LOCK TABLES `vote_answers` WRITE;
+/*!40000 ALTER TABLE `vote_answers` DISABLE KEYS */;
+INSERT INTO `vote_answers` VALUES (23,10,'Yes',0),(24,10,'No',0);
+/*!40000 ALTER TABLE `vote_answers` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `vote_log`
+--
+
+DROP TABLE IF EXISTS `vote_log`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `vote_log` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `player_id` int NOT NULL,
+  `vote_id` int NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `vote_log`
+--
+
+LOCK TABLES `vote_log` WRITE;
+/*!40000 ALTER TABLE `vote_log` DISABLE KEYS */;
+/*!40000 ALTER TABLE `vote_log` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `votes`
+--
+
+DROP TABLE IF EXISTS `votes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `votes` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `subject` varchar(32) NOT NULL,
+  `published_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `votes`
+--
+
+LOCK TABLES `votes` WRITE;
+/*!40000 ALTER TABLE `votes` DISABLE KEYS */;
+INSERT INTO `votes` VALUES (10,'Are you a human?','2023-08-08 23:00:39');
+/*!40000 ALTER TABLE `votes` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Dumping events for database 'alexander'
+--
+/*!50106 SET @save_time_zone= @@TIME_ZONE */ ;
+/*!50106 DROP EVENT IF EXISTS `lobby_cleaner_event` */;
+DELIMITER ;;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;;
+/*!50003 SET character_set_client  = utf8mb4 */ ;;
+/*!50003 SET character_set_results = utf8mb4 */ ;;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;;
+/*!50003 SET @saved_time_zone      = @@time_zone */ ;;
+/*!50003 SET time_zone             = 'SYSTEM' */ ;;
+/*!50106 CREATE*/ /*!50117 DEFINER=`root`@`localhost`*/ /*!50106 EVENT `lobby_cleaner_event` ON SCHEDULE EVERY 60 SECOND STARTS '2023-07-28 15:02:25' ON COMPLETION NOT PRESERVE ENABLE DO CALL lobby_cleaner() */ ;;
+/*!50003 SET time_zone             = @saved_time_zone */ ;;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;;
+/*!50003 SET character_set_results = @saved_cs_results */ ;;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;;
+DELIMITER ;
+/*!50106 SET TIME_ZONE= @save_time_zone */ ;
+
+--
+-- Dumping routines for database 'alexander'
+--
+/*!50003 DROP FUNCTION IF EXISTS `get_display_nick` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` FUNCTION `get_display_nick`(
+	player_id BIGINT
+) RETURNS varchar(64) CHARSET utf8mb4
+    DETERMINISTIC
+BEGIN
+	RETURN 
+    (SELECT
+    CONCAT(COALESCE(clans.signature,''), players.nick) AS nick 
+	FROM players
+	LEFT JOIN clans 
+	ON players.clan_id = clans.id
+	WHERE players.player_id = player_id);
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP FUNCTION IF EXISTS `get_nation` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` FUNCTION `get_nation`(
+	id bigint
+) RETURNS int
+    DETERMINISTIC
+BEGIN
+	RETURN (SELECT
+    name
+    FROM nations
+    WHERE nations.id = id);
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP FUNCTION IF EXISTS `get_nation_name` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` FUNCTION `get_nation_name`(
+	id bigint
+) RETURNS int
+    DETERMINISTIC
+BEGIN
+	RETURN (SELECT
+    name
+    FROM nations
+    WHERE nations.id = id);
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP FUNCTION IF EXISTS `get_position` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` FUNCTION `get_position`(
+	_player_id bigint
+) RETURNS int
+    DETERMINISTIC
+BEGIN
+	RETURN (SELECT rnk FROM (SELECT player_id, row_number() OVER ( order by score ) as rnk FROM players) AS rnks WHERE player_id = _player_id);
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP FUNCTION IF EXISTS `get_rank` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` FUNCTION `get_rank`(
+	score int
+) RETURNS int
+    DETERMINISTIC
+BEGIN
+	IF score < 10 THEN
+		RETURN 1;
+	ELSEIF score < 25 THEN
+		RETURN 2;
+	ELSEIF score < 50 THEN
+		RETURN 3;
+	ELSEIF score < 75 THEN
+		RETURN 4;
+	ELSEIF score < 100 THEN
+		RETURN 5;
+	ELSEIF score < 125 THEN
+		RETURN 6;
+	ELSEIF score < 150 THEN
+		RETURN 7;
+	END IF;
+RETURN 1;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP FUNCTION IF EXISTS `has_clan` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` FUNCTION `has_clan`(
+	_player_id bigint
+) RETURNS int
+    DETERMINISTIC
+BEGIN
+	DECLARE _signature BOOLEAN;
+    SET _signature = 
+	(SELECT
+    signature
+    FROM clans 
+    WHERE creator = _player_id);
+    IF has_clan = 1 THEN
+		RETURN signature;
+	ELSE
+		RETURN 0;
+	END IF;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `can_be_excluded` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` PROCEDURE `can_be_excluded`(
+id_to_be_excluded bigint,
+caller_id bigint
+)
+BEGIN
+	SELECT
+	name,
+	IF(
+    clans.creator != id_to_be_excluded AND 
+    players.player_id != caller_id AND
+    clans.creator = caller_id
+    , TRUE , FALSE) AS result 
+	FROM players 
+	INNER JOIN clans ON clan_id = 1
+	WHERE players.player_id = id_to_be_excluded;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `clan_admin` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` PROCEDURE `clan_admin`(
+	_player_id bigint,
+    _new_jointer bigint,
+    _leaver bigint,
+    _clan_id bigint,
+    _again varchar(5)
+)
+BEGIN
+	DECLARE _has_clan BOOLEAN;
+    SET _has_clan = (SELECT
+    id
+    FROM clans 
+    WHERE creator = _player_id);
+	IF _new_jointer != 0 THEN
+		IF _has_clan THEN
+			IF _again = 'true' THEN
+				DELETE
+				FROM clans 
+				WHERE creator = _player_id;
+			ELSE
+				SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = "DLG_CLAN_REMOVE";
+			END IF;
+		END IF;
+		UPDATE players
+		SET clan_id = _clan_id
+		WHERE player_id = _player_id;
+	ELSEIF _leaver != '' THEN
+		IF _has_clan THEN
+			DELETE
+			FROM clans
+			WHERE creator = _player_id;
+		END IF;
+        UPDATE players
+		SET clan_id = NULL
+		WHERE player_id = _player_id;
+	END IF;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `create_clan` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` PROCEDURE `create_clan`(
+	new_creator bigint,
+    new_title varchar(64),
+    new_signature varchar(64),
+    new_info varchar(256)
+)
+BEGIN
+    IF NOT (new_signature REGEXP '^[A-Za-z0-9]+$') THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERR_CLAN_SIGNATURE_FORMAT';
+    END IF;
+
+	INSERT INTO 
+    clans
+    (creator, title, signature, info) 
+    VALUES 
+    (new_creator, new_title, CONCAT('[', new_signature, ']'), new_info);
+
+	UPDATE
+    players
+    SET clan_id = LAST_INSERT_ID()
+	WHERE new_creator = players.player_id;
+    
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `forum_search` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` PROCEDURE `forum_search`(
+	search_nick varchar(64),
+    search_text varchar(512)
+)
+BEGIN
+    SELECT * 
+    FROM thread_messages
+    WHERE INSTR(search_nick, get_display_nick(author_id));
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `get_clans` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` PROCEDURE `get_clans`()
+BEGIN
+    SELECT
+	clans.id,
+	clans.title,
+	clans.signature,
+	clans.created_at,
+	get_display_nick(clans.creator) AS nick,
+	(SELECT COUNT(*) FROM players WHERE clan_id = clans.id) as members,
+	(SELECT SUM(score) FROM players WHERE clan_id = clans.id) as score,
+	ROUND((SELECT SUM(score) FROM players WHERE clan_id = clans.id)/(SELECT COUNT(*) FROM players WHERE clan_id = clans.id)) as average_score
+	FROM
+	clans;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `get_clan_members` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` PROCEDURE `get_clan_members`(
+	clan_id bigint
+)
+BEGIN
+	SELECT
+	IF(clans.creator = players.player_id, "Father", IF(EXISTS(SELECT 1 FROM game_log WHERE players.player_id = game_log.winner_id OR players.player_id = game_log.loser_id), "Member", "Novice")) as state,
+	get_display_nick(players.player_id) as nick,
+    get_position(players.player_id) AS position,
+	players.name,
+	players.score,
+    players.player_id,
+	ranks.name as player_rank,
+	(SELECT countries.name FROM countries WHERE countries.id = players.country) AS country
+	FROM players
+	LEFT JOIN clans ON id = players.clan_id
+    INNER JOIN ranks ON players.clan_rank = ranks.id
+	WHERE players.clan_id = clan_id;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `get_clan_summary` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` PROCEDURE `get_clan_summary`(
+	_clan_id bigint,
+    _player_id bigint
+)
+BEGIN
+	SELECT
+	clans.title,
+	clans.signature,
+	clans.creator,
+    clans.info,
+    IF(EXISTS(SELECT 1 FROM (SELECT player_id FROM players WHERE players.clan_id = clans.id) AS members WHERE player_id = _player_id), TRUE, FALSE) as is_member
+    FROM clans
+    LEFT JOIN players ON clans.creator = players.player_id
+    WHERE clans.id = _clan_id;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `get_game_log` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` PROCEDURE `get_game_log`(
+	_offset int
+)
+BEGIN
+	(
+    SELECT
+	game_log.id,
+	game_log.title,
+	get_display_nick(winner_id) AS winner_nick,
+	get_display_nick(loser_id) AS loser_nick,
+	get_nation_name(winner_nat),
+	get_nation_name(loser_nat),
+	points_won,
+	points_lost,
+	created_at
+    FROM game_log
+    ORDER BY id DESC LIMIT 7 OFFSET _offset
+    );
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `get_id_by_nick` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` PROCEDURE `get_id_by_nick`(
+	VE_NICK varchar(64)
+)
+BEGIN
+	SELECT players.player_id AS id FROM players 
+	LEFT JOIN clans on players.clan_id = clans.id 
+	WHERE (CONCAT(COALESCE(clans.signature,''), players.nick) = VE_NICK OR players.nick = VE_NICK);
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `get_lobbies` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` PROCEDURE `get_lobbies`()
+BEGIN
+SELECT 
+lobbies.id, 
+title, 
+host_id, 
+lobby_types.name as type, 
+max_players, 
+players, 
+password, 
+ip, 
+get_display_nick(host_id) AS nick 
+FROM lobbies 
+LEFT JOIN lobby_types ON lobby_types.id = lobbies.type
+WHERE ip IS NOT NULL;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `get_mail` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` PROCEDURE `get_mail`(
+	_mode VARCHAR(1),
+    player_id BIGINT
+)
+BEGIN
+    IF _mode = '1' THEN
+                    SELECT 
+                    mail_messages.id, 
+                    subject, 
+                    content, 
+                    sent_at, 
+                    status, 
+                    id_to,
+                    get_display_nick(id_to) AS nick 
+                    FROM mail_messages 
+                    INNER JOIN players ON players.player_id = id_to 
+                    LEFT JOIN clans ON clan_id = clans.id
+                    WHERE (id_from = player_id AND NOT removed_by_sender);
+    ELSEIF _mode = '2' THEN
+					SELECT 
+                    mail_messages.id, 
+                    subject, 
+                    content, 
+                    sent_at, 
+                    status, 
+                    id_from, 
+					get_display_nick(id_from) AS nick 
+                    FROM mail_messages 
+                    INNER JOIN players ON players.player_id = id_from 
+                    LEFT JOIN clans ON clan_id = clans.id
+                    WHERE (id_to = player_id AND NOT removed_by_recipient AND status = 1);
+	ELSEIF _mode = '3' THEN
+					SELECT 
+					mail_messages.id, 
+					subject, 
+					content, 
+					sent_at, 
+					status, 
+					id_from, 
+					get_display_nick(id_from) AS nick 
+					FROM mail_messages 
+					INNER JOIN players ON players.player_id = id_from 
+					LEFT JOIN clans ON clan_id = clans.id 
+					WHERE (id_to = player_id AND NOT removed_by_recipient AND status = 2);
+	ELSEIF _mode = '4' THEN
+					SELECT 
+					mail_messages.id, 
+					subject, 
+					content, 
+					sent_at, 
+					status, 
+					id_from, 
+					get_display_nick(id_from) AS nick 
+					FROM mail_messages 
+					INNER JOIN players ON players.player_id = id_from 
+					LEFT JOIN clans ON clan_id = clans.id 
+					WHERE (id_to = player_id AND NOT removed_by_recipient );
+    END IF;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `get_player_id_by_nick` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` PROCEDURE `get_player_id_by_nick`(
+	VE_NICK varchar(64)
+)
+BEGIN
+	SELECT players.player_id AS id 
+    FROM players 
+	LEFT JOIN clans on players.clan_id = clans.id 
+	WHERE (CONCAT(COALESCE(clans.signature,''), players.nick) = VE_NICK OR players.nick = VE_NICK);
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `get_punishments` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` PROCEDURE `get_punishments`()
+BEGIN
+SELECT 
+game_id,
+published_at,
+get_display_nick(moderator_id) as nick,
+moderator_id,
+comment
+FROM punishments ORDER BY id DESC;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `get_scored_games` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` PROCEDURE `get_scored_games`(
+	_offset int
+)
+BEGIN
+	SELECT
+	id, 
+	get_display_nick(author_id) as p1_nick, 
+	created_at, 
+	content,
+	author_id,
+	(SELECT COUNT(*) AS count 
+	FROM thread_messages
+	WHERE thread_messages.thread_id = threads.id) AS messages
+	FROM threads 
+	ORDER BY id DESC LIMIT 31 OFFSET _offset;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `get_thread` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` PROCEDURE `get_thread`(
+	thread_id bigint
+)
+BEGIN
+	SELECT 
+    id, 
+    created_at, 
+    author_id,
+    get_display_nick(author_id) as nick, 
+    content 
+    FROM threads 
+    WHERE id = thread_id LIMIT 1;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `get_threads` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` PROCEDURE `get_threads`(
+	_mode int,
+    _offset int
+)
+BEGIN
+    IF _mode = '1' THEN
+				SELECT
+                id, 
+                get_display_nick(author_id) as nick, 
+                created_at, 
+                content,
+                author_id,
+                (SELECT COUNT(*) AS count 
+                FROM thread_messages
+                WHERE thread_messages.thread_id = threads.id) AS messages
+                FROM threads 
+                ORDER BY id DESC LIMIT 31 OFFSET _offset;
+	ELSEIF _mode = '2' THEN
+				SELECT 
+				thread_id AS id, 
+                get_display_nick(author_id) as nick, 
+                created_at,
+                author_id,
+                content
+				FROM thread_messages 
+				ORDER BY id DESC LIMIT 10;
+	ELSEIF _mode = '3' THEN
+				SELECT 
+				thread_id AS id,  
+                get_display_nick(author_id) as nick, 
+                created_at, 
+                author_id,
+                content
+				FROM thread_messages 
+				WHERE created_at > now() - interval 1 day 
+				ORDER BY id DESC;
+	ELSEIF _mode = '4' THEN
+				SELECT 
+				thread_id AS id, 
+                get_display_nick(author_id) as nick, 
+                created_at, 
+                author_id,
+                content
+				FROM thread_messages 
+				WHERE created_at > now() - interval 7 day 
+				ORDER BY id DESC;
+    END IF;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `get_thread_list` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` PROCEDURE `get_thread_list`(
+	_mode int,
+    _offset int
+)
+BEGIN
+    IF _mode = '1' THEN
+				SELECT
+                id, 
+                get_display_nick(author_id) as nick, 
+                created_at, 
+                content,
+                author_id,
+                (SELECT COUNT(*) AS count 
+                FROM thread_messages
+                WHERE thread_messages.thread_id = threads.id) AS messages
+                FROM threads 
+                ORDER BY id DESC LIMIT 31 OFFSET _offset;
+	ELSEIF _mode = '2' THEN
+				SELECT 
+				thread_id AS id, 
+                get_display_nick(author_id) as nick, 
+                created_at,
+                author_id,
+                content
+				FROM thread_messages 
+				ORDER BY id DESC LIMIT 10;
+	ELSEIF _mode = '3' THEN
+				SELECT 
+				thread_id AS id,  
+                get_display_nick(author_id) as nick, 
+                created_at, 
+                author_id,
+                content
+				FROM thread_messages 
+				WHERE created_at > now() - interval 1 day 
+				ORDER BY id DESC;
+	ELSEIF _mode = '4' THEN
+				SELECT 
+				thread_id AS id, 
+                get_display_nick(author_id) as nick, 
+                created_at, 
+                author_id,
+                content
+				FROM thread_messages 
+				WHERE created_at > now() - interval 7 day 
+				ORDER BY id DESC;
+    END IF;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `get_thread_messages` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` PROCEDURE `get_thread_messages`(
+	thread_id bigint
+)
+BEGIN
+	SELECT 
+    author_id,
+    created_at,
+    content,
+    get_display_nick(author_id) as nick
+    FROM thread_messages 
+    WHERE thread_id = thread_id
+    ORDER BY id ASC;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `lobby_cleaner` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `lobby_cleaner`(
+)
+BEGIN
+	DELETE FROM lobbies WHERE lobbies.heartbeat < now() - interval 1 MINUTE;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `login` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` PROCEDURE `login`(
+	VE_NICK VARCHAR(64),
+    VE_PASS VARCHAR(32),
+    VE_GMID VARCHAR(20)
+)
+BEGIN
+	DECLARE pid BIGINT;
+	DECLARE uuid VARCHAR(36);
+
+	SET pid = (SELECT
+	player_id
+	FROM players 
+	LEFT JOIN clans ON clan_id = clans.id 
+	WHERE (CONCAT(COALESCE(clans.signature,''), players.nick) = VE_NICK OR players.nick = VE_NICK) AND pass = VE_PASS AND gmid = VE_GMID
+	LIMIT 1);
+    
+    IF pid IS NOT NULL THEN
+		SET uuid = UUID();
+		REPLACE INTO sessions (session_key, player_id) VALUES (uuid, pid);
+       (SELECT
+		player_id,
+        uuid as session_key,
+        mail,
+		(CONCAT(COALESCE(clans.signature,''), players.nick)) AS nick,
+		pass, 
+		gmid 
+		FROM players 
+		LEFT JOIN clans ON clan_id = clans.id 
+		WHERE player_id = pid LIMIT 1);
+	ELSE
+		SIGNAL SQLSTATE '45008' SET MESSAGE_TEXT = "ERR_ACC_NOTFOUND"; 
+    END IF;
+    
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `mail_stats` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` PROCEDURE `mail_stats`(
+	player_id BIGINT
+)
+BEGIN
+ SELECT
+(SELECT COUNT(*) FROM mail_messages WHERE id_to = player_id AND NOT removed_by_recipient) AS messages_total,
+(SELECT COUNT(*) FROM mail_messages WHERE id_from = player_id AND NOT removed_by_sender) AS messages_sent,
+(SELECT COUNT(*) FROM mail_messages WHERE id_to = player_id AND status = 1 AND NOT removed_by_recipient) AS messages_unread,
+(SELECT COUNT(*) FROM mail_messages WHERE id_to = player_id AND status = 2 AND NOT removed_by_recipient) AS messages_read;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `reg_new_user` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` PROCEDURE `reg_new_user`(
+	VE_MODE varchar(5),
+    VE_NICK varchar(64),
+    VE_NAME varchar(64),
+    VE_MAIL varchar(128),
+    VE_ICQ varchar(32),
+    VE_HOMP varchar(255),
+    VE_SEX bigint,
+    VE_CNTRY bigint,
+    VE_PHON varchar(32),
+    VE_BIRTH varchar(10),
+    VE_GMID varchar(20),
+    VE_PASS varchar(32),
+    VE_RASS varchar(32)
+)
+BEGIN
+	IF VE_MODE = 'edit' THEN
+		IF EXISTS(SELECT 1 FROM players WHERE gmid = VE_GMID AND pass = VE_PASS LIMIT 1) THEN
+			UPDATE players 
+			SET
+			nick = VE_NICK,
+			name = VE_NAME,
+			mail = VE_MAIL,
+			pass = VE_RASS,
+			icq = VE_ICQ,
+			site = VE_HOMP,
+			sex = VE_SEX + 1,
+			country= VE_CNTRY + 1,
+			phone=VE_PHON,
+			birthday=VE_BIRTH
+			WHERE gmid = VE_GMID AND pass = VE_PASS;
+		ELSE
+			SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = "ERR_ACC_NOTFOUND";
+		END IF;
+	ELSEIF VE_MODE = 'creat' THEN
+		IF VE_PASS != VE_RASS THEN
+			SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = "ERR_PASS_MISMATCH";
+        END IF;
+		INSERT INTO
+        players (nick, name, mail, gmid, pass, icq, site, sex, country, phone, birthday) VALUES 
+		(VE_NICK, VE_NAME, VE_MAIL, VE_GMID, VE_PASS, VE_ICQ, VE_HOMP, VE_SEX + 1, VE_CNTRY + 1, VE_PHON, VE_BIRTH);
+	END IF;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `relogin` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` PROCEDURE `relogin`(
+	VE_NICK VARCHAR(64),
+    VE_PASS VARCHAR(32)
+)
+BEGIN
+	SELECT
+	player_id,
+	CONCAT(COALESCE(clans.signature,''), players.nick) as nick,
+    mail,
+	pass, 
+	gmid,
+    (SELECT session_key FROM sessions WHERE players.player_id = sessions.player_id) as session_key 
+	FROM players 
+	LEFT JOIN clans ON clan_id = clans.id 
+	WHERE (CONCAT(COALESCE(clans.signature,''), players.nick) = VE_NICK OR players.nick = VE_NICK) AND pass = VE_PASS
+	LIMIT 1;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `validate_player` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `validate_player`(
+	IN nick VARCHAR(64),
+    IN birthday VARCHAR(64),
+    IN email VARCHAR(128)
+)
+    NO SQL
+    DETERMINISTIC
+BEGIN
+	IF NOT EXISTS(SELECT email REGEXP '^[a-zA-Z0-9][a-zA-Z0-9._-]*@[a-zA-Z0-9][a-zA-Z0-9._-]*\\.[a-zA-Z]{2,4}$') OR char_length(email) > 128 THEN
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERR_EMAIL_FORMAT';
+	END IF;
+    
+	IF nick IS NULL OR nick = '' OR char_length(nick) < 3  OR char_length(nick) > 64 THEN
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = "ERR_NICK_LENGTH";
+	END IF;
+    
+    IF NOT EXISTS(SELECT birthday REGEXP '[0-9]{2}[\/|.][0-9]{2}[\/|.][0-9]{4}') THEN
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERR_BIRTH_FORMAT';
+	END IF;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2023-08-11 13:41:33
+-- MySQL dump 10.13  Distrib 8.0.33, for Win64 (x86_64)
+--
 -- Host: 192.168.0.153    Database: sys
 -- ------------------------------------------------------
 -- Server version	8.0.33
@@ -7750,1737 +9564,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-08-10 16:24:47
--- MySQL dump 10.13  Distrib 8.0.33, for Win64 (x86_64)
---
--- Host: 192.168.0.153    Database: alexander
--- ------------------------------------------------------
--- Server version	8.0.33
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!50503 SET NAMES utf8 */;
-/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
-/*!40103 SET TIME_ZONE='+00:00' */;
-/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
-/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
-
---
--- Table structure for table `clan_states`
---
-
-DROP TABLE IF EXISTS `clan_states`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `clan_states` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `name` varchar(32) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `clan_states`
---
-
-LOCK TABLES `clan_states` WRITE;
-/*!40000 ALTER TABLE `clan_states` DISABLE KEYS */;
-INSERT INTO `clan_states` VALUES (1,'Novice'),(2,'Member'),(3,'Father');
-/*!40000 ALTER TABLE `clan_states` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `clans`
---
-
-DROP TABLE IF EXISTS `clans`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `clans` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `creator` bigint DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `title` varchar(64) NOT NULL,
-  `signature` varchar(64) NOT NULL,
-  `info` varchar(256) NOT NULL DEFAULT '""',
-  `games` bigint NOT NULL DEFAULT '0',
-  `total_score` bigint NOT NULL DEFAULT '0',
-  `average_score` bigint NOT NULL DEFAULT '0',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id` (`id`),
-  UNIQUE KEY `title` (`title`),
-  UNIQUE KEY `signature` (`signature`)
-) ENGINE=InnoDB AUTO_INCREMENT=58 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `clans`
---
-
-LOCK TABLES `clans` WRITE;
-/*!40000 ALTER TABLE `clans` DISABLE KEYS */;
-INSERT INTO `clans` VALUES (1,6,'2023-08-02 09:02:18','testing','testing','testing the clans',0,0,0);
-/*!40000 ALTER TABLE `clans` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `countries`
---
-
-DROP TABLE IF EXISTS `countries`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `countries` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `name` varchar(64) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=195 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `countries`
---
-
-LOCK TABLES `countries` WRITE;
-/*!40000 ALTER TABLE `countries` DISABLE KEYS */;
-INSERT INTO `countries` VALUES (1,'Not specified'),(2,'Afghanistan'),(3,'Albania'),(4,'Algeria'),(5,'Andorra'),(6,'Angola'),(7,'Antigua and Barbuda'),(8,'Argentina'),(9,'Armenia'),(10,'Austria'),(11,'Azerbaijan'),(12,'Bahrain'),(13,'Bangladesh'),(14,'Barbados'),(15,'Belarus'),(16,'Belgium'),(17,'Belize'),(18,'Benin'),(19,'Bhutan'),(20,'Bolivia'),(21,'Bosnia and Herzegovina'),(22,'Botswana'),(23,'Brazil'),(24,'Brunei'),(25,'Bulgaria'),(26,'Burkina Faso'),(27,'Burundi'),(28,'Cabo Verde'),(29,'Cambodia'),(30,'Cameroon'),(31,'Canada'),(32,'Central African Republic'),(33,'Chad'),(34,'Channel Islands'),(35,'Chile'),(36,'China'),(37,'Colombia'),(38,'Comoros'),(39,'Congo'),(40,'Costa Rica'),(41,'Cote d\'Ivoire'),(42,'Croatia'),(43,'Cuba'),(44,'Cyprus'),(45,'Czech Republic'),(46,'Denmark'),(47,'Djibouti'),(48,'Dominica'),(49,'Dominican Republic'),(50,'DR Congo'),(51,'Ecuador'),(52,'Egypt'),(53,'El Salvador'),(54,'Equatorial Guinea'),(55,'Eritrea'),(56,'Estonia'),(57,'Eswatini'),(58,'Ethiopia'),(59,'Faeroe Islands'),(60,'Finland'),(61,'France'),(62,'French Guiana'),(63,'Gabon'),(64,'Gambia'),(65,'Georgia'),(66,'Germany'),(67,'Ghana'),(68,'Gibraltar'),(69,'Greece'),(70,'Grenada'),(71,'Guatemala'),(72,'Guinea'),(73,'Guinea-Bissau'),(74,'Guyana'),(75,'Haiti'),(76,'Holy See'),(77,'Honduras'),(78,'Hong Kong'),(79,'Hungary'),(80,'Iceland'),(81,'India'),(82,'Indonesia'),(83,'Iran'),(84,'Iraq'),(85,'Ireland'),(86,'Isle of Man'),(87,'Israel'),(88,'Italy'),(89,'Jamaica'),(90,'Japan'),(91,'Jordan'),(92,'Kazakhstan'),(93,'Kenya'),(94,'Kuwait'),(95,'Kyrgyzstan'),(96,'Laos'),(97,'Latvia'),(98,'Lebanon'),(99,'Lesotho'),(100,'Liberia'),(101,'Libya'),(102,'Liechtenstein'),(103,'Lithuania'),(104,'Luxembourg'),(105,'Macao'),(106,'Madagascar'),(107,'Malawi'),(108,'Malaysia'),(109,'Maldives'),(110,'Mali'),(111,'Malta'),(112,'Mauritania'),(113,'Mauritius'),(114,'Mayotte'),(115,'Mexico'),(116,'Moldova'),(117,'Monaco'),(118,'Mongolia'),(119,'Montenegro'),(120,'Morocco'),(121,'Mozambique'),(122,'Myanmar'),(123,'Namibia'),(124,'Nepal'),(125,'Netherlands'),(126,'Nicaragua'),(127,'Niger'),(128,'Nigeria'),(129,'North Korea'),(130,'North Macedonia'),(131,'Norway'),(132,'Oman'),(133,'Pakistan'),(134,'Panama'),(135,'Paraguay'),(136,'Peru'),(137,'Philippines'),(138,'Poland'),(139,'Portugal'),(140,'Qatar'),(141,'Reunion'),(142,'Romania'),(143,'Russia'),(144,'Rwanda'),(145,'Saint Helena'),(146,'Saint Kitts and Nevis'),(147,'Saint Lucia'),(148,'Saint Vincent and the Grenadines'),(149,'San Marino'),(150,'Sao Tome & Principe'),(151,'Saudi Arabia'),(152,'Senegal'),(153,'Serbia'),(154,'Seychelles'),(155,'Sierra Leone'),(156,'Singapore'),(157,'Slovakia'),(158,'Slovenia'),(159,'Somalia'),(160,'South Africa'),(161,'South Korea'),(162,'South Sudan'),(163,'Spain'),(164,'Sri Lanka'),(165,'State of Palestine'),(166,'Sudan'),(167,'Suriname'),(168,'Sweden'),(169,'Switzerland'),(170,'Syria'),(171,'Taiwan'),(172,'Tajikistan'),(173,'Tanzania'),(174,'Thailand'),(175,'The Bahamas'),(176,'Timor-Leste'),(177,'Togo'),(178,'Trinidad and Tobago'),(179,'Tunisia'),(180,'Turkey'),(181,'Turkmenistan'),(182,'Uganda'),(183,'Ukraine'),(184,'United Arab Emirates'),(185,'United Kingdom'),(186,'United States'),(187,'Uruguay'),(188,'Uzbekistan'),(189,'Venezuela'),(190,'Vietnam'),(191,'Western Sahara'),(192,'Yemen'),(193,'Zambia'),(194,'Zimbabwe');
-/*!40000 ALTER TABLE `countries` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `game_log`
---
-
-DROP TABLE IF EXISTS `game_log`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `game_log` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `as_clan` bigint unsigned DEFAULT NULL COMMENT 'This field is used to track if member has played for the specific clan. The result of this field is used to determine the ''clan state'' of a given player (ie. ''Novice'' | ''Member'')',
-  `winner_id` bigint unsigned NOT NULL,
-  `loser_id` bigint unsigned NOT NULL,
-  `type` tinyint unsigned NOT NULL,
-  `title` varchar(32) NOT NULL DEFAULT '""',
-  `winner_nat` tinyint unsigned NOT NULL,
-  `loser_nat` tinyint unsigned NOT NULL,
-  `points_won` int NOT NULL DEFAULT '0',
-  `points_lost` int NOT NULL DEFAULT '0',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`) /*!80000 INVISIBLE */,
-  KEY `player1_id` (`winner_id`),
-  KEY `player2_id` (`loser_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `game_log`
---
-
-LOCK TABLES `game_log` WRITE;
-/*!40000 ALTER TABLE `game_log` DISABLE KEYS */;
-/*!40000 ALTER TABLE `game_log` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `gmids`
---
-
-DROP TABLE IF EXISTS `gmids`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `gmids` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `gmid` varchar(20) NOT NULL,
-  `hasBeenUsed` tinyint NOT NULL DEFAULT '0',
-  UNIQUE KEY `id` (`id`),
-  UNIQUE KEY `gmid` (`gmid`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `gmids`
---
-
-LOCK TABLES `gmids` WRITE;
-/*!40000 ALTER TABLE `gmids` DISABLE KEYS */;
-INSERT INTO `gmids` VALUES (3,'TEST-TEST-TEST-TEST',0),(4,'1111-1111-1111-1111',1);
-/*!40000 ALTER TABLE `gmids` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `lobbies`
---
-
-DROP TABLE IF EXISTS `lobbies`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `lobbies` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `title` varchar(32) NOT NULL,
-  `host_id` bigint NOT NULL,
-  `heartbeat` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `type` int unsigned NOT NULL DEFAULT '0',
-  `max_players` int unsigned NOT NULL DEFAULT '7',
-  `players` int unsigned NOT NULL DEFAULT '1',
-  `password` varchar(45) DEFAULT NULL,
-  `ip` varchar(45) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id` (`id`),
-  UNIQUE KEY `host_id_UNIQUE` (`host_id`),
-  KEY `lobbies_ibfk_1_idx` (`host_id`),
-  CONSTRAINT `lobbies_ibfk_1` FOREIGN KEY (`host_id`) REFERENCES `players` (`player_id`) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=73 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `lobbies`
---
-
-LOCK TABLES `lobbies` WRITE;
-/*!40000 ALTER TABLE `lobbies` DISABLE KEYS */;
-/*!40000 ALTER TABLE `lobbies` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `lobby_types`
---
-
-DROP TABLE IF EXISTS `lobby_types`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `lobby_types` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `allow_designed` tinyint unsigned DEFAULT '0',
-  `allow_ai` tinyint unsigned NOT NULL DEFAULT '0',
-  `name` varchar(16) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `lobby_types`
---
-
-LOCK TABLES `lobby_types` WRITE;
-/*!40000 ALTER TABLE `lobby_types` DISABLE KEYS */;
-INSERT INTO `lobby_types` VALUES (1,0,0,'Scored'),(2,0,1,'Custom'),(3,1,1,'Designed');
-/*!40000 ALTER TABLE `lobby_types` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `mail_messages`
---
-
-DROP TABLE IF EXISTS `mail_messages`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `mail_messages` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `sent_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `id_from` bigint unsigned NOT NULL,
-  `id_to` bigint unsigned NOT NULL,
-  `subject` varchar(32) NOT NULL,
-  `content` varchar(256) NOT NULL,
-  `status` bigint unsigned NOT NULL DEFAULT '1',
-  `removed_by_sender` tinyint unsigned DEFAULT '0',
-  `removed_by_recipient` tinyint unsigned DEFAULT '0',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id` (`id`),
-  KEY `id_from` (`id_from`),
-  KEY `id_to` (`id_to`),
-  KEY `statuses_idx` (`status`),
-  CONSTRAINT `statuses` FOREIGN KEY (`status`) REFERENCES `mail_statuses` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `mail_messages`
---
-
-LOCK TABLES `mail_messages` WRITE;
-/*!40000 ALTER TABLE `mail_messages` DISABLE KEYS */;
-/*!40000 ALTER TABLE `mail_messages` ENABLE KEYS */;
-UNLOCK TABLES;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER `mail_messages_BEFORE_INSERT` BEFORE INSERT ON `mail_messages` FOR EACH ROW BEGIN
-	IF NEW.subject = '' THEN
-		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = "ERR_MAIL_NOSUB"; -- NO SUBJECT
-    ELSEIF NEW.content = '' THEN
-		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = "ERR_MAIL_NOCON"; -- NO CONTENT
-    END IF;
-END */;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-
---
--- Table structure for table `mail_statuses`
---
-
-DROP TABLE IF EXISTS `mail_statuses`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `mail_statuses` (
-  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(32) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `mail_statuses`
---
-
-LOCK TABLES `mail_statuses` WRITE;
-/*!40000 ALTER TABLE `mail_statuses` DISABLE KEYS */;
-INSERT INTO `mail_statuses` VALUES (1,'unread'),(2,'read'),(3,'removed');
-/*!40000 ALTER TABLE `mail_statuses` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `nations`
---
-
-DROP TABLE IF EXISTS `nations`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `nations` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(45) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `nations`
---
-
-LOCK TABLES `nations` WRITE;
-/*!40000 ALTER TABLE `nations` DISABLE KEYS */;
-INSERT INTO `nations` VALUES (1,'India'),(2,'Macedonia'),(3,'Persia'),(4,'Egypt');
-/*!40000 ALTER TABLE `nations` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `news`
---
-
-DROP TABLE IF EXISTS `news`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `news` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `posted_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `content` varchar(4096) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `news`
---
-
-LOCK TABLES `news` WRITE;
-/*!40000 ALTER TABLE `news` DISABLE KEYS */;
-INSERT INTO `news` VALUES (1,'2023-07-15 07:20:05','This is a news entry'),(6,'2023-08-03 06:32:44','This is another news entry');
-/*!40000 ALTER TABLE `news` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `players`
---
-
-DROP TABLE IF EXISTS `players`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `players` (
-  `player_id` bigint NOT NULL AUTO_INCREMENT,
-  `name` varchar(64) DEFAULT NULL,
-  `nick` varchar(64) DEFAULT NULL,
-  `mail` varchar(128) NOT NULL,
-  `icq` varchar(32) DEFAULT NULL,
-  `site` varchar(255) DEFAULT NULL,
-  `sex` bigint DEFAULT '1',
-  `country` bigint NOT NULL DEFAULT '1',
-  `birthday` varchar(10) NOT NULL,
-  `phone` varchar(32) DEFAULT NULL,
-  `gmid` varchar(20) NOT NULL,
-  `creatip` varchar(16) DEFAULT NULL,
-  `lastip` varchar(16) DEFAULT NULL,
-  `score` bigint unsigned NOT NULL DEFAULT '0',
-  `clan_id` bigint DEFAULT NULL,
-  `clan_rank` bigint DEFAULT NULL,
-  `clan_state` bigint DEFAULT NULL,
-  `pass` varchar(32) NOT NULL,
-  PRIMARY KEY (`player_id`),
-  KEY `clan_rank` (`clan_rank`),
-  KEY `clan_state` (`clan_state`),
-  KEY `players_ibfk_2` (`country`),
-  KEY `players_ibfk_1` (`sex`) /*!80000 INVISIBLE */,
-  KEY `fk1` (`clan_id`) /*!80000 INVISIBLE */,
-  KEY `mod_id` (`player_id`),
-  CONSTRAINT `fk3` FOREIGN KEY (`clan_id`) REFERENCES `clans` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  CONSTRAINT `players_ibfk_1` FOREIGN KEY (`sex`) REFERENCES `sexes` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  CONSTRAINT `players_ibfk_2` FOREIGN KEY (`country`) REFERENCES `countries` (`id`) ON UPDATE CASCADE,
-  CONSTRAINT `players_ibfk_4` FOREIGN KEY (`clan_rank`) REFERENCES `ranks` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT `players_ibfk_5` FOREIGN KEY (`clan_state`) REFERENCES `clan_states` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `players`
---
-
-LOCK TABLES `players` WRITE;
-/*!40000 ALTER TABLE `players` DISABLE KEYS */;
-INSERT INTO `players` VALUES (18,'Norbert Budzinski','kuledude34','norbudzinski@gmail.com','','',2,138,'14/01/1999','','1111-1111-1111-1111',NULL,NULL,0,NULL,1,NULL,'password');
-/*!40000 ALTER TABLE `players` ENABLE KEYS */;
-UNLOCK TABLES;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `players_BEFORE_INSERT` BEFORE INSERT ON `players` FOR EACH ROW BEGIN
-
-    IF new.score < 10 THEN
-	SET new.clan_rank = 1;
-	ELSEIF new.score < 25 THEN
-	SET new.clan_rank = 2;
-	ELSEIF new.score < 50 THEN
-	SET new.clan_rank = 3;
-	ELSEIF new.score < 75 THEN
-	SET new.clan_rank = 4;
-	ELSEIF new.score < 100 THEN
-	SET new.clan_rank = 5;
-	ELSEIF new.score < 125 THEN
-	SET new.clan_rank = 6;
-	ELSE
-	SET new.clan_rank = 7;
-	END IF;
-
-	CALL validate_player(NEW.nick, NEW.pass, NEW.mail);
-    
-	IF EXISTS(SELECT * FROM players WHERE players.nick = NEW.nick) THEN
-		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERR_NICK_EXISTS';
-
-    ELSEIF NOT EXISTS(SELECT * FROM gmids WHERE gmid = NEW.gmid) THEN
-		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = "ERR_GMID_INVALID";
-        
-	ELSEIF EXISTS(SELECT * FROM players WHERE mail = NEW.mail) THEN
-		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = "ERR_EMAIL_USED";
-        
-	ELSEIF EXISTS(SELECT * FROM gmids WHERE gmid = NEW.gmid and hasBeenUsed = 1) THEN
-		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = "ERR_GMID_USED";
-	ELSE
-		UPDATE gmids
-		SET hasBeenUsed = 1
-		WHERE gmid = new.gmid; 
-    END IF;
-END */;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `players_BEFORE_UPDATE` BEFORE UPDATE ON `players` FOR EACH ROW BEGIN
-
-	IF NEW.clan_id != OLD.clan_id THEN
-		IF (SELECT creator FROM clans WHERE clans.id = OLD.clan_id)  = OLD.player_id THEN
-			DELETE FROM clans WHERE id = OLD.clan_id;
-        END IF;
-    END IF;
-    
-	CALL validate_player(NEW.nick, NEW.pass, NEW.mail);
-
-	IF EXISTS(SELECT * FROM players WHERE players.nick = NEW.nick AND NOT(players.nick = NEW.nick)) THEN
-			SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERR_NICK_EXISTS';
-	END IF;
-		IF EXISTS(SELECT * FROM players WHERE players.mail = NEW.mail AND NOT(players.mail = NEW.mail)) THEN
-				SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = "ERR_EMAIL_USED";
-	END IF;
-	
-    
-END */;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-
---
--- Table structure for table `punishments`
---
-
-DROP TABLE IF EXISTS `punishments`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `punishments` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `published_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `moderator_id` bigint NOT NULL,
-  `game_id` bigint NOT NULL,
-  `comment` varchar(45) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`) /*!80000 INVISIBLE */,
-  KEY `mod_id` (`moderator_id`),
-  CONSTRAINT `mod_id` FOREIGN KEY (`moderator_id`) REFERENCES `players` (`player_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `punishments`
---
-
-LOCK TABLES `punishments` WRITE;
-/*!40000 ALTER TABLE `punishments` DISABLE KEYS */;
-/*!40000 ALTER TABLE `punishments` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `ranks`
---
-
-DROP TABLE IF EXISTS `ranks`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `ranks` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `name` varchar(32) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `ranks`
---
-
-LOCK TABLES `ranks` WRITE;
-/*!40000 ALTER TABLE `ranks` DISABLE KEYS */;
-INSERT INTO `ranks` VALUES (1,'Recruit'),(2,'Warrior'),(3,'Veteran'),(4,'Guardsman'),(5,'Corporal'),(6,'Veteran Corporal'),(7,'Guardsmen Corporal'),(8,'Captain'),(9,'Veteran Captain'),(10,'Chief Captain'),(11,'Major'),(12,'Colonel'),(13,'Veteran Colonel');
-/*!40000 ALTER TABLE `ranks` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `sessions`
---
-
-DROP TABLE IF EXISTS `sessions`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `sessions` (
-  `player_id` bigint NOT NULL,
-  `session_key` char(36) NOT NULL,
-  `ip` varchar(16) DEFAULT NULL,
-  PRIMARY KEY (`player_id`),
-  CONSTRAINT `sessions_ibfk_1` FOREIGN KEY (`player_id`) REFERENCES `players` (`player_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `sessions`
---
-
-LOCK TABLES `sessions` WRITE;
-/*!40000 ALTER TABLE `sessions` DISABLE KEYS */;
-INSERT INTO `sessions` VALUES (18,'b5844566-3784-11ee-a63b-00ffbe07e06c',NULL);
-/*!40000 ALTER TABLE `sessions` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `sexes`
---
-
-DROP TABLE IF EXISTS `sexes`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `sexes` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `name` varchar(32) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `sexes`
---
-
-LOCK TABLES `sexes` WRITE;
-/*!40000 ALTER TABLE `sexes` DISABLE KEYS */;
-INSERT INTO `sexes` VALUES (1,'Not specified'),(2,'Male'),(3,'Female');
-/*!40000 ALTER TABLE `sexes` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `thread_messages`
---
-
-DROP TABLE IF EXISTS `thread_messages`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `thread_messages` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `author_id` bigint NOT NULL,
-  `thread_id` bigint NOT NULL,
-  `content` varchar(512) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id` (`id`),
-  KEY `thread_messages_ibfk_1` (`author_id`),
-  KEY `thread_messages_ibfk_2` (`thread_id`),
-  CONSTRAINT `thread_messages_ibfk_1` FOREIGN KEY (`author_id`) REFERENCES `players` (`player_id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `thread_messages_ibfk_2` FOREIGN KEY (`thread_id`) REFERENCES `threads` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `thread_messages`
---
-
-LOCK TABLES `thread_messages` WRITE;
-/*!40000 ALTER TABLE `thread_messages` DISABLE KEYS */;
-/*!40000 ALTER TABLE `thread_messages` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `threads`
---
-
-DROP TABLE IF EXISTS `threads`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `threads` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `author_id` bigint NOT NULL,
-  `content` varchar(512) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id` (`id`),
-  KEY `threads_ibfk_1` (`author_id`),
-  CONSTRAINT `threads_ibfk_1` FOREIGN KEY (`author_id`) REFERENCES `players` (`player_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `threads`
---
-
-LOCK TABLES `threads` WRITE;
-/*!40000 ALTER TABLE `threads` DISABLE KEYS */;
-/*!40000 ALTER TABLE `threads` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `vote_answers`
---
-
-DROP TABLE IF EXISTS `vote_answers`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `vote_answers` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `vote_id` bigint NOT NULL,
-  `text` varchar(64) NOT NULL,
-  `votes` bigint NOT NULL DEFAULT '0',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id` (`id`),
-  KEY `vote_answers_ibfk_1` (`vote_id`),
-  CONSTRAINT `vote_answers_ibfk_1` FOREIGN KEY (`vote_id`) REFERENCES `votes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `vote_answers`
---
-
-LOCK TABLES `vote_answers` WRITE;
-/*!40000 ALTER TABLE `vote_answers` DISABLE KEYS */;
-INSERT INTO `vote_answers` VALUES (23,10,'Yes',0),(24,10,'No',0);
-/*!40000 ALTER TABLE `vote_answers` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `vote_log`
---
-
-DROP TABLE IF EXISTS `vote_log`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `vote_log` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `player_id` int NOT NULL,
-  `vote_id` int NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `vote_log`
---
-
-LOCK TABLES `vote_log` WRITE;
-/*!40000 ALTER TABLE `vote_log` DISABLE KEYS */;
-/*!40000 ALTER TABLE `vote_log` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `votes`
---
-
-DROP TABLE IF EXISTS `votes`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `votes` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `subject` varchar(32) NOT NULL,
-  `published_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `votes`
---
-
-LOCK TABLES `votes` WRITE;
-/*!40000 ALTER TABLE `votes` DISABLE KEYS */;
-INSERT INTO `votes` VALUES (10,'Are you a human?','2023-08-08 23:00:39');
-/*!40000 ALTER TABLE `votes` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Dumping events for database 'alexander'
---
-/*!50106 SET @save_time_zone= @@TIME_ZONE */ ;
-/*!50106 DROP EVENT IF EXISTS `lobby_cleaner_event` */;
-DELIMITER ;;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;;
-/*!50003 SET character_set_client  = utf8mb4 */ ;;
-/*!50003 SET character_set_results = utf8mb4 */ ;;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;;
-/*!50003 SET @saved_time_zone      = @@time_zone */ ;;
-/*!50003 SET time_zone             = 'SYSTEM' */ ;;
-/*!50106 CREATE*/ /*!50117 DEFINER=`root`@`localhost`*/ /*!50106 EVENT `lobby_cleaner_event` ON SCHEDULE EVERY 60 SECOND STARTS '2023-07-28 15:02:25' ON COMPLETION NOT PRESERVE ENABLE DO CALL lobby_cleaner() */ ;;
-/*!50003 SET time_zone             = @saved_time_zone */ ;;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;;
-/*!50003 SET character_set_results = @saved_cs_results */ ;;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;;
-DELIMITER ;
-/*!50106 SET TIME_ZONE= @save_time_zone */ ;
-
---
--- Dumping routines for database 'alexander'
---
-/*!50003 DROP FUNCTION IF EXISTS `get_display_nick` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `get_display_nick`(
-	player_id BIGINT
-) RETURNS varchar(64) CHARSET utf8mb4
-    DETERMINISTIC
-BEGIN
-	RETURN 
-    (SELECT
-    CONCAT(COALESCE(clans.signature,''), players.nick) AS nick 
-	FROM players
-	LEFT JOIN clans 
-	ON players.clan_id = clans.id
-	WHERE players.player_id = player_id);
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP FUNCTION IF EXISTS `get_nation` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `get_nation`(
-	id bigint
-) RETURNS int
-    DETERMINISTIC
-BEGIN
-	RETURN (SELECT
-    name
-    FROM nations
-    WHERE nations.id = id);
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP FUNCTION IF EXISTS `get_nation_name` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `get_nation_name`(
-	id bigint
-) RETURNS int
-    DETERMINISTIC
-BEGIN
-	RETURN (SELECT
-    name
-    FROM nations
-    WHERE nations.id = id);
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP FUNCTION IF EXISTS `get_position` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `get_position`(
-	_player_id bigint
-) RETURNS int
-    DETERMINISTIC
-BEGIN
-	RETURN (SELECT rnk FROM (SELECT player_id, row_number() OVER ( order by score ) as rnk FROM players) AS rnks WHERE player_id = _player_id);
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP FUNCTION IF EXISTS `get_rank` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`%` FUNCTION `get_rank`(
-	score int
-) RETURNS int
-    DETERMINISTIC
-BEGIN
-	IF score < 10 THEN
-		RETURN 1;
-	ELSEIF score < 25 THEN
-		RETURN 2;
-	ELSEIF score < 50 THEN
-		RETURN 3;
-	ELSEIF score < 75 THEN
-		RETURN 4;
-	ELSEIF score < 100 THEN
-		RETURN 5;
-	ELSEIF score < 125 THEN
-		RETURN 6;
-	ELSEIF score < 150 THEN
-		RETURN 7;
-	END IF;
-RETURN 1;
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `can_be_excluded` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`%` PROCEDURE `can_be_excluded`(
-id_to_be_excluded bigint,
-caller_id bigint
-)
-BEGIN
-	SELECT
-	name,
-	IF(
-    clans.creator != id_to_be_excluded AND 
-    players.player_id != caller_id AND
-    clans.creator = caller_id
-    , TRUE , FALSE) AS result 
-	FROM players 
-	INNER JOIN clans ON clan_id = 1
-	WHERE players.player_id = id_to_be_excluded;
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `create_clan` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`%` PROCEDURE `create_clan`(
-	new_creator bigint,
-    new_title varchar(64),
-    new_signature varchar(64),
-    new_info varchar(256)
-)
-BEGIN
-    IF NOT (new_signature REGEXP '^[A-Za-z0-9]+$') THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERR_CLAN_SIGNATURE_FORMAT';
-    END IF;
-
-	INSERT INTO 
-    clans
-    (creator, title, signature, info) 
-    VALUES 
-    (new_creator, new_title, CONCAT('[', new_signature, ']'), new_info);
-
-	UPDATE
-    players
-    SET clan_id = LAST_INSERT_ID()
-	WHERE new_creator = players.player_id;
-    
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `forum_search` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`%` PROCEDURE `forum_search`(
-	search_nick varchar(64),
-    search_text varchar(512)
-)
-BEGIN
-    SELECT * 
-    FROM thread_messages
-    WHERE INSTR(search_nick, get_display_nick(author_id));
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `get_clans` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`%` PROCEDURE `get_clans`()
-BEGIN
-    SELECT
-	clans.id,
-	clans.title,
-	clans.signature,
-	clans.created_at,
-	get_display_nick(clans.creator) AS nick,
-	(SELECT COUNT(*) FROM players WHERE clan_id = clans.id) as members,
-	(SELECT SUM(score) FROM players WHERE clan_id = clans.id) as score,
-	ROUND((SELECT SUM(score) FROM players WHERE clan_id = clans.id)/(SELECT COUNT(*) FROM players WHERE clan_id = clans.id)) as average_score
-	FROM
-	clans;
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `get_clan_members` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`%` PROCEDURE `get_clan_members`(
-	clan_id bigint
-)
-BEGIN
-	SELECT
-	IF(clans.creator = players.player_id, "Father", IF(EXISTS(SELECT 1 FROM game_log WHERE players.player_id = game_log.winner_id OR players.player_id = game_log.loser_id), "Member", "Novice")) as state,
-	get_display_nick(players.player_id) as nick,
-    get_position(players.player_id) AS position,
-	players.name,
-	players.score,
-    players.player_id,
-	ranks.name as player_rank,
-	(SELECT countries.name FROM countries WHERE countries.id = players.country) AS country
-	FROM players
-	LEFT JOIN clans ON id = players.clan_id
-    INNER JOIN ranks ON players.clan_rank = ranks.id
-	WHERE players.clan_id = clan_id;
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `get_clan_summary` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`%` PROCEDURE `get_clan_summary`(
-	_clan_id bigint,
-    _player_id bigint
-)
-BEGIN
-	SELECT
-	clans.title,
-	clans.signature,
-	clans.creator,
-    clans.info,
-    IF(EXISTS(SELECT 1 FROM (SELECT player_id FROM players WHERE players.clan_id = clans.id) AS members WHERE player_id = _player_id), TRUE, FALSE) as is_member
-    FROM clans
-    LEFT JOIN players ON clans.creator = players.player_id
-    WHERE clans.id = _clan_id;
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `get_game_log` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`%` PROCEDURE `get_game_log`(
-	_offset int
-)
-BEGIN
-	(
-    SELECT
-	game_log.id,
-	game_log.title,
-	get_display_nick(winner_id) AS winner_nick,
-	get_display_nick(loser_id) AS loser_nick,
-	get_nation_name(winner_nat),
-	get_nation_name(loser_nat),
-	points_won,
-	points_lost,
-	created_at
-    FROM game_log
-    ORDER BY id DESC LIMIT 7 OFFSET _offset
-    );
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `get_id_by_nick` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`%` PROCEDURE `get_id_by_nick`(
-	VE_NICK varchar(64)
-)
-BEGIN
-	SELECT players.player_id AS id FROM players 
-	LEFT JOIN clans on players.clan_id = clans.id 
-	WHERE (CONCAT(COALESCE(clans.signature,''), players.nick) = VE_NICK OR players.nick = VE_NICK);
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `get_lobbies` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`%` PROCEDURE `get_lobbies`()
-BEGIN
-SELECT 
-lobbies.id, 
-title, 
-host_id, 
-lobby_types.name as type, 
-max_players, 
-players, 
-password, 
-ip, 
-get_display_nick(host_id) AS nick 
-FROM lobbies 
-LEFT JOIN lobby_types ON lobby_types.id = lobbies.type
-WHERE ip IS NOT NULL;
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `get_mail` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`%` PROCEDURE `get_mail`(
-	_mode VARCHAR(1),
-    player_id BIGINT
-)
-BEGIN
-    IF _mode = '1' THEN
-                    SELECT 
-                    mail_messages.id, 
-                    subject, 
-                    content, 
-                    sent_at, 
-                    status, 
-                    id_to,
-                    get_display_nick(id_to) AS nick 
-                    FROM mail_messages 
-                    INNER JOIN players ON players.player_id = id_to 
-                    LEFT JOIN clans ON clan_id = clans.id
-                    WHERE (id_from = player_id AND NOT removed_by_sender);
-    ELSEIF _mode = '2' THEN
-					SELECT 
-                    mail_messages.id, 
-                    subject, 
-                    content, 
-                    sent_at, 
-                    status, 
-                    id_from, 
-					get_display_nick(id_from) AS nick 
-                    FROM mail_messages 
-                    INNER JOIN players ON players.player_id = id_from 
-                    LEFT JOIN clans ON clan_id = clans.id
-                    WHERE (id_to = player_id AND NOT removed_by_recipient AND status = 1);
-	ELSEIF _mode = '3' THEN
-					SELECT 
-					mail_messages.id, 
-					subject, 
-					content, 
-					sent_at, 
-					status, 
-					id_from, 
-					get_display_nick(id_from) AS nick 
-					FROM mail_messages 
-					INNER JOIN players ON players.player_id = id_from 
-					LEFT JOIN clans ON clan_id = clans.id 
-					WHERE (id_to = player_id AND NOT removed_by_recipient AND status = 2);
-	ELSEIF _mode = '4' THEN
-					SELECT 
-					mail_messages.id, 
-					subject, 
-					content, 
-					sent_at, 
-					status, 
-					id_from, 
-					get_display_nick(id_from) AS nick 
-					FROM mail_messages 
-					INNER JOIN players ON players.player_id = id_from 
-					LEFT JOIN clans ON clan_id = clans.id 
-					WHERE (id_to = player_id AND NOT removed_by_recipient );
-    END IF;
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `get_player_id_by_nick` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`%` PROCEDURE `get_player_id_by_nick`(
-	VE_NICK varchar(64)
-)
-BEGIN
-	SELECT players.player_id AS id 
-    FROM players 
-	LEFT JOIN clans on players.clan_id = clans.id 
-	WHERE (CONCAT(COALESCE(clans.signature,''), players.nick) = VE_NICK OR players.nick = VE_NICK);
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `get_punishments` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`%` PROCEDURE `get_punishments`()
-BEGIN
-SELECT 
-game_id,
-published_at,
-get_display_nick(moderator_id) as nick,
-moderator_id,
-comment
-FROM punishments ORDER BY id DESC;
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `get_scored_games` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`%` PROCEDURE `get_scored_games`(
-	_offset int
-)
-BEGIN
-	SELECT
-	id, 
-	get_display_nick(author_id) as p1_nick, 
-	created_at, 
-	content,
-	author_id,
-	(SELECT COUNT(*) AS count 
-	FROM thread_messages
-	WHERE thread_messages.thread_id = threads.id) AS messages
-	FROM threads 
-	ORDER BY id DESC LIMIT 31 OFFSET _offset;
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `get_thread` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`%` PROCEDURE `get_thread`(
-	thread_id bigint
-)
-BEGIN
-	SELECT 
-    id, 
-    created_at, 
-    author_id,
-    get_display_nick(author_id) as nick, 
-    content 
-    FROM threads 
-    WHERE id = thread_id LIMIT 1;
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `get_threads` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`%` PROCEDURE `get_threads`(
-	_mode int,
-    _offset int
-)
-BEGIN
-    IF _mode = '1' THEN
-				SELECT
-                id, 
-                get_display_nick(author_id) as nick, 
-                created_at, 
-                content,
-                author_id,
-                (SELECT COUNT(*) AS count 
-                FROM thread_messages
-                WHERE thread_messages.thread_id = threads.id) AS messages
-                FROM threads 
-                ORDER BY id DESC LIMIT 31 OFFSET _offset;
-	ELSEIF _mode = '2' THEN
-				SELECT 
-				thread_id AS id, 
-                get_display_nick(author_id) as nick, 
-                created_at,
-                author_id,
-                content
-				FROM thread_messages 
-				ORDER BY id DESC LIMIT 10;
-	ELSEIF _mode = '3' THEN
-				SELECT 
-				thread_id AS id,  
-                get_display_nick(author_id) as nick, 
-                created_at, 
-                author_id,
-                content
-				FROM thread_messages 
-				WHERE created_at > now() - interval 1 day 
-				ORDER BY id DESC;
-	ELSEIF _mode = '4' THEN
-				SELECT 
-				thread_id AS id, 
-                get_display_nick(author_id) as nick, 
-                created_at, 
-                author_id,
-                content
-				FROM thread_messages 
-				WHERE created_at > now() - interval 7 day 
-				ORDER BY id DESC;
-    END IF;
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `get_thread_list` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`%` PROCEDURE `get_thread_list`(
-	_mode int,
-    _offset int
-)
-BEGIN
-    IF _mode = '1' THEN
-				SELECT
-                id, 
-                get_display_nick(author_id) as nick, 
-                created_at, 
-                content,
-                author_id,
-                (SELECT COUNT(*) AS count 
-                FROM thread_messages
-                WHERE thread_messages.thread_id = threads.id) AS messages
-                FROM threads 
-                ORDER BY id DESC LIMIT 31 OFFSET _offset;
-	ELSEIF _mode = '2' THEN
-				SELECT 
-				thread_id AS id, 
-                get_display_nick(author_id) as nick, 
-                created_at,
-                author_id,
-                content
-				FROM thread_messages 
-				ORDER BY id DESC LIMIT 10;
-	ELSEIF _mode = '3' THEN
-				SELECT 
-				thread_id AS id,  
-                get_display_nick(author_id) as nick, 
-                created_at, 
-                author_id,
-                content
-				FROM thread_messages 
-				WHERE created_at > now() - interval 1 day 
-				ORDER BY id DESC;
-	ELSEIF _mode = '4' THEN
-				SELECT 
-				thread_id AS id, 
-                get_display_nick(author_id) as nick, 
-                created_at, 
-                author_id,
-                content
-				FROM thread_messages 
-				WHERE created_at > now() - interval 7 day 
-				ORDER BY id DESC;
-    END IF;
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `get_thread_messages` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`%` PROCEDURE `get_thread_messages`(
-	thread_id bigint
-)
-BEGIN
-	SELECT 
-    author_id,
-    created_at,
-    content,
-    get_display_nick(author_id) as nick
-    FROM thread_messages 
-    WHERE thread_id = thread_id
-    ORDER BY id ASC;
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `lobby_cleaner` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `lobby_cleaner`(
-)
-BEGIN
-	DELETE FROM lobbies WHERE lobbies.heartbeat < now() - interval 1 MINUTE;
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `login` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`%` PROCEDURE `login`(
-	VE_NICK VARCHAR(64),
-    VE_PASS VARCHAR(32),
-    VE_GMID VARCHAR(20)
-)
-BEGIN
-	DECLARE pid BIGINT;
-	DECLARE uuid VARCHAR(36);
-
-	SET pid = (SELECT
-	player_id
-	FROM players 
-	LEFT JOIN clans ON clan_id = clans.id 
-	WHERE (CONCAT(COALESCE(clans.signature,''), players.nick) = VE_NICK OR players.nick = VE_NICK) AND pass = VE_PASS AND gmid = VE_GMID
-	LIMIT 1);
-    
-    IF pid IS NOT NULL THEN
-		SET uuid = UUID();
-		REPLACE INTO sessions (session_key, player_id) VALUES (uuid, pid);
-       (SELECT
-		player_id,
-        uuid as session_key,
-        mail,
-		(CONCAT(COALESCE(clans.signature,''), players.nick)) AS nick,
-		pass, 
-		gmid 
-		FROM players 
-		LEFT JOIN clans ON clan_id = clans.id 
-		WHERE player_id = pid LIMIT 1);
-	ELSE
-		SIGNAL SQLSTATE '45008' SET MESSAGE_TEXT = "ERR_ACC_NOTFOUND"; 
-    END IF;
-    
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `mail_stats` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`%` PROCEDURE `mail_stats`(
-	player_id BIGINT
-)
-BEGIN
- SELECT
-(SELECT COUNT(*) FROM mail_messages WHERE id_to = player_id AND NOT removed_by_recipient) AS messages_total,
-(SELECT COUNT(*) FROM mail_messages WHERE id_from = player_id AND NOT removed_by_sender) AS messages_sent,
-(SELECT COUNT(*) FROM mail_messages WHERE id_to = player_id AND status = 1 AND NOT removed_by_recipient) AS messages_unread,
-(SELECT COUNT(*) FROM mail_messages WHERE id_to = player_id AND status = 2 AND NOT removed_by_recipient) AS messages_read;
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `reg_new_user` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`%` PROCEDURE `reg_new_user`(
-	VE_MODE varchar(5),
-    VE_NICK varchar(64),
-    VE_NAME varchar(64),
-    VE_MAIL varchar(128),
-    VE_ICQ varchar(32),
-    VE_HOMP varchar(255),
-    VE_SEX bigint,
-    VE_CNTRY bigint,
-    VE_PHON varchar(32),
-    VE_BIRTH varchar(10),
-    VE_GMID varchar(20),
-    VE_PASS varchar(32),
-    VE_RASS varchar(32)
-)
-BEGIN
-	IF VE_MODE = 'edit' THEN
-		IF EXISTS(SELECT 1 FROM players WHERE gmid = VE_GMID AND pass = VE_PASS LIMIT 1) THEN
-			UPDATE players 
-			SET
-			nick = VE_NICK,
-			name = VE_NAME,
-			mail = VE_MAIL,
-			pass = VE_RASS,
-			icq = VE_ICQ,
-			site = VE_HOMP,
-			sex = VE_SEX + 1,
-			country= VE_CNTRY + 1,
-			phone=VE_PHON,
-			birthday=VE_BIRTH
-			WHERE gmid = VE_GMID AND pass = VE_PASS;
-		ELSE
-			SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = "ERR_ACC_NOTFOUND";
-		END IF;
-	ELSEIF VE_MODE = 'creat' THEN
-		IF VE_PASS != VE_RASS THEN
-			SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = "ERR_PASS_MISMATCH";
-        END IF;
-		INSERT INTO
-        players (nick, name, mail, gmid, pass, icq, site, sex, country, phone, birthday) VALUES 
-		(VE_NICK, VE_NAME, VE_MAIL, VE_GMID, VE_PASS, VE_ICQ, VE_HOMP, VE_SEX + 1, VE_CNTRY + 1, VE_PHON, VE_BIRTH);
-	END IF;
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `relogin` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`%` PROCEDURE `relogin`(
-	VE_NICK VARCHAR(64),
-    VE_PASS VARCHAR(32)
-)
-BEGIN
-	SELECT
-	player_id,
-	CONCAT(COALESCE(clans.signature,''), players.nick) as nick,
-    mail,
-	pass, 
-	gmid,
-    (SELECT session_key FROM sessions WHERE players.player_id = sessions.player_id) as session_key 
-	FROM players 
-	LEFT JOIN clans ON clan_id = clans.id 
-	WHERE (CONCAT(COALESCE(clans.signature,''), players.nick) = VE_NICK OR players.nick = VE_NICK) AND pass = VE_PASS
-	LIMIT 1;
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `validate_player` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `validate_player`(
-	IN nick VARCHAR(64),
-    IN birthday VARCHAR(64),
-    IN email VARCHAR(128)
-)
-    NO SQL
-    DETERMINISTIC
-BEGIN
-	IF NOT EXISTS(SELECT email REGEXP '^[a-zA-Z0-9][a-zA-Z0-9._-]*@[a-zA-Z0-9][a-zA-Z0-9._-]*\\.[a-zA-Z]{2,4}$') OR char_length(email) > 128 THEN
-		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERR_EMAIL_FORMAT';
-	END IF;
-    
-	IF nick IS NULL OR nick = '' OR char_length(nick) < 3  OR char_length(nick) > 64 THEN
-		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = "ERR_NICK_LENGTH";
-	END IF;
-    
-    IF NOT EXISTS(SELECT birthday REGEXP '[0-9]{2}[\/|.][0-9]{2}[\/|.][0-9]{4}') THEN
-		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERR_BIRTH_FORMAT';
-	END IF;
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
-
-/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
-/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
-/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
-
--- Dump completed on 2023-08-10 16:24:48
+-- Dump completed on 2023-08-11 13:41:42
