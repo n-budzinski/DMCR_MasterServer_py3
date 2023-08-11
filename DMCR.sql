@@ -61,7 +61,7 @@ CREATE TABLE `clans` (
   UNIQUE KEY `id` (`id`),
   UNIQUE KEY `title` (`title`),
   UNIQUE KEY `signature` (`signature`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -70,6 +70,7 @@ CREATE TABLE `clans` (
 
 LOCK TABLES `clans` WRITE;
 /*!40000 ALTER TABLE `clans` DISABLE KEYS */;
+INSERT INTO `clans` VALUES (1,1,'2023-08-11 15:46:04','THE KITTEH','[KITTEH]','I\'M THE ONE WHO MEOWS!',0,0,0);
 /*!40000 ALTER TABLE `clans` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -154,7 +155,7 @@ CREATE TABLE `gmids` (
 
 LOCK TABLES `gmids` WRITE;
 /*!40000 ALTER TABLE `gmids` DISABLE KEYS */;
-INSERT INTO `gmids` VALUES (3,'TEST-TEST-TEST-TEST',0),(4,'1111-1111-1111-1111',1);
+INSERT INTO `gmids` VALUES (3,'TEST-TEST-TEST-TEST',1),(4,'1111-1111-1111-1111',1);
 /*!40000 ALTER TABLE `gmids` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -387,7 +388,7 @@ CREATE TABLE `players` (
   CONSTRAINT `players_ibfk_2` FOREIGN KEY (`country`) REFERENCES `countries` (`id`) ON UPDATE CASCADE,
   CONSTRAINT `players_ibfk_4` FOREIGN KEY (`clan_rank`) REFERENCES `ranks` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `players_ibfk_5` FOREIGN KEY (`clan_state`) REFERENCES `clan_states` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -396,6 +397,7 @@ CREATE TABLE `players` (
 
 LOCK TABLES `players` WRITE;
 /*!40000 ALTER TABLE `players` DISABLE KEYS */;
+INSERT INTO `players` VALUES (1,'Norbert Budzinski','norbudzinski','norbudzinski@gmail.com','','',2,138,'14/01/1999','','TEST-TEST-TEST-TEST',NULL,NULL,0,1,1,NULL,'password');
 /*!40000 ALTER TABLE `players` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
@@ -559,6 +561,7 @@ CREATE TABLE `sessions` (
 
 LOCK TABLES `sessions` WRITE;
 /*!40000 ALTER TABLE `sessions` DISABLE KEYS */;
+INSERT INTO `sessions` VALUES (1,'4d61f321-385e-11ee-a63b-00ffbe07e06c',NULL);
 /*!40000 ALTER TABLE `sessions` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1344,6 +1347,41 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `get_profile` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` PROCEDURE `get_profile`(
+	_player_id bigint 
+)
+BEGIN
+	SELECT 
+	player_id, 
+	name, 
+	players.nick AS nick, 
+	mail, 
+	pass AS password, 
+	icq, 
+	site, 
+	sex, 
+	country, 
+	phone, 
+	birthday 
+	FROM players 
+	LEFT JOIN clans ON clan_id = clans.id 
+	WHERE player_id = _player_id LIMIT 1;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 /*!50003 DROP PROCEDURE IF EXISTS `get_punishments` */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -1582,6 +1620,48 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `get_user_details` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` PROCEDURE `get_user_details`(
+	_player_id bigint
+)
+BEGIN
+	SELECT 
+	player_id, 
+	COALESCE(players.name, ' - ') AS name, 
+	clan_id ,
+	CONCAT(COALESCE(clans.signature,''),players.nick) AS nick, 
+	clans.signature, 
+	mail, 
+	icq, 
+	site, 
+	sexes.name AS sex, 
+	countries.name AS country, 
+	phone, 
+	get_rank(players.score) AS player_rank, 
+	birthday, 
+	score, 
+	ranks.name AS rank_name 
+	FROM players 
+	LEFT JOIN clans ON clans.creator = players.player_id 
+	LEFT JOIN countries ON countries.id = players.country 
+	LEFT JOIN ranks ON ranks.id = get_rank(players.score) 
+	LEFT JOIN sexes ON sexes.id = players.sex 
+	WHERE players.player_id = _player_id;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 /*!50003 DROP PROCEDURE IF EXISTS `lobby_cleaner` */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -1811,7 +1891,7 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-08-11 13:41:33
+-- Dump completed on 2023-08-11 18:21:53
 -- MySQL dump 10.13  Distrib 8.0.33, for Win64 (x86_64)
 --
 -- Host: 192.168.0.153    Database: sys
@@ -9564,4 +9644,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-08-11 13:41:42
+-- Dump completed on 2023-08-11 18:21:58
