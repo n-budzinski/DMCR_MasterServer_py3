@@ -59,7 +59,6 @@ def change_account2(**kwargs) -> str:
 @alexander.route('change.dcml')
 def change(variables: dict, **kwargs) -> str:
     if not (variables["VE_NICK"], variables["VE_PASS"], variables["VE_GMID"]):
-        print("Not empty")
         return (
             "<MESDLG>"
             "#ebox[%D](x:0,y:0,w:1024,h:768)"
@@ -87,58 +86,31 @@ def change(variables: dict, **kwargs) -> str:
 
 @alexander.route('clan_admin2.dcml')
 def clan_admin2(variables: dict, player_id, **kwargs) -> str:
-    with alexander.engine.connect() as connection:
-        has_clan = connection.execute(text(
-            f'SELECT '
-            f'signature '
-            f'FROM clans '
-            f'WHERE creator = {player_id} '
-        )).fetchone()
-    if variables['new_jointer'] == player_id:
-        if has_clan:
-            has_clan = has_clan._mapping
-            if variables['again'] == 'true':
-                pass
-            else:
+    try:
+        with alexander.engine.connect() as connection:
+            connection.execute(text(
+                f'CALL clan_admin({player_id}, {variables.get("new_jointer", 0)}, {variables.get("leaver", 0)}, {variables.get("clanID", 0)}, "{variables["again"]}")'
+            ))
+            connection.commit()
+            return (
+                f'<NGDLG>'
+                f'#exec(GW|open&clan_users.dcml\\00&clanID={variables["clanID"]}\\00|LW_lockall)'
+                f'<NGDLG>'
+            )
+
+    except DBAPIError as err:
+        if err.orig:
+            error_message = err.orig.args[1]
+            if error_message == 'DLG_CLAN_REMOVE':
                 return (
                     f'<NGDLG>'
                     f'#ebox[%L0](x:0,y:0,w:100%,h:100%)'
-                    f'#table[%TBL](%L0[x:243,y:130,w:415,h:205],{{}}{{}}{{'
-                    f'GW|open&clan_admin2.dcml\\00&again=true^clanID={variables["clanID"]}^new_jointer='
-                    f'{player_id}\\00}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"NOTICE\",\"Delete clan ['
-                    f'{has_clan["signature"]}]?\",26,\"OK\",\"Cancel\")'
+                    f'#table[%TBL](%L0[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&clan_admin2.dcml\\00&again=true^clanID={variables["clanID"]}^new_jointer={player_id}\\00}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"NOTICE\",\"Delete clan [ SIGNATURE HERE ]?\",26,\"OK\",\"Cancel\")'
                     f'<NGDLG>'
                 )
-        with alexander.engine.connect() as connection:
-            connection.execute(text(
-                f'DELETE '
-                f'FROM clans '
-                f'WHERE creator = {player_id}'
-            ))
-            connection.execute(text(
-                f'UPDATE players '
-                f'SET clan_id = {variables["clanID"]} '
-                f'WHERE player_id = {player_id}'
-            ))
-            connection.commit()
-    elif variables['leaver']:
-        with alexander.engine.connect() as connection:
-            if has_clan:
-                connection.execute(text(
-                    f'DELETE '
-                    f'FROM clans '
-                    f'WHERE creator = {player_id}'
-                ))
-            else:
-                connection.execute(text(
-                    f'UPDATE players '
-                    f'SET clan_id = NULL '
-                    f'WHERE player_id = {player_id}'
-                ))
-            connection.commit()
     return (
         f'<NGDLG>'
-        f'#exec(GW|open&clan_users.dcml\\00&clanID={variables["clanID"]}\\00|LW_lockall)'
+        f'#exec(GW|open&clans_list.dcml\\00|LW_lockall)'
         f'<NGDLG>'
     )
 
@@ -301,99 +273,104 @@ def clan_new(variables: dict, player_id: str | int, **kwargs) -> str:
 
 @alexander.route('clan_users.dcml')
 def clan_users(variables: dict, player_id, **kwargs) -> str | None:
-    print('clan')
     members_list = []
     members_buttons = []
-    with alexander.engine.connect() as connection:
-        clan = connection.execute(text(
-            f"CALL get_clan_summary({variables['clanID']}, {player_id})"
-        )).fetchone()
-        if clan:
-            print('clan exists')
-            clan = clan._mapping
-            members = connection.execute(text(
-                f"CALL get_clan_members({variables['clanID']})"
-            )).fetchall()
-            for idx, member in enumerate(members):
-                member = member._mapping
-                members_buttons.append(
-                    f"#apan[%APAN{idx}](%SB[x:0,y:{idx * 21}-2,w:100%,h:20],{{GW|open&user_details.dcml\\00&ID={member['player_id']}\\00|LW_lockall}},8) ")
-                members_list.append(
-                    f",21,\"{member['state']}\",\"{member['nick']}\",\"{member['name']}\",\"{member['position']}\",\"{member['player_id']}\",\"{member['country']}\",\"{member['score']}\",\"{member['player_rank']}\"")
-            members_list = "".join(members_list)
-            members_buttons = "".join(members_buttons)
-            join_leave_button = \
-                f"#sbtn[%BTXT1](%B[x:641,y:377,w:100,h:305],{{GW|open&clan_admin2.dcml\\00&clanID={variables['clanID']}^leaver={player_id}\\00|LW_lockall}},\"Leave clan\")" if \
-                    clan['is_member'] == 1 else \
-                    f"#sbtn[%BTXT1](%B[x:641,y:377,w:100,h:305],{{GW|open&clan_admin2.dcml\\00&clanID={variables['clanID']}^new_jointer={player_id}\\00|LW_lockall}},\"Join clan\")"
-            return (
-                f"#ebox[%TB](x:0,y:0,w:100%,h:100%) "
-                f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12) "
-                f"#pix[%PXT2](%TB[x:0,y:263,w:100%,h:100%],{{}},Internet/pix/i_pri0,13,13,13,13) "
-                f"#pan[%P1](%TB[x:42,y:0-22,w:0,h:80],10) "
-                f"#font(RG18,RG18,RG18) "
-                f"#txt[%PL](%TB[x:737,y:0,w:150,h:20],{{}},\"Players\")"
-                f"#font(BG18,BG18,BG18) "
-                f"#ctxt[%TTTEXT](%TB[x:0-62,y:0-32,w:1024,h:20],{{}},\"PLAYER LIST\") "
-                f"#font(R2C12,R2C12,R2C12) "
-                f"#txt[%TMTEXT](%TB[x:0,y:514,w:100,h:20],{{}},\"Message:\") "
-                f"#def_gp_btn(Internet/pix/i_pri0,53,53,0,1)"
-                f"#font(RC12,R2C12,RC12) "
-                f"#gpbtn[%BT1](%TB[x:74,y:23,w:-22,h:-18],{{GW|open&news.dcml\\00|LW_lockall}},\"News & Events\")"
-                f"#hint(%BT1,\"News, events, forum and punishment list\")"
-                f"#font(RC12,RC12,RC12) "
-                f"#def_gp_btn(Internet/pix/i_pri0,51,51,0,1) "
-                f"#gpbtn[%BT2](%TB[x:196,y:22,w:-22,h:-18],{{GW|open&users_list.dcml\\00&language=\\00|LW_lockall}},\"Player List\")"
-                f"#hint(%BT2,\"Player list, personal mail and clan information\")"
-                f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)"
-                f"#font(RC12,R2C12,RC12) "
-                f"#gpbtn[%BT4](%TB[x:318,y:23,w:-22,h:-18],{{GW|open&games.dcml\\00|LW_lockall}},\"Custom Games\")"
-                f"#hint(%BT4,\"Play custom games\")"
-                f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)"
-                f"#font(RC12,R2C12,RC12) "
-                f"#gpbtn[%BT5](%TB[x:440,y:23,w:-22,h:-18],{{GW|open&scored_games.dcml\\00&player_id=0\\00|LW_lockall}},\"Scored Games\")"
-                f"#hint(%BT5,\"Played games and their scores\")"
-                f"#ebox[%B_VOTE](x:5,y:396,w:140,h:103) "
-                f"<VOTING> "
-                f"#exec(GW|open&voting.dcml\\00&question=46\\00) "
-                f"<VOTING> "
-                f"#ebox[%B](x:0,y:0,w:100%,h:100%) "
-                f"#font(BC14,R2C14,RC14) "
-                f"#ctxt[%LIST1](%B[x:0,y:106,w:146,h:24],{{GW|open&users_list.dcml\\00|LW_lockall}},\"{{Player List}}\") "
-                f"#hint(%LIST1,\"Player list, personal mail and clan information\") "
-                f"#font(RC14,GC14,RC14) "
-                f"#ctxt[%LIST2](%B[x:0,y:%LIST1-9,w:146,h:24],{{GW|open&clans_list.dcml\\00|LW_lockall}},\"{{Clan List}}\") "
-                f"#hint(%LIST2,\"Clans, their members and details\") "
-                f"#ebox[%B0](x:154,y:42,w:559,h:291) "
-                f"#font(BC12,BC12,RC12) "
-                f"#txt[%INFO0](%B0[x:12,y:64,w:540,h:18],{{}},\"{clan['info']}\") "
-                f"#exec(LW_vis&0&%INFO0) "
-                f"#pan[%PAN](%B0[x:0,y:0,w:100%,y1:%INFO0+9],5) "
-                f"#font(RC12,R2C12,RC12) "
-                f"#txt[%TOP1](%B0[x:5,y:7,w:150,h:24],{{}},\"Clan {clan['signature']}\") "
-                f"#pix[%PX](%B0[x:3,y:27,w:100%,h:100%],{{}},Internet/pix/i_pri0,25,25,25,25) "
-                f"#font(R2C12,R2C12,RC12) "
-                f"\\#txt[%TOP2](%B0[x:5,y:43,w:150,h:24],{{}},\"Info:\") "
-                f"#font(BC12,BC12,RC12) "
-                f"#pan[%PAN0](%B0[x:7,y:62,w:545,y1:%INFO0],1)"
-                f"#font(BC12,BC12,RC12) "
-                f"#txt[%INFO](%B0[x:12,y:64,w:540,h:20],{{}},\"{clan['info']}\")"
-                f"#font(R2C12,R2C12,RC12) "
-                f"#stbl[%TBL0](%B0[x:0,y:%INFO0+19,w:526-3,y1:D],{{GW|open&clan_users.dcml\\00&clanID={variables['clanID']}^order=state^resort=\\00|LW_lockall}}{{GW|open&clan_users.dcml\\00&clanID={variables['clanID']}^order=nick^resort=\\00|LW_lockall}}{{GW|open&clan_users.dcml\\00&clanID={variables['clanID']}^order=name^resort=\\00|LW_lockall}}{{GW|open&clan_users.dcml\\00&clanID={variables['clanID']}^order=position^resort=\\00|LW_lockall}}{{GW|open&clan_users.dcml\\00&clanID={variables['clanID']}^order=id^resort=\\00|LW_lockall}}{{GW|open&clan_users.dcml\\00&clanID={variables['clanID']}^order=country^resort=\\00|LW_lockall}}{{GW|open&clan_users.dcml\\00&clanID={variables['clanID']}^order=score^resort=1\\00|LW_lockall}}{{GW|open&clan_users.dcml\\00&clanID={variables['clanID']}^order=score^resort=1\\00|LW_lockall}},8,7,10%,1,21%,1,20%,1,8%,1,6%,1,14%,1,8%,1,13%,1,20,\"{{State\",\"{{Nickname\",\"{{Full Name\",\"{{Pos\",\"{{#\",\"{{Country\",\"{{Scores\",\"{{Rank\") "
-                f"#def_sbox(Internet/pix/i_pri%d,-1,-1,-1,-1,-1,-1,-1,-1,0,0,0,0,6,-21,25) "
-                f"#sbox[%SB](%B0[x:0-4,y:%PAN+28,w:526+4,y1:D-2]) "
-                f"{members_buttons}"
-                f"#ebox[%LB](x:0,y:4,w:100%,h:100%) "
-                f"#font(BC12,R2C12,RC12) "
-                f"#stbl[%TBL](%SB[x:4,y:0,w:526-3,h:42],{{}},8,0,10%,1,21%,1,20%,1,8%,1,6%,1,14%,1,8%,1,13%,1{members_list})"
-                f"#font(BC14,WC14,BC14) "
-                f"{join_leave_button}"
-                f"<NGDLG> "
-                f"<NGDLG> "
-                f"#block(cancel.cml,CAN)<NGDLG> "
-                f"<NGDLG> "
-                f"#end(CAN)"
-            )
+    if variables['clanID']:
+        with alexander.engine.connect() as connection:
+            clan = connection.execute(text(
+                f"CALL get_clan_summary({variables['clanID']}, {player_id})"
+            )).fetchone()
+            if clan:
+                clan = clan._mapping
+                members = connection.execute(text(
+                    f"CALL get_clan_members({variables['clanID']})"
+                )).fetchall()
+                for idx, member in enumerate(members):
+                    member = member._mapping
+                    members_buttons.append(
+                        f"#apan[%APAN{idx}](%SB[x:0,y:{idx * 21}-2,w:100%,h:20],{{GW|open&user_details.dcml\\00&ID={member['player_id']}\\00|LW_lockall}},8) ")
+                    members_list.append(
+                        f",21,\"{member['state']}\",\"{member['nick']}\",\"{member['name']}\",\"{member['position']}\",\"{member['player_id']}\",\"{member['country']}\",\"{member['score']}\",\"{member['player_rank']}\"")
+                members_list = "".join(members_list)
+                members_buttons = "".join(members_buttons)
+                join_leave_button = \
+                    f"#sbtn[%BTXT1](%B[x:641,y:377,w:100,h:305],{{GW|open&clan_admin2.dcml\\00&clanID={variables['clanID']}^leaver={player_id}\\00|LW_lockall}},\"Leave clan\")" if \
+                        clan['is_member'] == 1 else \
+                        f"#sbtn[%BTXT1](%B[x:641,y:377,w:100,h:305],{{GW|open&clan_admin2.dcml\\00&clanID={variables['clanID']}^new_jointer={player_id}\\00|LW_lockall}},\"Join clan\")"
+                return (
+                    f"#ebox[%TB](x:0,y:0,w:100%,h:100%) "
+                    f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12) "
+                    f"#pix[%PXT2](%TB[x:0,y:263,w:100%,h:100%],{{}},Internet/pix/i_pri0,13,13,13,13) "
+                    f"#pan[%P1](%TB[x:42,y:0-22,w:0,h:80],10) "
+                    f"#font(RG18,RG18,RG18) "
+                    f"#txt[%PL](%TB[x:737,y:0,w:150,h:20],{{}},\"Players\")"
+                    f"#font(BG18,BG18,BG18) "
+                    f"#ctxt[%TTTEXT](%TB[x:0-62,y:0-32,w:1024,h:20],{{}},\"PLAYER LIST\") "
+                    f"#font(R2C12,R2C12,R2C12) "
+                    f"#txt[%TMTEXT](%TB[x:0,y:514,w:100,h:20],{{}},\"Message:\") "
+                    f"#def_gp_btn(Internet/pix/i_pri0,53,53,0,1)"
+                    f"#font(RC12,R2C12,RC12) "
+                    f"#gpbtn[%BT1](%TB[x:74,y:23,w:-22,h:-18],{{GW|open&news.dcml\\00|LW_lockall}},\"News & Events\")"
+                    f"#hint(%BT1,\"News, events, forum and punishment list\")"
+                    f"#font(RC12,RC12,RC12) "
+                    f"#def_gp_btn(Internet/pix/i_pri0,51,51,0,1) "
+                    f"#gpbtn[%BT2](%TB[x:196,y:22,w:-22,h:-18],{{GW|open&users_list.dcml\\00&language=\\00|LW_lockall}},\"Player List\")"
+                    f"#hint(%BT2,\"Player list, personal mail and clan information\")"
+                    f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)"
+                    f"#font(RC12,R2C12,RC12) "
+                    f"#gpbtn[%BT4](%TB[x:318,y:23,w:-22,h:-18],{{GW|open&games.dcml\\00|LW_lockall}},\"Custom Games\")"
+                    f"#hint(%BT4,\"Play custom games\")"
+                    f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)"
+                    f"#font(RC12,R2C12,RC12) "
+                    f"#gpbtn[%BT5](%TB[x:440,y:23,w:-22,h:-18],{{GW|open&scored_games.dcml\\00&player_id=0\\00|LW_lockall}},\"Scored Games\")"
+                    f"#hint(%BT5,\"Played games and their scores\")"
+                    f"#ebox[%B_VOTE](x:5,y:396,w:140,h:103) "
+                    f"<VOTING> "
+                    f"#exec(GW|open&voting.dcml\\00&question=46\\00) "
+                    f"<VOTING> "
+                    f"#ebox[%B](x:0,y:0,w:100%,h:100%) "
+                    f"#font(BC14,R2C14,RC14) "
+                    f"#ctxt[%LIST1](%B[x:0,y:106,w:146,h:24],{{GW|open&users_list.dcml\\00|LW_lockall}},\"{{Player List}}\") "
+                    f"#hint(%LIST1,\"Player list, personal mail and clan information\") "
+                    f"#font(RC14,GC14,RC14) "
+                    f"#ctxt[%LIST2](%B[x:0,y:%LIST1-9,w:146,h:24],{{GW|open&clans_list.dcml\\00|LW_lockall}},\"{{Clan List}}\") "
+                    f"#hint(%LIST2,\"Clans, their members and details\") "
+                    f"#ebox[%B0](x:154,y:42,w:559,h:291) "
+                    f"#font(BC12,BC12,RC12) "
+                    f"#txt[%INFO0](%B0[x:12,y:64,w:540,h:18],{{}},\"{clan['info']}\") "
+                    f"#exec(LW_vis&0&%INFO0) "
+                    f"#pan[%PAN](%B0[x:0,y:0,w:100%,y1:%INFO0+9],5) "
+                    f"#font(RC12,R2C12,RC12) "
+                    f"#txt[%TOP1](%B0[x:5,y:7,w:150,h:24],{{}},\"Clan {clan['signature']}\") "
+                    f"#pix[%PX](%B0[x:3,y:27,w:100%,h:100%],{{}},Internet/pix/i_pri0,25,25,25,25) "
+                    f"#font(R2C12,R2C12,RC12) "
+                    f"\\#txt[%TOP2](%B0[x:5,y:43,w:150,h:24],{{}},\"Info:\") "
+                    f"#font(BC12,BC12,RC12) "
+                    f"#pan[%PAN0](%B0[x:7,y:62,w:545,y1:%INFO0],1)"
+                    f"#font(BC12,BC12,RC12) "
+                    f"#txt[%INFO](%B0[x:12,y:64,w:540,h:20],{{}},\"{clan['info']}\")"
+                    f"#font(R2C12,R2C12,RC12) "
+                    f"#stbl[%TBL0](%B0[x:0,y:%INFO0+19,w:526-3,y1:D],{{GW|open&clan_users.dcml\\00&clanID={variables['clanID']}^order=state^resort=\\00|LW_lockall}}{{GW|open&clan_users.dcml\\00&clanID={variables['clanID']}^order=nick^resort=\\00|LW_lockall}}{{GW|open&clan_users.dcml\\00&clanID={variables['clanID']}^order=name^resort=\\00|LW_lockall}}{{GW|open&clan_users.dcml\\00&clanID={variables['clanID']}^order=position^resort=\\00|LW_lockall}}{{GW|open&clan_users.dcml\\00&clanID={variables['clanID']}^order=id^resort=\\00|LW_lockall}}{{GW|open&clan_users.dcml\\00&clanID={variables['clanID']}^order=country^resort=\\00|LW_lockall}}{{GW|open&clan_users.dcml\\00&clanID={variables['clanID']}^order=score^resort=1\\00|LW_lockall}}{{GW|open&clan_users.dcml\\00&clanID={variables['clanID']}^order=score^resort=1\\00|LW_lockall}},8,7,10%,1,21%,1,20%,1,8%,1,6%,1,14%,1,8%,1,13%,1,20,\"{{State\",\"{{Nickname\",\"{{Full Name\",\"{{Pos\",\"{{#\",\"{{Country\",\"{{Scores\",\"{{Rank\") "
+                    f"#def_sbox(Internet/pix/i_pri%d,-1,-1,-1,-1,-1,-1,-1,-1,0,0,0,0,6,-21,25) "
+                    f"#sbox[%SB](%B0[x:0-4,y:%PAN+28,w:526+4,y1:D-2]) "
+                    f"{members_buttons}"
+                    f"#ebox[%LB](x:0,y:4,w:100%,h:100%) "
+                    f"#font(BC12,R2C12,RC12) "
+                    f"#stbl[%TBL](%SB[x:4,y:0,w:526-3,h:42],{{}},8,0,10%,1,21%,1,20%,1,8%,1,6%,1,14%,1,8%,1,13%,1{members_list})"
+                    f"#font(BC14,WC14,BC14) "
+                    f"{join_leave_button}"
+                    f"<NGDLG> "
+                    f"<NGDLG> "
+                    f"#block(cancel.cml,CAN)<NGDLG> "
+                    f"<NGDLG> "
+                    f"#end(CAN)"
+                    )
+            else:
+                return (
+                    f'<NGDLG>'
+                    f'#exec(GW|open&clans_list.dcml\\00|LW_lockall)'
+                    f'<NGDLG>'
+                )
 
 
 @alexander.route('clans_list.dcml')
@@ -509,9 +486,6 @@ def dbtbl(**kwargs) -> str:
         f"#stbl[%ROOM_LST](%SB[x:4,y:0,w:523,h:21],{{}},5,0,33,0,25,1,14,1,14,1,14,1"
         f"{lobbies}"
         f")#font(BC14,WC14,BC14)"
-        # f"#sbtn[%B_J](%BB[x:521,y:377,w:100,h:305],{{GW|open&dbtbl.dcml\\00&order=r.hbtime^resort=\\00|LW_lockall}},\"Refresh\")"
-        # f"#sbtn[%B_DONATE](%BB[x:50,y:377,w:100,h:305],{{GW|url&https://paypal.me/NorbertBudzinski\\00}},\"Donate\")"
-        # f"#hint(%B_DONATE,\"Buy me a coffee\")"
         f"#sbtn[%B_J](%BB[x:401,y:377,w:100,h:305],{{GW|open&dbtbl.dcml\\00&order=r.hbtime^resort=\\00|LW_lockall}},\"Refresh\")"
         f"<DBTBL>"
     )
@@ -521,7 +495,7 @@ def dbtbl(**kwargs) -> str:
 def forum_add(variables: dict, player_id: str | int, **kwargs) -> str:
     if variables['add_message']:
         with alexander.engine.connect() as connection:
-            if variables['theme'] != 'None':
+            if variables['theme'] != '':
                 connection.execute(text(
                     f'INSERT INTO thread_messages (author_id, thread_id, content) VALUES ({player_id}, {variables["theme"]}, "{variables["add_message"]}")'))
             else:
@@ -860,7 +834,6 @@ def games(**kwargs) -> str:
         f"#hint(%TIT1,\"Play custom games\")"
         f"#font(R2C14,R2C14,RC14)"
         f"#ctxt[%LIST33](%B[x:0,y:%TIT1-9,w:146,h:24],{{GW|open&rating_help.dcml\\00|LW_lockall}},\"{{Rating Describe}}\")"
-        # f"#ctxt[%LIST33](%B[x:0,y:%TIT1-9,w:146,h:24],{{GW|open&map.dcml\\00|LW_lockall}},\"{{Rating Games}}\")"
         f"#pan[%PAN](%B[x:154,y:42,w:523,h:291],7)"
         f"#font(BC14,WC14,BC14)"
         f"#sbtn[%B_R](%B[x:521,y:377,w:100,h:305],{{GW|open&random_game_dlg.dcml\\00|LW_lockall}},\"Fight\")"
@@ -873,11 +846,10 @@ def games(**kwargs) -> str:
 
 @alexander.route('join_game.dcml')
 def join_game(variables: dict, player_id: str, **kwargs) -> str:
-    id_room = variables.get("id_room", "")
     with alexander.engine.connect() as connection:
         lobby = connection.execute(text(
             f"SELECT players, max_players, ip, password, (SELECT nick FROM players WHERE players.player_id = "
-            f"lobbies.host_id) as nick, host_id FROM lobbies WHERE id = {id_room} LIMIT 1")).fetchone()
+            f"lobbies.host_id) as nick, host_id FROM lobbies WHERE id = {variables['id_room']} LIMIT 1")).fetchone()
     if lobby:
         if lobby.max_players <= lobby.players:
             return (
@@ -943,15 +915,14 @@ def join_game(variables: dict, player_id: str, **kwargs) -> str:
             )
         else:
             if lobby.password:
-                if variables.get("password", "") == "":
-                    id_room = variables.get("id_room", "")
+                if variables['password'] == "":
                     return (
                         f"<NGDLG>"
                         f"#exec(LW_cfile&\\00&Bastet/%GV_VE_PASSWD)"
                         f"#ebox[%BF](x:0,y:0,w:100%,h:100%)"
                         f"#table[%TBL](%BF[x:243,y:130,w:415,h:205],{{}}{{}}{{"
                         f"GW|open&join_game.dcml\\00&delete_old=true^id_room="
-                        f"{id_room}^password=<%GV_VE_PASSWD>\\00|LW_lockall}}{{LW_file&Internet/Cash/cancel.cml}},2,"
+                        f"{variables['id_room']}^password=<%GV_VE_PASSWD>\\00|LW_lockall}}{{LW_file&Internet/Cash/cancel.cml}},2,"
                         f"0,3,13,252,\"JOIN\",,26,\"JOIN\",\"Cancel\")"
                         f"#ebox[%L](x:245,y:100,w:450,h:210)"
                         f"#font(BC12,RC12,RC12)"
@@ -961,7 +932,7 @@ def join_game(variables: dict, player_id: str, **kwargs) -> str:
                         f"#edit[%E_PASS](%L[x:19,y:113,w:377,h:18],{{%GV_VE_PASSWD}},0,0,1,1)"
                         f"<NGDLG>"
                     )
-                elif variables.get("password", "") != lobby.password:
+                elif variables['password'] != lobby.password:
                     return (
                         f"<NGDLG>"
                         f"#ebox[%L0](x:0,y:0,w:100%,h:100%)"
@@ -1015,20 +986,19 @@ def join_game(variables: dict, player_id: str, **kwargs) -> str:
                         f"#gpbtn[%PXBT](%BTABLE[x:520-433,y:303-16,w:100%,h:70],{{GW|open&cancel.dcml\\00|LW_lockall}},\"OK\")"
                         f"<NGDLG>"
                     )
-            id_room = variables.get("id_room", "")
             return (
                 f"<NGDLG>"
                 f"#exec(LW_cfile&\\00&Bastet/%GV_VE_PASSWD)"
                 f"#ebox[%BF](x:0,y:0,w:100%,h:100%)"
                 f"#table[%TBL](%BF[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&cancel.dcml\\00|LW_lockall}},2,0,3,13,252,\"JOIN\",\"Connecting...\\Please, wait.\",26,\"Cancel\")"
-                f"#exec(LW_gvar&%CG_GAMEID&{id_room}&%CG_MAXPL&{str(lobby.max_players)}&%CG_GAMENAME&{'namehere'}&%COMMAND&JGAME&%CG_IP&{lobby.ip}:{34000})"
+                f"#exec(LW_gvar&%CG_GAMEID&{variables['id_room']}&%CG_MAXPL&{str(lobby.max_players)}&%CG_GAMENAME&{'namehere'}&%COMMAND&JGAME&%CG_IP&{lobby.ip}:{34000})"
                 f"<NGDLG>"
             )
     return (
         f"<NGDLG>"
         f"#exec(LW_cfile&\\00&Bastet/%GV_VE_PASSWD)"
         f"#ebox[%BF](x:0,y:0,w:100%,h:100%)"
-        f"#table[%TBL](%BF[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&join_game.dcml\\00&id_room={id_room}\\00|LW_lockall}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"ERROR\",\"You cannot join the room! This is an incorrect room. Press Cancel button to exit\",26,\"Try Again\",\"Cancel\")"
+        f"#table[%TBL](%BF[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&join_game.dcml\\00&id_room={variables['id_room']}\\00|LW_lockall}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"ERROR\",\"You cannot join the room! This is an incorrect room. Press Cancel button to exit\",26,\"Try Again\",\"Cancel\")"
         f"<NGDLG>"
     )
 
@@ -1281,8 +1251,6 @@ def log_user(variables: dict, **kwargs) -> str | None:
             connection.commit()
             if profile:
                 profile = profile._mapping
-                print(profile)
-                print(variables)
                 return (
                     f"<MESDLG> "
                     f"#ebox[%MBG](x:0,y:0,w:1024,h:768)"
@@ -1792,7 +1760,6 @@ def enter_game_dlg(**kwargs) -> str:
 
 @alexander.route('new_game_dlg.dcml')
 def new_game_dlg(variables: dict, player_id, **kwargs) -> str:
-    print(variables)
     if variables['max_players'] and variables['type']:
         gameType = variables.get('type', 0)
         with alexander.engine.connect() as connection:
@@ -2276,7 +2243,7 @@ def reg_new_user(variables: dict, **kwargs) -> str | None:
                 f"<MESDLG>"
             )
 
-
+# TODO: PLACEHOLDER
 @alexander.route('scored_games.dcml')
 def scored_games(variables: defaultdict, **kwargs) -> str:
     thread_strings = ""
@@ -2486,7 +2453,6 @@ def startup(**kwargs) -> str:
         f"#ctxt[%TIT1](%B[x:0,y:106,w:146,h:24],{{GW|open&games.dcml\\00|LW_lockall}},\"{{Custom Games}}\")"
         f"#hint(%TIT1,\"Play custom games\")"
         f"#ctxt[%LIST33](%B[x:0,y:%TIT1-9,w:146,h:24],{{GW|open&rating_help.dcml\\00|LW_lockall}},\"{{Rating Describe}}\")"
-        # f"#ctxt[%LIST33](%B[x:0,y:%TIT1-9,w:146,h:24],{{GW|open&map.dcml\\00|LW_lockall}},\"{{Rating Games}}\")"
         f"#pan[%PAN](%B[x:154,y:42,w:523,h:291],7)"
         f"#font(BC14,WC14,BC14)"
         f"#sbtn[%B_R](%B[x:521,y:377,w:100,h:305],{{GW|open&random_game_dlg.dcml\\00|LW_lockall}},\"Fight\")"
@@ -3001,13 +2967,13 @@ def command_setipaddr(lobby_id: str, address: str) -> None:
         connection.commit()
 
 
-def verbose_sql_error(requested_file: str, variables: dict, error_message: str) -> str:
+def view_message(button_1: str = "LW_file&Internet/Cash/l_games_btn.cml", button_2: str = "LW_file&Internet/Cash/l_games_btn.cml", error_message: str = "INTERNAL SERVER ERROR") -> str:
     return (
             f"<MESDLG> "
             f"#ebox[%MBG](x:0,y:0,w:1024,h:768) "
             f"#def_dtbl_button_hotkey(13,27) "
             # {{GW|open&{requested_file}\\00|LW_lockall}}
-            f"#table[%TBL](%MBG[x:306,y:325,w:415,h:205],{{}}{{}}{{LW_file&Internet/Cash/l_games_btn.cml}}{{LW_file&Internet/Cash/l_games_btn.cml}},2,0,3,13,252,\"ERROR\",\"{mysql_error_messages[error_message]}\",26,\"Edit\",\"Cancel\") "
+            f"#table[%TBL](%MBG[x:306,y:325,w:415,h:205],{{}}{{}}{button_1}{button_2},2,0,3,13,252,\"ERROR\",\"{mysql_error_messages[error_message]}\",26,\"Edit\",\"Cancel\") "
             f"<MESDLG> "
             )
 
