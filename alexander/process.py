@@ -126,31 +126,32 @@ def clan_load_image(variables: dict, **kwargs) -> str:
             f'\\00|LW_lockall)'
             f'<NGDLG>'
         )
-    return (
-        f'<NGDLG> '
-        f'#ebox[%L0](x:0,y:0,w:100%,h:100%)'
-        f'#table[%TBL](%L0[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&clan_load_image.dcml\\00'
-        f'&help=true^signature={variables["signature"]}^icon_name=<%GV_CLAN_ICON>\\00|LW_lockall}}'
-        f'{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"CLAN ICON\",\"\",26,\"Upload\",\"Cancel\")'
-        f'#ebox[%BI](x:254,y:138,w:416,h:167)'
-        f'#pan[%P1](%BI[x:181,y:14,w:175,h:141],5)'
-        f'#def_sbox(Internet/pix/i_pri%d,-1,-1,-1,-1,-1,-1,-1,-1,0,0,0,0,6,-3,6)'
-        f'#def_scroll(Interf3/elements/scroll3,0,0)'
-        f'#sbox[%FLBOX](x:437,y:152,w:175,h:140)'
-        f'#font(BC12,BC12,BC12)'
-        f'#txt[%L](%BI[x:5,y:14,w:100,h:24],{{}},\"Icon:\")'
-        f'#pan[%P2](%BI[x:9,y:33,w:150,h:14],1)'
-        f'#font(BC12,BC12,BC12)'
-        f'#edit[%Eic](%BI[x:13,y:32,w:152,h:18],{{%GV_CLAN_ICON}})'
-        f'#exec(LW_enb&0&%Eic)'
-        f'#font(BC12,BC12,BC12)'
-        f'#txt[%L](%BI[x:5,y:59,w:100,h:24],{{}},\"Disk:\")'
-        f'#cbb[%DISK](%BI[x:4,y:71,w:162,h:18],{{%CBVAR}},\"-\")'
-        f'#fbrowse({{%GV_FULLWAY}}{{%GV_CURFILE}}{{%GV_CLAN_ICON}},%DISK,%FLBOX,*.*)'
-        f'<%FLBOX>'
-        f'<%FLBOX>'
-        f'<NGDLG>'
-    )
+    else:
+        return (
+            f'<NGDLG> '
+            f'#ebox[%L0](x:0,y:0,w:100%,h:100%)'
+            f'#table[%TBL](%L0[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&clan_load_image.dcml\\00'
+            f'&help=true^signature={variables["signature"]}^icon_name=<%GV_CLAN_ICON>\\00|LW_lockall}}'
+            f'{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"CLAN ICON\",\"\",26,\"Upload\",\"Cancel\")'
+            f'#ebox[%BI](x:254,y:138,w:416,h:167)'
+            f'#pan[%P1](%BI[x:181,y:14,w:175,h:141],5)'
+            f'#def_sbox(Internet/pix/i_pri%d,-1,-1,-1,-1,-1,-1,-1,-1,0,0,0,0,6,-3,6)'
+            f'#def_scroll(Interf3/elements/scroll3,0,0)'
+            f'#sbox[%FLBOX](x:437,y:152,w:175,h:140)'
+            f'#font(BC12,BC12,BC12)'
+            f'#txt[%L](%BI[x:5,y:14,w:100,h:24],{{}},\"Icon:\")'
+            f'#pan[%P2](%BI[x:9,y:33,w:150,h:14],1)'
+            f'#font(BC12,BC12,BC12)'
+            f'#edit[%Eic](%BI[x:13,y:32,w:152,h:18],{{%GV_CLAN_ICON}})'
+            f'#exec(LW_enb&0&%Eic)'
+            f'#font(BC12,BC12,BC12)'
+            f'#txt[%L](%BI[x:5,y:59,w:100,h:24],{{}},\"Disk:\")'
+            f'#cbb[%DISK](%BI[x:4,y:71,w:162,h:18],{{%CBVAR}},\"-\")'
+            f'#fbrowse({{%GV_FULLWAY}}{{%GV_CURFILE}}{{%GV_CLAN_ICON}},%DISK,%FLBOX,*.*)'
+            f'<%FLBOX>'
+            f'<%FLBOX>'
+            f'<NGDLG>'
+        )
 
 
 @alexander.route('clan_new.dcml')
@@ -365,12 +366,11 @@ def clan_users(variables: dict, player_id, **kwargs) -> str | None:
                     f"<NGDLG> "
                     f"#end(CAN)"
                     )
-            else:
-                return (
-                    f'<NGDLG>'
-                    f'#exec(GW|open&clans_list.dcml\\00|LW_lockall)'
-                    f'<NGDLG>'
-                )
+    return (
+        f'<NGDLG>'
+        f'#exec(GW|open&clans_list.dcml\\00|LW_lockall)'
+        f'<NGDLG>'
+    )
 
 
 @alexander.route('clans_list.dcml')
@@ -590,7 +590,7 @@ def forum_search(**kwargs) -> str:
 
 
 @alexander.route('forum_view.dcml')
-def forum_view(variables: dict, **kwargs) -> str | None:
+def forum_view(variables: dict, **kwargs) -> str:
     with alexander.engine.connect() as connection:
         if variables['theme']:
             thread = connection.execute(text(f"""CALL get_thread({variables['theme']})""")).fetchone()
@@ -681,7 +681,11 @@ def forum_view(variables: dict, **kwargs) -> str | None:
                     f"#block(cancel.cml,CAN)<NGDLG><NGDLG>"
                     f"#end(CAN)"
                 )
-
+    return (
+        f'<NGDLG>'
+        f'#exec(GW|open&forum.dcml\\00|LW_lockall)'
+        f'<NGDLG>'
+    )
 
 @alexander.route('forum.dcml')
 def forum(variables: dict, **kwargs) -> str:
@@ -908,7 +912,7 @@ def join_game(variables: dict, player_id: str, **kwargs) -> str:
         elif lobby.host_id == player_id:
             return (
                 "<NGDLG>"
-                "#exec(LW_cfile&\\00&Bastet/%GV_VE_PASSWD)"
+                "#exec(LW_cfile&\\00&Cookies/%GV_VE_PASSWD)"
                 "#ebox[%BF](x:0,y:0,w:100%,h:100%)"
                 "#table[%TBL](%BF[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&cancel.dcml\\00&id_room={id_room}\\00|LW_lockall}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"ERROR\",\"You cannot join your own room!\",26,\"OK\")"
                 "<NGDLG>"
@@ -918,7 +922,7 @@ def join_game(variables: dict, player_id: str, **kwargs) -> str:
                 if variables['password'] == "":
                     return (
                         f"<NGDLG>"
-                        f"#exec(LW_cfile&\\00&Bastet/%GV_VE_PASSWD)"
+                        f"#exec(LW_cfile&\\00&Cookies/%GV_VE_PASSWD)"
                         f"#ebox[%BF](x:0,y:0,w:100%,h:100%)"
                         f"#table[%TBL](%BF[x:243,y:130,w:415,h:205],{{}}{{}}{{"
                         f"GW|open&join_game.dcml\\00&delete_old=true^id_room="
@@ -988,7 +992,7 @@ def join_game(variables: dict, player_id: str, **kwargs) -> str:
                     )
             return (
                 f"<NGDLG>"
-                f"#exec(LW_cfile&\\00&Bastet/%GV_VE_PASSWD)"
+                f"#exec(LW_cfile&\\00&Cookies/%GV_VE_PASSWD)"
                 f"#ebox[%BF](x:0,y:0,w:100%,h:100%)"
                 f"#table[%TBL](%BF[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&cancel.dcml\\00|LW_lockall}},2,0,3,13,252,\"JOIN\",\"Connecting...\\Please, wait.\",26,\"Cancel\")"
                 f"#exec(LW_gvar&%CG_GAMEID&{variables['id_room']}&%CG_MAXPL&{str(lobby.max_players)}&%CG_GAMENAME&{'namehere'}&%COMMAND&JGAME&%CG_IP&{lobby.ip}:{34000})"
@@ -996,7 +1000,7 @@ def join_game(variables: dict, player_id: str, **kwargs) -> str:
             )
     return (
         f"<NGDLG>"
-        f"#exec(LW_cfile&\\00&Bastet/%GV_VE_PASSWD)"
+        f"#exec(LW_cfile&\\00&Cookies/%GV_VE_PASSWD)"
         f"#ebox[%BF](x:0,y:0,w:100%,h:100%)"
         f"#table[%TBL](%BF[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&join_game.dcml\\00&id_room={variables['id_room']}\\00|LW_lockall}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"ERROR\",\"You cannot join the room! This is an incorrect room. Press Cancel button to exit\",26,\"Try Again\",\"Cancel\")"
         f"<NGDLG>"
@@ -1269,14 +1273,6 @@ def log_user(variables: dict, **kwargs) -> str | None:
                     f"%CHNL1&{alexander.irc.ch1}\\00&"
                     f"%CHNL2&{alexander.irc.ch2}\\00)"
                     f"<MESDLG> ")
-            # else:
-            #     return (
-            #         f"<MESDLG> "
-            #         f"#ebox[%D](x:0,y:0,w:1024,h:768) "
-            #         f"#def_dtbl_button_hotkey(13,27) "
-            #         f"#table[%TBL](%D[x:306,y:325,w:415,h:205],{{}}{{}}{{LW_file&Internet/Cash/l_games_btn.cml}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"ERROR\",\"{mysql_error_messages['ERR_ACC_NOTFOUND']}\",26,\"Edit\",\"Cancel\") "
-            #         f"<MESDLG> "
-            #     )
     except DBAPIError as err:
             if err.orig: 
                 return (
@@ -1789,14 +1785,18 @@ def new_game_dlg(variables: dict, player_id, **kwargs) -> str:
                 f'<NGDLG>'
             )
     else:
+        title = "Lobby"
         with alexander.engine.connect() as connection:
             types = connection.execute(text(f"SELECT name FROM lobby_types")).fetchall()
+            player = connection.execute(text(f"SELECT get_display_nick({player_id}) AS nick")).fetchone()
+            if player: 
+                title = player._mapping['nick']
         return (
             f"<NGDLG>"
             f"#ebox[%L0](x:0,y:0,w:100%,h:100%)"
-            # f"#exec(LW_cfile&{player.nickname}\\00&Bastet/%GV_VE_TITLE)"
-            f"#exec(LW_cfile&\\00&Bastet/%GV_VE_PASSWD)"
-            f"#exec(LW_cfile&\\00&Bastet/%GV_VE_MAX_PL)"
+            f"#exec(LW_cfile&{title}\\00&Cookies/%GV_VE_TITLE)"
+            f"#exec(LW_cfile&\\00&Cookies/%GV_VE_PASSWD)"
+            f"#exec(LW_cfile&\\00&Cookies/%GV_VE_MAX_PL)"
             f"#table[%TBL](%L0[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&new_game_dlg.dcml\\00&max_players=<%GV_VE_MAX_PL>^type=<%GV_VE_TYPE>^password=<%GV_VE_PASSWD>^title=<%GV_VE_TITLE>\\00|LW_lockall}}{{GW|open&cancel.dcml\\00|LW_lockall}},1,0,13,252,\"CREATE NEW GAME\",,26,\"Create\",\"Cancel\")"
             f"#ebox[%L](x:245,y:100,w:450,h:210)"
             f"#font(BC12,RC12,RC12)"
@@ -2136,9 +2136,9 @@ def reg_new_user(variables: dict, **kwargs) -> str | None:
                 f"<MESDLG>"
                 f"#ebox[%MBG](x:0,y:0,w:1024,h:768)"
                 f"#edit[%E_AC](%MBG[x:0,y:0,w:0,h:0],{{%GV_VE_ACCOUNTS}})"
-                f"#exec(LW_cfile&\\00&Cookies/%GV_VE_PASS)"
-                f"#exec(LW_cfile&\\00&Cookies/%GV_VE_RASS)"
-                f"#exec(LW_cfile&\\00&Cookies/%GV_VE_GMID)"
+                f"#exec(LW_cfile&{variables['VE_NICK']}\\00&Cookies/%GV_VE_NICK)"
+                f"#exec(LW_cfile&{variables['VE_RASS']}\\00&Cookies/%GV_VE_PASS)"
+                f"#exec(LW_cfile&{variables['VE_GMID']}\\00&Cookies/%GV_VE_GMID)"
                 f"#def_dtbl_button_hotkey(13,27)"
                 f"#def_dtbl_button_hotkey(13,27)"
                 f"#table[%TBL](%MBG[x:306,y:325,w:415,h:205],{{}}{{}}{{GW|open&log_user.dcml\\00&"
@@ -2181,14 +2181,14 @@ def reg_new_user(variables: dict, **kwargs) -> str | None:
                 f"\"Cancel\")"
                 f"<MESDLG>")
 
-        elif variables['VE_MODE'] in ('creat', None):
+        elif variables['VE_MODE'] == 'creat':
             return (
                 f"<MESDLG>"
                 f"#ebox[%MBG](x:0,y:0,w:1024,h:768)"
                 f"#edit[%E_AC](%MBG[x:0,y:0,w:0,h:0],{{%GV_VE_ACCOUNTS}})"
-                f"#exec(LW_cfile&\\00&Cookies/%GV_VE_PASS)"
-                f"#exec(LW_cfile&\\00&Cookies/%GV_VE_RASS)"
-                f"#exec(LW_cfile&\\00&Cookies/%GV_VE_GMID)"
+                f"#exec(LW_cfile&{variables['VE_NICK']}\\00&Cookies/%GV_VE_PASS)"
+                f"#exec(LW_cfile&{variables['VE_RASS']}\\00&Cookies/%GV_VE_RASS)"
+                f"#exec(LW_cfile&{variables['VE_GMID']}\\00&Cookies/%GV_VE_GMID)"
                 f"#def_dtbl_button_hotkey(13,27)"
                 f"#def_dtbl_button_hotkey(13,27)"
                 f"#table[%TBL](%MBG[x:306,y:325,w:415,h:205],{{}}{{}}{{GW|open&log_user.dcml\\00&"
@@ -2228,8 +2228,7 @@ def reg_new_user(variables: dict, **kwargs) -> str | None:
                 f"save password, in other case press Cancel.\\This option saves your password and Game Box #ID. Don't "
                 f"use it, if you play from computer accessible for other people.\",26,\"OK\",\"Cancel\")"
                 f"<MESDLG>")
-        
-        return ""
+
 
     except DBAPIError as err:
         error_message = None
@@ -2242,6 +2241,10 @@ def reg_new_user(variables: dict, **kwargs) -> str | None:
                 f"#table[%TBL](%MBG[x:306,y:325,w:415,h:205],{{}}{{}}{{GW|open&log_new_form.dcml\\00&logs={variables['logs']}^cansel={variables['cansel']}^VE_MODE={variables['VE_MODE']}^VE_NAME={variables['VE_NAME']}^VE_NICK={variables['VE_NICK']}^VE_MAIL={variables['VE_MAIL']}^VE_ICQ={variables['VE_ICQ']}^VE_HOMP={variables['VE_HOMP']}^VE_SEX={variables['VE_SEX']}^VE_CNTRY={variables['VE_CNTRY']}^VE_PHON={variables['VE_PHON']}^VE_BIRTH={variables['VE_BIRTH']}^accounts={variables['accounts']}\\00|LW_lockall}}{{LW_file&Internet/Cash/l_games_btn.cml}},2,0,3,13,252,\"ERROR\",\"{error_message}\",26,\"Edit\",\"Cancel\")"
                 f"<MESDLG>"
             )
+
+
+
+
 
 # TODO: PLACEHOLDER
 @alexander.route('scored_games.dcml')
@@ -2473,28 +2476,7 @@ def startup(**kwargs) -> str:
 def user_details(variables: dict, player_id, **kwargs) -> str | None:
     with alexander.engine.connect() as connection:
         profile = connection.execute(text(
-            f"SELECT "
-            f"player_id, "
-            f"COALESCE(players.name, ' - ') AS name, "
-            f"clan_id ,"
-            f"CONCAT(COALESCE(clans.signature,''),players.nick) AS nick, "
-            f"clans.signature, "
-            f"mail, "
-            f"icq, "
-            f"site, "
-            f"sexes.name AS sex, "
-            f"countries.name AS country, "
-            f"phone, "
-            f"get_rank(players.score) AS player_rank, "
-            f"birthday, "
-            f"score, "
-            f"ranks.name AS rank_name "
-            f"FROM players "
-            f"LEFT JOIN clans ON clans.creator = players.player_id "
-            f"LEFT JOIN countries ON countries.id = players.country "
-            f"LEFT JOIN ranks ON ranks.id = get_rank(players.score) "
-            f"LEFT JOIN sexes ON sexes.id = players.sex "
-            f"WHERE players.player_id = {variables['ID']} "
+            f"CALL get_user_details({variables['ID']})"
         )).fetchone()
         if profile:
             profile = profile._mapping
@@ -2884,21 +2866,7 @@ def command_login(parameters: list[bytes], database: Engine) -> str:
             if profileid:
                 profileid = profileid._mapping
                 profile = connection.execute(text(
-                    f"SELECT "
-                    f"player_id, "
-                    f"name, "
-                    f"players.nick AS nick, "
-                    f"mail, "
-                    f"pass AS password, "
-                    f"icq, "
-                    f"site, "
-                    f"sex, "
-                    f"country, "
-                    f"phone, "
-                    f"birthday "
-                    f"FROM players "
-                    f"LEFT JOIN clans ON clan_id = clans.id "
-                    f"WHERE player_id = '{profileid.player_id}' LIMIT 1"
+                    f"CALL get_profile({profileid.player_id})"
                 )).fetchone()
                 if profile:
                     return (
@@ -2967,18 +2935,18 @@ def command_setipaddr(lobby_id: str, address: str) -> None:
         connection.commit()
 
 
-def view_message(button_1: str = "LW_file&Internet/Cash/l_games_btn.cml", button_2: str = "LW_file&Internet/Cash/l_games_btn.cml", error_message: str = "INTERNAL SERVER ERROR") -> str:
+def view_message(button_1: str = "LW_file&Internet/Cash/l_games_btn.cml", button_2: str = "LW_file&Internet/Cash/l_games_btn.cml", title: str = "ERROR", message: str = "INTERNAL SERVER ERROR") -> str:
     return (
-            f"<MESDLG> "
-            f"#ebox[%MBG](x:0,y:0,w:1024,h:768) "
-            f"#def_dtbl_button_hotkey(13,27) "
-            # {{GW|open&{requested_file}\\00|LW_lockall}}
-            f"#table[%TBL](%MBG[x:306,y:325,w:415,h:205],{{}}{{}}{button_1}{button_2},2,0,3,13,252,\"ERROR\",\"{mysql_error_messages[error_message]}\",26,\"Edit\",\"Cancel\") "
-            f"<MESDLG> "
+            f"<MESDLG>"
+            f"#ebox[%MBG](x:0,y:0,w:1024,h:768)"
+            f"#def_dtbl_button_hotkey(13,27)"
+            f"#table[%TBL](%MBG[x:306,y:325,w:415,h:205],{{}}{{}}{button_1}{button_2},2,0,3,13,252,\"{title}\",\"{mysql_error_messages[message]}\",26,\"Edit\",\"Cancel\")"
+            f"<MESDLG>"
             )
 
 
 def process_request(request, **kwargs) -> list:
+    print(request)
     command, parameters, player_id = request[0], request[1:-2], request[-1].decode()
     response = []
 
