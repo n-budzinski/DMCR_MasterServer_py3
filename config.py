@@ -1,7 +1,13 @@
 from os import environ
 from sqlalchemy import create_engine
 from collections import defaultdict
+from argparse import ArgumentParser
 
+parser = ArgumentParser()
+parser.add_argument("--dbhost", type=str, help="the database host", required=True)
+parser.add_argument("--dbuser", type=str, help="the database user", required=True)
+parser.add_argument("--dbpass", type=str, help="the database password", required=True)
+argv = parser.parse_args()
 
 class Server():
     def __init__(self, 
@@ -10,21 +16,7 @@ class Server():
                 tcp_port: int = 34001
                 ) -> None:
         self.address, self.udp_port, self.tcp_port = address, udp_port, tcp_port
-
-
-class Irc():
-    def __init__(self, address: str, ch1: str, ch2: str) -> None:
-        self.address, self.ch1, self.ch2 = address, ch1, ch2
-
-
-class Database:
-    # DEFAULTS
-    host = environ.get("DCMLEMU_DB_URL", "localhost")
-    username = environ.get("DCMLEMU_DB_USERNAME", "admin")
-    password = environ.get("DCMLEMU_DB_PASSWORD", "password")
-    scheme = environ.get("DCMLEMU_DB_SCHEME", "alexander")
-
-
+        
 class Game:
 
     route_map = {}
@@ -36,49 +28,39 @@ class Game:
         return inner
 
     def __init__(self,
-                 host: str,
                  scheme: str,
-                 username: str,
-                 password: str,
-                 irc: Irc,
+                 irc_address: str,
+                 irc_ch1: str,
+                 irc_ch2: str,
                  dbtbl_interval: int) -> None:
+        self.irc_address = irc_address
+        self.irc_ch1 = irc_ch1
+        self.irc_ch2 = irc_ch2
         self.scheme = scheme
-        self.username = username
-        self.password = password
-        self.irc = irc
         self.dbtbl_interval = dbtbl_interval
         self.engine = create_engine(f'mysql+pymysql://'
-                                    f'{environ.get(username, Database.username)}:{environ.get(password, Database.password)}'
-                                    f'@{environ.get(host, Database.host)}/{environ.get(scheme, "alexander")}?charset=utf8mb4')
+                                    f'{argv.dbuser}:{argv.dbpass}'
+                                    f'@{argv.dbhost}/{self.scheme}?charset=utf8mb4')
 
 alexander = Game(
-    host = "DCMLEMU_ALEX_URL",
-    scheme = "DCMLEMU_ALEX_SCHEME",
-    username = "DCMLEMU_ALEX_USERNAME",
-    password = "DCMLEMU_ALEX_PASSWORD",
-    irc = Irc(address = "127.0.0.1", 
-              ch1 = "#GSP!conquest_m!5", 
-              ch2 = "#GSP!conquest!3"),
+    scheme = "alexander",
+    irc_address = "127.0.0.1", 
+    irc_ch1 = "#GSP!conquest_m!5", 
+    irc_ch2 = "#GSP!conquest!3",
     dbtbl_interval = 15)
 
 alexander_demo = Game(
-    host = "DCMLEMU_ALEX_DEMO_URL",
-    scheme = "DCMLEMU_ALEX_DEMO_SCHEME",
-    username = "DCMLEMU_ALEX_DEMO_USERNAME",
-    password = "DCMLEMU_ALEX_DEMO_PASSWORD",
-    irc = Irc(address = "127.0.0.1", 
-              ch1 = "#GSP!conquest_m!5", 
-              ch2 = "#GSP!conquest!3"),
+    scheme = "alexander_demo",
+    irc_address = "127.0.0.1", 
+    irc_ch1 = "#GSP!conquest_m!5", 
+    irc_ch2 = "#GSP!conquest!3",
     dbtbl_interval = 15)
 
 heroes_of_annihilated_empires = Game(
-    host = "DCMLEMU_HOAE_URL",
-    scheme = "DCMLEMU_HOAE_SCHEME",
-    username = "DCMLEMU_HOAE_USERNAME",
-    password = "DCMLEMU_HOAE_PASSWORD",
-    irc = Irc(address = "127.0.0.1", 
-              ch1 = "#GSP!conquest_m!5", 
-              ch2 = "#GSP!conquest!3"),
+    scheme = "herose_of_annihilated_empires",
+    irc_address = "127.0.0.1", 
+    irc_ch1 = "#GSP!conquest_m!5", 
+    irc_ch2 = "#GSP!conquest!3",
     dbtbl_interval = 15)
 
 mysql_error_messages = defaultdict(lambda: "ERR_INTERNAL",{

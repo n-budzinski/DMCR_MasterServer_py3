@@ -6,9 +6,6 @@ from sqlalchemy import Engine, text
 from sqlalchemy.exc import DBAPIError
 from math import floor, ceil
 from struct import unpack
-from typing import Callable
-from sqlalchemy.engine.row import RowMapping, Row
-
 
 @alexander.route('cancel.dcml')
 def cancel(**kwargs) -> str:
@@ -16,7 +13,6 @@ def cancel(**kwargs) -> str:
         '<NGDLG>'
         '<NGDLG>'
     )
-
 
 @alexander.route('change_account2.dcml')
 def change_account2(**kwargs) -> str:
@@ -1269,9 +1265,9 @@ def log_user(variables: dict, **kwargs) -> str | None:
                     f"%MAIL&{profile['mail']}&"
                     f"%PASS&{variables['VE_PASS']}&"
                     f"%GMID&{variables['VE_GMID']}&"
-                    f"%CHAT&{alexander.irc.address}&"
-                    f"%CHNL1&{alexander.irc.ch1}\\00&"
-                    f"%CHNL2&{alexander.irc.ch2}\\00)"
+                    f"%CHAT&{alexander.irc_address}&"
+                    f"%CHNL1&{alexander.irc_ch1}\\00&"
+                    f"%CHNL2&{alexander.irc_ch2}\\00)"
                     f"<MESDLG> ")
     except DBAPIError as err:
             if err.orig: 

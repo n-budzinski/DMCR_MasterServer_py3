@@ -10,20 +10,6 @@ import alexander.process as alexdemo
 from collections import defaultdict
 from typing import Any
 
-TCP_MAX_PACKET_SIZE = 1440
-TCP_TIMEOUT = 120
-UDP_MAX_PACKET_SIZE = 64
-
-GAME_VERSIONS = defaultdict(lambda: alex,{
-    13: alexdemo,
-    # '14': (c2nw, C2NWDB)
-    16: alex,
-    # '30': (hoae, HOAEDB)
-})
-
-SERVER = Server()
-
-
 def unpack_packet(packet: bytes) -> tuple[Any, list[bytes]]:
     payload = decompress(packet[12:])
     data = []
@@ -39,7 +25,6 @@ def unpack_packet(packet: bytes) -> tuple[Any, list[bytes]]:
         value = payload[cursor:cursor+parameter_length].rstrip(b'\x00')
         data.append(value)
         cursor += parameter_length
-    # payload = payload[cursor:]
     return unpack("HBB", packet[:4]), data
 
 
@@ -136,6 +121,20 @@ def main():
 
 
 if __name__ == "__main__":
+
+    TCP_MAX_PACKET_SIZE = 1440
+    TCP_TIMEOUT = 120
+    UDP_MAX_PACKET_SIZE = 64
+
+    GAME_VERSIONS = defaultdict(lambda: alex,{
+    13: alexdemo,
+    # '14': (c2nw, C2NWDB)
+    16: alex,
+    # '30': (hoae, HOAEDB)
+    })
+
+    SERVER = Server()
+
     try:
         main()
     except KeyboardInterrupt:
