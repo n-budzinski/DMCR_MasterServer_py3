@@ -1,4 +1,5 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
+from pymysql import connect
 from database import get_engine
 from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError
@@ -278,7 +279,6 @@ async def get_lobby(scheme: str,
         print(ex)
     return {"result": "INTERNAL_ERROR"}
 
-
 @app.get("/{scheme}/get_choices")
 async def get_choices(scheme: str):
     engine = conn.get(scheme)
@@ -303,6 +303,127 @@ async def get_choices(scheme: str):
     except Exception as ex:
         print(ex)
     return {"result": "INTERNAL_ERROR"}
+
+
+@app.get("/{scheme}/login")
+async def relogin(scheme: str,
+                    username: str,
+                    password: str,
+                    gmid: str = "",
+                    relogin: str = ""):
+    engine = conn.get(scheme)
+    if not engine:
+          return {"result": "SCHEME_ERROR"}
+    try:
+        with engine.connect() as connection:
+                if relogin == "true":
+                    profile = connection.execute(text(
+                    f"CALL relogin(\'{username}\',\'{password}\')")).fetchone()
+                    if profile:
+                        return {"result": profile._mapping}
+                elif username and password and gmid:
+                    profile = connection.execute(text(
+                    f"CALL login(\'{username}\',\'{password}\', \'{gmid}\')")).fetchone()
+                    if profile:
+                        return {"result": profile._mapping}
+                else:
+                     return {"result": "MISSING_FIELDS_ERROR"}
+    except DBAPIError as ex:
+        if ex.orig:
+            return {"result": ex.orig.args[1]}
+    return {"result": "INTERNAL_ERROR"}
+
+
+@app.get("/{scheme}/mail")
+async def mail(scheme: str,
+                    player_id: int,
+                    messageID: int,
+                    sent: str | None = None,
+                    readable: str | None = None,
+                    delete: str | None = None):
+    engine = conn.get(scheme)
+    if not engine:
+          return {"result": "SCHEME_ERROR"}
+    try:
+        with engine.connect() as connection:
+            if delete == "true":
+                sender = connection.execute(text(
+                    f"SELECT id_from, id_to "
+                    f"FROM mail_messages "
+                    f"WHERE mail_messages.id = {messageID}"
+                )).fetchone()
+                if sender:
+                    sender = sender._mapping
+                    connection.execute(text(
+                        f"UPDATE mail_messages "
+                        f"SET {'removed_by_sender' if sender['id_from'] == int(player_id) else 'removed_by_recipient'} = 1 "
+                        f"{', removed_by_recipient = 1' if sender['id_from'] == sender['id_to'] else ''} "
+                        f"WHERE id = {messageID}"
+                    ))
+                    connection.commit()
+            summary = connection.execute(text(
+                f"CALL mail_stats({player_id}) "
+            )).fetchone()
+            if summary:
+                summary = summary._mapping
+                if sent == 'true':
+                    mode = "1"
+                elif readable == '2':
+                    mode = "2"
+                elif readable == '3':
+                    mode = "3"
+                else:
+                    mode = "4"
+                result = connection.execute(text(
+                        f"CALL get_mail({mode}, {player_id})"
+                    )).fetchall()
+                mail = []
+                for entry in result:
+                        mail.append(entry._mapping)
+                return {"result": mail}
+    except DBAPIError as ex:
+        if ex.orig:
+            return {"result": ex.orig.args[1]}
+    return {"result": "INTERNAL_ERROR"}
+
+
+@app.get("/{scheme}/send_mail")
+async def send_mail(scheme: str,
+                        player_id: int,
+                        send_to: str = "",
+                        subject: str = "",
+                        message: str = ""):
+    engine = conn.get(scheme)
+    if not engine:
+          return {"result": "SCHEME_ERROR"}
+    try:
+        with engine.connect() as connection:
+            summary = connection.execute(text(
+                f"CALL mail_stats({player_id}) "
+            )).fetchone()
+            if summary:
+                summary = summary._mapping
+                id = connection.execute(text(
+                    f"CALL get_player_id_by_nick(\"{send_to}\")"
+                )).fetchone()
+                if id:
+                    id = id._mapping.id
+                    if id == player_id:
+                            return {"result": "INVALID_RECIPIENT"}
+                    if subject and message:
+                        connection.execute(text(
+                            "INSERT INTO mail_messages "
+                            "(id_from, id_to, subject, content) "
+                            "VALUES "
+                            f"({player_id}, {id._mapping}, \"{subject}\", \"{message}\")"
+                        ))
+                        connection.commit()
+                else:
+                    return {"result": "MAIL_RECIPIENT_NOT_FOUND"}
+                return {"result": summary}
+        return {"result": "INTERNAL_ERROR"}
+    except Exception as ex:
+        print(ex)
 
 
 @app.get("/{path:path}")

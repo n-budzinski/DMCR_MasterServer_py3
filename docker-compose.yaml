@@ -7,13 +7,17 @@ services:
     dockerfile: dockerfile.srv
     ports:
       - "34001:34001"
+      - "34000:34000"
     networks:
       - dmcr
 
   db:
     context: .
     dockerfile: dockerfile.db
+    expose:
+      - 8000
     environment:
+      HOST: database
       USERNAME: DMCR
       PASSWORD: changeme
     networks:
