@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+
+  srv:
+    context: .
+    dockerfile: dockerfile.srv
+    ports:
+      - "34001:34001"
+    networks:
+      - dmcr
+
+  db:
+    context: .
+    dockerfile: dockerfile.db
+    environment:
+      USERNAME: DMCR
+      PASSWORD: changeme
+    networks:
+      dmcr:
+        aliases:
+          - database
+
+  irc:
+    context: .
+    dockerfile: dockerfile.irc
+    ports:
+      - "6667:6667"
+    networks:
+      dmcr:
+        aliases:
+          - irc
+
+networks:
+  dmcr:

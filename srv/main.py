@@ -1,12 +1,12 @@
+import locale
 from threading import Thread
 from asyncio import StreamReader, StreamWriter, wait_for, TimeoutError, run, start_server
 from socket import socket, AF_INET, SOCK_DGRAM
 from traceback import print_exc
 from struct import pack, unpack, unpack_from
 from zlib import compress, decompress
-from config import Server
+from config import Server, LOCALE
 import alexander.process as alex
-import alexander.process as alexdemo
 from collections import defaultdict
 from typing import Any
 
@@ -93,13 +93,15 @@ async def handle_tcp(reader: StreamReader, writer: StreamWriter) -> None:
         else:
             continue
     writer.close()
-    # await writer.wait_closed()
+    await writer.wait_closed()
 
 
 async def process_packet(packet, writer):
     (sequence, language, version), data = unpack_packet(packet)
+    print(f"SEQ: {sequence} LANG: {LOCALE.get(language, 1)}\nREQUEST: {data}")
     response = GAME_VERSIONS[version].process_request(data)
     if response:
+        print(f"RESPONSE: {response}\n")
         send_packet(writer, add_header(pack_packet(response, data[-2].decode()), sequence, language, version))
     await writer.drain()
 
@@ -127,10 +129,10 @@ if __name__ == "__main__":
     UDP_MAX_PACKET_SIZE = 64
 
     GAME_VERSIONS = defaultdict(lambda: alex,{
-    13: alexdemo,
-    # '14': (c2nw, C2NWDB)
+    # 13: alexdemo,
+    # 14: (c2nw, C2NWDB)
     16: alex,
-    # '30': (hoae, HOAEDB)
+    # 30: (hoae, HOAEDB)
     })
 
     SERVER = Server()

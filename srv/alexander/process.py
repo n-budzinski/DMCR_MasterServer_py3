@@ -1237,7 +1237,7 @@ def log_new_form(variables: dict, **kwargs) -> str:
             f"#hint(%New account,\"Create a new account\")"
         )
     return ""
-
+#####
 @alexander.route('log_user.dcml')
 def log_user(variables: dict, **kwargs) -> str | None:
     try:
@@ -1270,6 +1270,7 @@ def log_user(variables: dict, **kwargs) -> str | None:
                     f"%CHNL2&{alexander.irc_ch2}\\00)"
                     f"<MESDLG> ")
     except DBAPIError as err:
+            print(err)
             if err.orig: 
                 return (
                     f"<MESDLG> "
@@ -2229,6 +2230,7 @@ def reg_new_user(variables: dict, **kwargs) -> str | None:
     except DBAPIError as err:
         error_message = None
         if err.orig:
+            print(err)
             error_message = mysql_error_messages[err.orig.args[1]]
             return (
                 f"<MESDLG>"
@@ -2942,7 +2944,6 @@ def view_message(button_1: str = "LW_file&Internet/Cash/l_games_btn.cml", button
 
 
 def process_request(request, **kwargs) -> list:
-    print(request)
     command, parameters, player_id = request[0], request[1:-2], request[-1].decode()
     response = []
 

@@ -1,12 +1,10 @@
-from os import environ
 from sqlalchemy import create_engine
+from sqlalchemy import exc
 from collections import defaultdict
 from argparse import ArgumentParser
 
 parser = ArgumentParser()
-parser.add_argument("--dbhost", type=str, help="the database host", required=True)
-parser.add_argument("--dbuser", type=str, help="the database user", required=True)
-parser.add_argument("--dbpass", type=str, help="the database password", required=True)
+parser.add_argument("--api", type=str, help="the database host", required=True)
 argv = parser.parse_args()
 
 class Server():
@@ -38,27 +36,31 @@ class Game:
         self.irc_ch2 = irc_ch2
         self.scheme = scheme
         self.dbtbl_interval = dbtbl_interval
-        self.engine = create_engine(f'mysql+pymysql://'
-                                    f'{argv.dbuser}:{argv.dbpass}'
-                                    f'@{argv.dbhost}/{self.scheme}?charset=utf8mb4')
+        try:
+            self.engine = create_engine(f'mysql+pymysql://'
+                                        f'{argv.dbuser}:{argv.dbpass}'
+                                        f'@{argv.dbhost}/{self.scheme}?charset=utf8mb4')
+        except Exception as ex:
+            print(f"Exception {ex}\n")
+        
 
 alexander = Game(
     scheme = "alexander",
-    irc_address = "127.0.0.1", 
+    irc_address = "192.168.0.200", 
     irc_ch1 = "#GSP!conquest_m!5", 
     irc_ch2 = "#GSP!conquest!3",
     dbtbl_interval = 15)
 
 alexander_demo = Game(
     scheme = "alexander_demo",
-    irc_address = "127.0.0.1", 
+    irc_address = "192.168.0.200", 
     irc_ch1 = "#GSP!conquest_m!5", 
     irc_ch2 = "#GSP!conquest!3",
     dbtbl_interval = 15)
 
 heroes_of_annihilated_empires = Game(
     scheme = "herose_of_annihilated_empires",
-    irc_address = "127.0.0.1", 
+    irc_address = "192.168.0.200", 
     irc_ch1 = "#GSP!conquest_m!5", 
     irc_ch2 = "#GSP!conquest!3",
     dbtbl_interval = 15)
