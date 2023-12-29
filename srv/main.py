@@ -1,4 +1,3 @@
-import locale
 from threading import Thread
 from asyncio import StreamReader, StreamWriter, wait_for, TimeoutError, run, start_server
 from socket import socket, AF_INET, SOCK_DGRAM

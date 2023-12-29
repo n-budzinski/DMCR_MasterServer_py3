@@ -3,7 +3,6 @@ from fastapi import FastAPI, Depends
 from database import get_engine
 from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError
-from collections import defaultdict
 
 app = FastAPI()
 conn = {
@@ -345,7 +344,7 @@ async def get_threads(  mode: int = 1,
 
 @app.get("/{scheme}/get_lobby")
 async def get_lobby(id_room: int,
-                    common: dict = Depends(common_parameters)) -> dict:
+                    common: dict = Depends(common_parameters)) -> Dict[str, Any]:
     if not common["authorized"]:
        return {"result": "UNAUTHORIZED"}
     engine = conn.get(common["scheme"])
@@ -373,7 +372,7 @@ async def mail( messageID: int,
                 sent: str | None = None,
                 readable: str | None = None,
                 delete: str | None = None,
-                common: dict = Depends(common_parameters)) -> dict:
+                common: dict = Depends(common_parameters)) -> Dict[str, Any]:
     if not common["authorized"]:
        return {"result": "UNAUTHORIZED"}
     engine = conn.get(common["scheme"])
@@ -427,7 +426,7 @@ async def send_mail(send_to: str,
                     subject: str,
                     message: str,
                     send: str | None,
-                    common: dict = Depends(common_parameters)) -> dict:
+                    common: dict = Depends(common_parameters)) -> Dict[str, Any]:
     if not common["authorized"]:
        return {"result": "UNAUTHORIZED"}
     engine = conn.get(common["scheme"])
@@ -513,7 +512,7 @@ async def view_mail(    messageID: int = 1,
 
 
 @app.get("/{scheme}/get_news")
-async def get_news(common: dict = Depends(common_parameters)) -> dict:
+async def get_news(common: dict = Depends(common_parameters)) -> Dict[str, Any]:
     if not common["authorized"]:
        return {"result": "UNAUTHORIZED"}
     engine = conn.get(common["scheme"])
@@ -533,7 +532,7 @@ async def get_news(common: dict = Depends(common_parameters)) -> dict:
     
 
 @app.get("/{scheme}/get_punishments")
-async def get_punishments(common: dict = Depends(common_parameters)) -> dict:
+async def get_punishments(common: dict = Depends(common_parameters)) -> Dict[str, Any]:
     if not common["authorized"]:
        return {"result": "UNAUTHORIZED"}
     engine = conn.get(common["scheme"])
@@ -553,7 +552,7 @@ async def get_punishments(common: dict = Depends(common_parameters)) -> dict:
     
 
 @app.get("/{scheme}/get_scored_games")
-async def get_scored_games(common: dict = Depends(common_parameters)) -> dict:
+async def get_scored_games(common: dict = Depends(common_parameters)) -> Dict[str, Any]:
     if not common["authorized"]:
        return {"result": "UNAUTHORIZED"}
     engine = conn.get(common["scheme"])
@@ -574,7 +573,7 @@ async def get_scored_games(common: dict = Depends(common_parameters)) -> dict:
 
 @app.get("/{scheme}/get_user_details")
 async def get_user_details(ID: str,
-                           common: dict = Depends(common_parameters)) -> dict:
+                           common: dict = Depends(common_parameters)) -> Dict[str, Any]:
     if not common["authorized"]:
        return {"result": "UNAUTHORIZED"}
     engine = conn.get(common["scheme"])
@@ -602,25 +601,18 @@ async def get_user_details(ID: str,
         return {"result": "INTERNAL_ERROR " + str(ex)}
 
 
-order_modes = defaultdict(lambda: "players.score",
-    nick = "players.nick",
-    name = "players.name",
-    id = "players.id",
-    country = "players.country"
-)
-
 @app.get("/{scheme}/get_user_list")
 async def get_user_list(    page: int = 0,
                             resort: int | None = None,
                             order: str = "1",
-                            common: dict = Depends(common_parameters)) -> dict:
+                            common: dict = Depends(common_parameters)) -> Dict[str, Any]:
     if not common["authorized"]:
        return {"result": "UNAUTHORIZED"}
     engine = conn.get(common["scheme"])
     if not engine:
           return {"result": "SCHEME_ERROR"}
     try:
-        order_by = order_modes[order]
+        order_by = "players." + order if order in ("nick", "name", "id", "country", "score") else "players.score"
         order = 'DESC' if resort == '1' else 'ASC'
         with engine.connect() as connection:
                 result = connection.execute(text(
@@ -639,7 +631,7 @@ async def get_user_list(    page: int = 0,
 
 
 @app.get("/{scheme}/get_poll")
-async def get_poll(common: dict = Depends(common_parameters)) -> dict:
+async def get_poll(common: dict = Depends(common_parameters)) -> Dict[str, Any]:
     if not common["authorized"]:
        return {"result": "UNAUTHORIZED"}
     engine = conn.get(common["scheme"])
