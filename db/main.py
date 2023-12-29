@@ -1,10 +1,9 @@
-from typing import Any, Dict, List
+from typing import Any, Dict
 from fastapi import FastAPI, Depends
-from pymysql import connect
 from database import get_engine
 from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError
-from functools import wraps
+from collections import defaultdict
 
 app = FastAPI()
 conn = {
@@ -28,7 +27,7 @@ async def is_authorized(scheme: str,
                     return True
     return False
 
-async def common_parameters(session_key: str, scheme: str, authorized: bool = False, player_id: int | None = None):
+async def common_parameters(scheme: str, session_key: str = "", authorized: bool = False, player_id: int | None = None):
     return {"scheme": scheme, "authorized": await is_authorized(scheme, player_id, session_key), "player_id": player_id}
 
 
@@ -114,8 +113,7 @@ async def clan_admin(   new_jointer: int,
 
 
 @app.get("/{scheme}/create_clan")
-async def create_clan(
-                        title: str, 
+async def create_clan(  title: str, 
                         signature: str,
                         info: str,
                         common: dict = Depends(common_parameters)) -> Dict[str, Any]:
@@ -193,7 +191,7 @@ async def get_clans(common: dict = Depends(common_parameters)) -> Dict[str, Any]
                 if result:
                     clans = []
                     for clan in result:
-                        clans.append(clan._mapping)
+                        clans.append(dict(clan._mapping))
                     return {"result": clans}
         return {"result": False}
     except Exception:
@@ -215,7 +213,7 @@ async def get_lobbies(common: dict = Depends(common_parameters)) -> Dict[str, An
                 if result:
                     lobbies = []
                     for lobby in result:
-                        lobbies.append(lobby._mapping)
+                        lobbies.append(dict(lobby._mapping))
                     return {"result": lobbies}
         return {"result": False}
     except Exception:
@@ -267,7 +265,7 @@ async def get_thread(   theme: int,
                     f"CALL get_thread({theme})"
                 )).fetchone()
                 if result:
-                    return {"result": result._mapping}
+                    return {"result": dict(result._mapping)}
                 return {"result": False}
     except Exception as ex:
         print(ex)
@@ -290,7 +288,7 @@ async def get_thread_messages(  theme: int,
                 if result:
                     messages = []
                     for message in result:
-                         messages.append(message._mapping)
+                         messages.append(dict(message._mapping))
                     return {"result": messages}
                 return {"result": False}
     except Exception as ex:
@@ -315,7 +313,7 @@ async def search_forum( search_nick: str = "",
                 if result:
                     messages = []
                     for message in result:
-                         messages.append(message._mapping)
+                         messages.append(dict(message._mapping))
                     return {"result": messages}
                 return {"result": False}
     except Exception:
@@ -364,7 +362,7 @@ async def get_lobby(id_room: int,
                 "FROM lobbies "
                 f"WHERE id = {id_room} LIMIT 1")).fetchone()
                 if result:
-                    return {"result": result._mapping}
+                    return {"result": dict(result._mapping)}
                 return {"result": False}
     except Exception as ex:
         print(ex)
@@ -416,7 +414,7 @@ async def mail( messageID: int,
                     )).fetchall()
                 mail = []
                 for entry in result:
-                        mail.append(entry._mapping)
+                        mail.append(dict(entry._mapping))
                 return {"result": mail}
     except DBAPIError as ex:
         if ex.orig:
@@ -466,10 +464,203 @@ async def send_mail(send_to: str,
         return {"result": "INTERNAL_ERROR"}
 
 
+@app.get("/{scheme}/view_mail")
+async def view_mail(    messageID: int = 1,
+                        common: dict = Depends(common_parameters)) -> Dict[str, Any]:
+    if not common["authorized"]:
+       return {"result": "UNAUTHORIZED"}
+    engine = conn.get(common["scheme"])
+    if not engine:
+          return {"result": "SCHEME_ERROR"}
+    try:
+        with engine.connect() as connection:
+                summary = connection.execute(text(
+                    f"CALL mail_stats({common['player_id']}) "
+                )).fetchone()
+                if summary:
+                    summary = summary._mapping
+                    message = connection.execute(text(
+                        f"SELECT "
+                        f"subject "
+                        f"content, "
+                        f"id_from, "
+                        f"sent_at, "
+                        f"subject, "
+                        f"player_id, "
+                        f"status, "
+                        f"CONCAT(COALESCE(clans.signature,''), players.nick) AS name "
+                        f"FROM mail_messages "
+                        f"INNER JOIN players ON players.player_id = id_to "
+                        f"LEFT JOIN clans ON clan_id = clans.id "
+                        f"WHERE mail_messages.id = {messageID} "
+                    )).fetchone()
+                    if message:
+                        message = message._mapping
+                        if message['status'] == 1:
+                            connection.execute(text(
+                                f"UPDATE mail_messages "
+                                f"SET status = 2 "
+                                f"WHERE id = {messageID}"
+                            ))
+                            connection.commit()
+                        return {"result": {
+                             "summary": dict(summary),
+                             "message": dict(message)
+                        }}
+        raise
+    except Exception:
+        return {"result": "INTERNAL_ERROR"}
+
+
+@app.get("/{scheme}/get_news")
+async def get_news(common: dict = Depends(common_parameters)) -> dict:
+    if not common["authorized"]:
+       return {"result": "UNAUTHORIZED"}
+    engine = conn.get(common["scheme"])
+    if not engine:
+          return {"result": "SCHEME_ERROR"}
+    try:
+        with engine.connect() as connection:
+                result = connection.execute(text(
+                "SELECT posted_at, content FROM news ORDER BY id DESC"
+                )).fetchall()
+                news = []
+                for article in result:
+                        news.append(dict(article._mapping))
+                return {"result": news}
+    except Exception as ex:
+        return {"result": "INTERNAL_ERROR"}
+    
+
+@app.get("/{scheme}/get_punishments")
+async def get_punishments(common: dict = Depends(common_parameters)) -> dict:
+    if not common["authorized"]:
+       return {"result": "UNAUTHORIZED"}
+    engine = conn.get(common["scheme"])
+    if not engine:
+          return {"result": "SCHEME_ERROR"}
+    try:
+        with engine.connect() as connection:
+                result = connection.execute(text(
+                "CALL get_punishments()"
+                )).fetchall()
+                punishments = []
+                for punishment in result:
+                        punishments.append(dict(punishment._mapping))
+                return {"result": punishments}
+    except Exception as ex:
+        return {"result": "INTERNAL_ERROR"}
+    
+
+@app.get("/{scheme}/get_scored_games")
+async def get_scored_games(common: dict = Depends(common_parameters)) -> dict:
+    if not common["authorized"]:
+       return {"result": "UNAUTHORIZED"}
+    engine = conn.get(common["scheme"])
+    if not engine:
+          return {"result": "SCHEME_ERROR"}
+    try:
+        with engine.connect() as connection:
+                result = connection.execute(text(
+                "CALL get_punishments()"
+                )).fetchall()
+                scored_games = []
+                for game in result:
+                        scored_games.append(dict(game._mapping))
+                return {"result": scored_games}
+    except Exception as ex:
+        return {"result": "INTERNAL_ERROR"}
+    
+
+@app.get("/{scheme}/get_user_details")
+async def get_user_details(ID: str,
+                           common: dict = Depends(common_parameters)) -> dict:
+    if not common["authorized"]:
+       return {"result": "UNAUTHORIZED"}
+    engine = conn.get(common["scheme"])
+    if not engine:
+          return {"result": "SCHEME_ERROR"}
+    try:
+        with engine.connect() as connection:
+                profile = connection.execute(text(
+                    f"CALL get_user_details({ID})"
+                )).fetchone()
+                if profile:
+                    profile = profile._mapping
+                    can_be_excluded = connection.execute(text(
+                        f"CALL can_be_excluded({ID}, {common['player_id']})"
+                    )).fetchone()
+
+                    return {"result": [
+                        {
+                        "profile": dict(profile),
+                        "can_be_excluded": True if can_be_excluded else False
+                        }
+                    ]}
+                return {"result": "ERR_USER_NOT_FOUND"}
+    except Exception as ex:
+        return {"result": "INTERNAL_ERROR " + str(ex)}
+
+
+order_modes = defaultdict(lambda: "players.score",
+    nick = "players.nick",
+    name = "players.name",
+    id = "players.id",
+    country = "players.country"
+)
+
+@app.get("/{scheme}/get_user_list")
+async def get_user_list(    page: int = 0,
+                            resort: int | None = None,
+                            order: str = "1",
+                            common: dict = Depends(common_parameters)) -> dict:
+    if not common["authorized"]:
+       return {"result": "UNAUTHORIZED"}
+    engine = conn.get(common["scheme"])
+    if not engine:
+          return {"result": "SCHEME_ERROR"}
+    try:
+        order_by = order_modes[order]
+        order = 'DESC' if resort == '1' else 'ASC'
+        with engine.connect() as connection:
+                result = connection.execute(text(
+                    f"SELECT get_display_nick(player_id), players.name, players.player_id, countries.name, players.score, ranks.name, row_number()\
+                    OVER ( order by {order_by} {order} ) AS 'pos'\
+                    FROM players\
+                    INNER JOIN ranks ON players.clan_rank = ranks.id\
+                    LEFT JOIN countries ON players.country = countries.id\
+                    ORDER BY {order_by} {order} LIMIT 14 OFFSET {13 * page};")).fetchall()
+                users = []
+                for user in result:
+                        users.append(dict(user._mapping))
+                return {"result": users}
+    except Exception as ex:
+        return {"result": "INTERNAL_ERROR"}
+
+
+@app.get("/{scheme}/get_poll")
+async def get_poll(common: dict = Depends(common_parameters)) -> dict:
+    if not common["authorized"]:
+       return {"result": "UNAUTHORIZED"}
+    engine = conn.get(common["scheme"])
+    if not engine:
+          return {"result": "SCHEME_ERROR"}
+    try:
+        with engine.connect() as connection:
+                result = connection.execute(text(
+                f"SELECT id, subject, published_at FROM votes;"
+                )).fetchone()
+                if result:
+                    return {"result": dict(result._mapping)}
+        return {"result": "POLL_NOT_FOUND"}
+    except Exception:
+        return {"result": "INTERNAL_ERROR"}
+
+
 @app.get("/{path:path}")
 @app.get("/")
 async def invalid(_: str | None = None):
-    return {"result" : "INVALID REQUEST"}
+    return {"result" : "INVALID_REQUEST"}
 
 if __name__ == "__main__":
     import uvicorn

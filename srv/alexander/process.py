@@ -1750,7 +1750,7 @@ def enter_game_dlg(**kwargs) -> str:
         f"<NGDLG>"
     )
 
-
+# TODO 
 @alexander.route('new_game_dlg.dcml')
 def new_game_dlg(variables: dict, player_id, **kwargs) -> str:
     if variables['max_players'] and variables['type']:
@@ -2112,7 +2112,7 @@ def rating_help(**kwargs) -> str:
         f"#end(CAN)"
     )
 
-
+# TODO
 @alexander.route('reg_new_user.dcml')
 def reg_new_user(variables: dict, **kwargs) -> str | None:
     try:
