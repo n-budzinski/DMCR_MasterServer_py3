@@ -69,7 +69,7 @@ async def get_choices(common: dict = Depends(common_parameters)) -> Dict[str, An
         return form_response("SUCCESS", output)
 
 @app.get("/{scheme}/login")
-async def relogin(username: str, password: str, gmid: str | None = None, relogin: str = "", common: dict = Depends(common_parameters)) -> Dict[str, Any]:
+async def login(username: str, password: str, gmid: str | None = None, relogin: str = "", common: dict = Depends(common_parameters)) -> Dict[str, Any]:
     engine = conn.get(common["scheme"]) 
     with engine.connect() as connection: # type: ignore
             if relogin == "true":
@@ -440,18 +440,23 @@ async def get_user_details(ID: str, common: dict = Depends(common_parameters)) -
         return form_response("ERROR", "USER_NOT_FOUND")
 
 @app.get("/{scheme}/get_user_list", dependencies=[Depends(is_authenticated)])
-async def get_user_list(page: int = 0, resort: int | None = None, order: str = "1", common: dict = Depends(common_parameters)) -> Dict[str, Any]:
+async def get_user_list(page: int = 0, resort: str | None = "1", order: str = "score", common: dict = Depends(common_parameters)) -> Dict[str, Any]:
     engine = conn.get(common["scheme"])
     order_by = "players." + order if order in ("nick", "name", "id", "country", "score") else "players.score"
     order = 'DESC' if resort == '1' else 'ASC'
     with engine.connect() as connection: #type: ignore
         result = connection.execute(text(
-            f"SELECT get_display_nick(player_id), players.name, players.player_id, countries.name, players.score, ranks.name, row_number()\
-            OVER ( order by :1 :2 ) AS 'pos'\
-            FROM players\
-            INNER JOIN ranks ON players.clan_rank = ranks.id\
-            LEFT JOIN countries ON players.country = countries.id\
-            ORDER BY :1 :2 LIMIT 14 OFFSET :3;"), parameters={"1": order_by, "2": order, "3": page * 13}).fetchall()
+            f"SELECT get_display_nick(player_id) AS nick, "
+            "players.name, "
+            "players.player_id, "
+            "countries.name AS 'country', "
+            "players.score, "
+            "ranks.name AS 'rank', "
+            "row_number() OVER ( order by :1 :2 ) AS 'pos' "
+            "FROM players "
+            "INNER JOIN ranks ON players.clan_rank = ranks.id "
+            "LEFT JOIN countries ON players.country = countries.id "
+            "ORDER BY :1 :2 LIMIT 14 OFFSET :3;"), parameters={"1": order_by, "2": order, "3": page * 13}).fetchall()
         users = []
         for user in result:
                 users.append(dict(user._mapping))
@@ -468,9 +473,48 @@ async def get_poll(common: dict = Depends(common_parameters)) -> Dict[str, Any]:
                 return form_response("SUCCESS", dict(result._mapping))
     return form_response("ERROR", "POLL_NOT_FOUND")
 
+@app.get("/{scheme}/heartbeat", dependencies=[Depends(is_authenticated)])
+async def heartbeat(player_count: int, host_id: int, common: dict = Depends(common_parameters)) -> Dict[str, Any]:
+    engine = conn.get(common["scheme"])
+    with engine.connect() as connection: #type: ignore
+        connection.execute(text(
+                f"UPDATE lobbies SET players = :1 WHERE host_id = :2"
+        ), parameters={
+             "1": player_count,
+             "2": host_id
+        })
+        connection.commit()
+    return form_response("SUCCESS")
+
+@app.get("/{scheme}/leave", dependencies=[Depends(is_authenticated)])
+async def leave(player_id: int, common: dict = Depends(common_parameters)) -> Dict[str, Any]:
+    engine = conn.get(common["scheme"])
+    with engine.connect() as connection: #type: ignore
+        connection.execute(text(
+                f"DELETE FROM lobbies WHERE host_id = :1;"
+        ), parameters={
+             "1": player_id
+        })
+        connection.commit()
+    return form_response("SUCCESS")
+
+@app.get("/{scheme}/setipaddr", dependencies=[Depends(is_authenticated)])
+async def setipaddr(player_id: int, lobby_id: int, address: str, common: dict = Depends(common_parameters)) -> Dict[str, Any]:
+    engine = conn.get(common["scheme"])
+    with engine.connect() as connection: #type: ignore
+        connection.execute(text(
+                f"UPDATE lobbies SET ip = :1 WHERE id = :2 AND host_id = :3"
+        ), parameters={
+             "1": address,
+             "2": lobby_id,
+             "3": player_id
+        })
+        connection.commit()
+    return form_response("SUCCESS")
+
 @app.get("/{path:path}")
 @app.get("/")
-async def invalid(_: str | None = None):
+async def invalid(_: str | None = None) -> Dict[str, Any]:
     return form_response("ERROR", "INVALID_REQUEST")
 
 if __name__ == "__main__":

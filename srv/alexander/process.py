@@ -13,7 +13,9 @@ def process_request(request, **kwargs) -> list:
     response = []
 
     if command == "setipaddr":
-        command_setipaddr(request[1].decode(), request[2].decode().split(':')[0])
+        command_setipaddr(lobby_id = request[1].decode(), 
+                          address = request[2].decode().split(':')[0],
+                          player_id = player_id)
 
     elif command == "leave":
         command_leave(player_id)
@@ -39,7 +41,7 @@ def process_request(request, **kwargs) -> list:
         pass
 
     elif command == "alive":
-        command_alive(parameters, game.engine)
+        command_alive(parameters)
 
     elif command == "login":
         response.append(LW_show(command_login(parameters, game.engine)))
@@ -63,13 +65,13 @@ def process_request(request, **kwargs) -> list:
 
 game = Game(
         scheme = "alexander",
-        irc_address = "192.168.0.200", 
+        irc_address = "irc", 
         irc_ch1 = "#GSP!conquest_m!5", 
         irc_ch2 = "#GSP!conquest!3",
         processor = process_request,
         dbtbl_interval = 15)
 
-def retrieve_from_API(query: str, **kwargs: dict[str, Any]) -> dict:
+def call_API(query: str, **kwargs: dict[str, Any] | None) -> dict:
     return requests.get(f"http://{game.api}:8000/{game.scheme}/{query}", params=kwargs).json()
 
 @game.route('cancel.dcml')
@@ -145,7 +147,7 @@ def change(variables: dict, **kwargs: dict[str, Any]) -> str:
 
 @game.route('clan_admin2.dcml')
 def clan_admin(variables: dict, player_id, **kwargs: dict[str, Any]) -> str:
-    response = retrieve_from_API(query="clan_admin2", kwargs = variables)
+    response = call_API(query="clan_admin2", kwargs = variables)
     if response["result"] == "SUCCESS":
         return (
             f'<NGDLG>'
@@ -208,7 +210,7 @@ def clan_load_image(variables: dict, **kwargs: dict[str, Any]) -> str:
 @game.route('clan_new.dcml')
 def clan_new(variables: dict, player_id: str | int, **kwargs: dict[str, Any]) -> str:
     if variables['title'] and variables['signature']:
-        response = retrieve_from_API(query="create_clan", kwargs = variables)
+        call_API(query="create_clan", kwargs = variables)
         return (
             f'#ebox[%TB](x:0,y:0,w:100%,h:100%)'
             f'#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)'
@@ -506,9 +508,7 @@ def clans_list(variables: dict, **kwargs: dict[str, Any]) -> str:
 
 @game.route('dbtbl.dcml')
 def dbtbl(**kwargs: dict[str, Any]) -> str:
-    with alexander.engine.connect() as connection:
-        lobbies = connection.execute(text(
-            f"CALL get_lobbies()")).fetchall()
+    lobbies = call_API(query="get_lobbies")
     ping_list = "".join(
         [f"#apan[%APAN{idx}](%SB[x:0,y:{idx * 21}-2,w:100%,h:20]," \
          f"{{GW|open&join_game.dcml\\00&delete_old=true^id_room={str(lobby[0])}\\00|LW_lockall}},8)" \
@@ -517,11 +517,11 @@ def dbtbl(**kwargs: dict[str, Any]) -> str:
          f"{reverse_address(lobby[-2])})"
          for idx, lobby in enumerate(lobbies)])
     lobbies = "".join(
-        [f',21,{str(lobby[1])} [{"Y" if lobby[6] else "N"}], {lobby[-1]},"{lobby[3]}","{lobby[5]}/{lobby[4]}",""' for
+        [f',21,{str(lobby["title"])} [{"Y" if lobby["password"] else "N"}], {lobby["nick"]},"{lobby["type"]}","{lobby["players"]}/{lobby["max_players"]}",""' for
          lobby in lobbies])
     return (
         f"<DBTBL>"
-        f"#exec(LW_time&{1000 * alexander.dbtbl_interval}&l_games_btn.cml\\00)"
+        f"#exec(LW_time&{1000 * game.dbtbl_interval}&l_games_btn.cml\\00)"
         f"#block(l_games_btn.cml,l_g):GW|open&dbtbl.dcml\\00&order=r.hbtime^resort=\\00|LW_lockall"
         f"#end(l_g)"
         f"#ebox[%BB](x:0,y:0,w:100%,h:100%)"
@@ -2671,7 +2671,7 @@ def url_open(variables: dict, **kwargs) -> str:
     )
 
 
-@alexander.route('users_list.dcml')
+@game.route('users_list.dcml')
 def users_list(variables: dict, **kwargs) -> str:
     user_list = []
     user_buttons = []
@@ -2689,21 +2689,17 @@ def users_list(variables: dict, **kwargs) -> str:
     else:
         order_by = 'players.score'
     order = 'DESC' if resort == '1' else 'ASC'
-    players = None
-    with alexander.engine.connect() as connection:
-        players = connection.execute(text(
-            f"SELECT get_display_nick(player_id), players.name, players.player_id, countries.name, players.score, ranks.name, row_number()\
-                        OVER ( order by {order_by} {order} ) AS 'pos'\
-                        FROM players\
-                        INNER JOIN ranks ON players.clan_rank = ranks.id\
-                        LEFT JOIN countries ON players.country = countries.id\
-                        ORDER BY {order_by} {order} LIMIT 14 OFFSET {13 * page};")).fetchall()
+    players = call_API(query = "get_user_list", kwargs = {
+        "page": page,
+        "resort": resort,
+        "order": order
+    }).get("CONTENT", [])
     user_buttons = "".join([
         f"#apan[%APAN0](%BB[x:150,y:{60 + (21 * idx)}-1,w:100%-161,h:20],{{GW|open&user_details.dcml\\00&ID={player[2]}\\00|LW_lockall}},8)"
         for idx, player in enumerate(players[:13])])
     user_list = "".join([
-        f"21,\"{player[6]}\",\"{player[0]}\",\"{player[1]}\",\"{player[2]}\",\"{player[3]}\",\"{player[4]}\",\"{player[5]}\","
-        for idx, player in enumerate(players[:13])])
+        f"21,\"{player['pos']}\",\"{player['nick']}\",\"{player['name']}\",\"{player['player_id']}\",\"{player['country']}\",\"{player['score']}\",\"{player['rank']}\","
+        for player in players[:13]])
     return "".join((
         f"#ebox[%TB](x:0,y:0,w:100%,h:100%)",
         f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)",
@@ -2902,7 +2898,7 @@ def command_open(parameters: list[bytes], player_id: str | int) -> str:
     if len(parameters) > 1:
         variable_string = parameters[1].decode()
         extract_variables(variables, variable_string)
-    return alexander.route_map.get(filename, cancel)(variables=variables, player_id=player_id)
+    return game.route_map.get(filename, cancel)(variables=variables, player_id=player_id)
 
 
 def command_login(parameters: list[bytes], database: Engine) -> str:
@@ -2957,33 +2953,30 @@ def command_login(parameters: list[bytes], database: Engine) -> str:
 def command_url(parameters: list[bytes]) -> str:
     return parameters[0].decode()
 
-
-def command_alive(parameters: list[bytes], database: Engine) -> None:
+def command_alive(parameters: list[bytes]) -> None:
     data = bytearray(parameters[0])
     data.extend(b'\x00' * (4 - len(data) % 4))
     values = []
     for n in range(0, len(data) // 4):
         src = data[n * 4:n * 4 + 4]
         values.append(unpack('<I', src)[0])
-    reported_player_count, host_id = values[0], values[1]
-    with alexander.engine.connect() as connection:
-        connection.execute(text(
-            f"UPDATE lobbies SET players = '{reported_player_count}' WHERE host_id = {host_id}"
-        ))
-        connection.commit()
+    player_count, host_id = values[0], values[1]
+    call_API(query="leave", kwargs = {
+        "player_count": player_count,
+        "host_id": host_id
+    })
 
+def command_leave(player_id: int | str) -> None:
+    call_API(query="leave", kwargs = {
+        "player_id": player_id
+    })
 
-def command_leave(player_id: str | int) -> None:
-    with alexander.engine.connect() as connection:
-        connection.execute(text(f"DELETE FROM lobbies WHERE host_id={player_id};"))
-        connection.commit()
-
-
-def command_setipaddr(lobby_id: str, address: str) -> None:
-    with alexander.engine.connect() as connection:
-        connection.execute(text(f"UPDATE lobbies SET ip = '{address}' WHERE id = {lobby_id}"))
-        connection.commit()
-
+def command_setipaddr(lobby_id: str, address: str, player_id: int) -> None:
+    call_API(query="setipaddr", kwargs = {
+        "lobby_id": lobby_id,
+        "address": address,
+        "player_id": player_id
+    })
 
 def view_message(button_1: str = "LW_file&Internet/Cash/l_games_btn.cml", button_2: str = "LW_file&Internet/Cash/l_games_btn.cml", title: str = "ERROR", message: str = "INTERNAL SERVER ERROR") -> str:
     return (
