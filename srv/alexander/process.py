@@ -132,7 +132,6 @@ def change(variables: dict, **kwargs: dict[str, Any]) -> str:
             f'#exec(GW|open&log_user.dcml\\00'
             f'&cansel={variables["cansel"]}'
             f'^save_pass={variables["save_pass"]}'
-            f'^icon_last_update=1098287226'
             f'^VE_PROF={variables["VE_PROF"]}'
             f'^VE_NAME={variables["VE_NAME"]}'
             f'^VE_NICK={variables["VE_NICK"]}'
@@ -146,14 +145,14 @@ def change(variables: dict, **kwargs: dict[str, Any]) -> str:
 
 @game.route('clan_admin2.dcml')
 def clan_admin(variables: dict, player_id, **kwargs: dict[str, Any]) -> str:
-    response = retrieve_from_API(query="clan_admin", kwargs = variables)
-    if response["result"] == True:
+    response = retrieve_from_API(query="clan_admin2", kwargs = variables)
+    if response["result"] == "SUCCESS":
         return (
             f'<NGDLG>'
             f'#exec(GW|open&clan_users.dcml\\00&clanID={variables["clanID"]}\\00|LW_lockall)'
             f'<NGDLG>'
         )
-    elif response["result"] == 'DLG_CLAN_REMOVE':
+    elif response["result"] == "CLAN_REMOVE_DLG":
                 return (
                     f'<NGDLG>'
                     f'#ebox[%L0](x:0,y:0,w:100%,h:100%)'
