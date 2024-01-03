@@ -105,9 +105,8 @@ async def clan_admin(   new_jointer: int,
         return {"result": True}
     except DBAPIError as err:
         if err.orig:
-            error_message = err.orig.args[1]
-            if error_message == 'DLG_CLAN_REMOVE':
-                return {"result": error_message}
+            if err.orig.args[1] == 'DLG_CLAN_REMOVE':
+                return {"result": err.orig.args[1]}
         return {"result": "INTERNAL_ERROR"}
 
 

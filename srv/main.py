@@ -1,12 +1,11 @@
+from telnetlib import GA
 from threading import Thread
 from asyncio import StreamReader, StreamWriter, wait_for, TimeoutError, run, start_server
 from socket import socket, AF_INET, SOCK_DGRAM
 from traceback import print_exc
 from struct import pack, unpack, unpack_from
 from zlib import compress, decompress
-from config import Server, LOCALE
-import alexander.process as alex
-from collections import defaultdict
+from config import Server, LOCALE, GAME_VERSIONS
 from typing import Any
 
 def unpack_packet(packet: bytes) -> tuple[Any, list[bytes]]:
@@ -27,7 +26,7 @@ def unpack_packet(packet: bytes) -> tuple[Any, list[bytes]]:
     return unpack("HBB", packet[:4]), data
 
 
-def pack_packet(data, integrity: str):
+def pack_packet(data, integrity: str) -> bytearray:
     packet = bytearray()
     packet.extend(pack("H", len(data)))
     for idx, function in enumerate(data):
@@ -41,7 +40,7 @@ def pack_packet(data, integrity: str):
     return packet
 
 
-def add_header(packet, sequence, language, version):
+def add_header(packet, sequence, language, version) -> bytearray:
     data = compress(packet)
     return bytearray(pack('HBBII', sequence, language, version, len(data) + 12, len(packet)) + data)
 
@@ -95,23 +94,22 @@ async def handle_tcp(reader: StreamReader, writer: StreamWriter) -> None:
     await writer.wait_closed()
 
 
-async def process_packet(packet, writer):
+async def process_packet(packet, writer) -> None:
     (sequence, language, version), data = unpack_packet(packet)
     print(f"SEQ: {sequence} LANG: {LOCALE.get(language, 1)}\nREQUEST: {data}")
-    response = GAME_VERSIONS[version].process_request(data)
-    if response:
-        print(f"RESPONSE: {response}\n")
-        send_packet(writer, add_header(pack_packet(response, data[-2].decode()), sequence, language, version))
+    response = GAME_VERSIONS[version].process(data) if version in GAME_VERSIONS else "<NGDLG> <NGDLG>"
+    print(f"RESPONSE: {response}\n")
+    send_packet(writer, add_header(pack_packet(response, data[-2].decode()), sequence, language, version))
     await writer.drain()
 
 
-async def run_tcp():
+async def run_tcp() -> None:
     server = await start_server(handle_tcp, SERVER.address, SERVER.tcp_port)
     async with server:
         await server.serve_forever()
 
 
-def main():
+def main() -> None:
     udp_socket = socket(AF_INET, SOCK_DGRAM)
     udp_socket.bind((SERVER.address, SERVER.udp_port))
     udp_socket.setblocking(True)
@@ -122,20 +120,10 @@ def main():
 
 
 if __name__ == "__main__":
-
     TCP_MAX_PACKET_SIZE = 1440
     TCP_TIMEOUT = 120
     UDP_MAX_PACKET_SIZE = 64
-
-    GAME_VERSIONS = defaultdict(lambda: alex,{
-    # 13: alexdemo,
-    # 14: (c2nw, C2NWDB)
-    16: alex,
-    # 30: (hoae, HOAEDB)
-    })
-
     SERVER = Server()
-
     try:
         main()
     except KeyboardInterrupt:

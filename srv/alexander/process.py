@@ -1,21 +1,86 @@
 from collections import defaultdict
 from datetime import datetime
+from turtle import st
+from typing import Any
 from common import clip, clip_string, reverse_address, extract_variables
-from config import mysql_error_messages, alexander
-from sqlalchemy import Engine, text
-from sqlalchemy.exc import DBAPIError
+from config import mysql_error_messages, Game, GAME_VERSIONS
 from math import floor, ceil
 from struct import unpack
+import requests
 
-@alexander.route('cancel.dcml')
-def cancel(**kwargs) -> str:
+def process_request(request, **kwargs) -> list:
+    command, parameters, player_id = request[0], request[1:-2], request[-1].decode()
+    response = []
+
+    if command == "setipaddr":
+        command_setipaddr(request[1].decode(), request[2].decode().split(':')[0])
+
+    elif command == "leave":
+        command_leave(player_id)
+
+    elif command == "start":
+        pass
+
+    elif command == "url":
+        response.append(LW_time(0, command_url(parameters)))
+
+    elif command == "gmalive":
+        pass
+
+    elif command == "stats":
+        pass
+
+    elif command == "setclan":
+        print("SIGNATURE ", parameters)
+        # signature = parameters[]
+        pass
+
+    elif command == "endgame":
+        pass
+
+    elif command == "alive":
+        command_alive(parameters, game.engine)
+
+    elif command == "login":
+        response.append(LW_show(command_login(parameters, game.engine)))
+
+    elif command == "open":
+        try:
+            result = command_open(parameters, player_id)
+            response.append(LW_show(result))
+
+        except Exception as exception:
+            print(exception)
+            response.append(LW_show(
+                    f'<MESDLG> '
+                    f'#ebox[%D](x:0,y:0,w:1024,h:768) '
+                    f'#def_dtbl_button_hotkey(13,27) '
+                    f'#table[%TBL](%D[x:306,y:325,w:415,h:205],{{}}{{}}{{GW|open&{parameters[0].decode()}\\00|LW_lockall}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,"CRITICAL ERROR","Server error occurred while processing your request! Press Try Again button to attempt process request again. Press Cancel to exit",26,"Try Again","Cancel") '
+                    f'<MESDLG> '
+                ))
+
+    return response
+
+game = Game(
+        scheme = "alexander",
+        irc_address = "192.168.0.200", 
+        irc_ch1 = "#GSP!conquest_m!5", 
+        irc_ch2 = "#GSP!conquest!3",
+        processor = process_request,
+        dbtbl_interval = 15)
+
+def retrieve_from_API(query: str, **kwargs: dict[str, Any]) -> dict:
+    return requests.get(f"http://{game.api}:8000/{game.scheme}/{query}", params=kwargs).json()
+
+@game.route('cancel.dcml')
+def cancel(**kwargs: dict[str, Any]) -> str:
     return (
         '<NGDLG>'
         '<NGDLG>'
     )
 
-@alexander.route('change_account2.dcml')
-def change_account2(**kwargs) -> str:
+@game.route('change_account2.dcml')
+def change_account(**kwargs: dict[str, Any]) -> str:
     return (
         f'#ebox[%EBG](x:0,y:0,w:1024,h:768)'
         f'#edit[%E_CUP](%EBG[x:0,y:0,w:0,h:0],{{%GV_CLANS_LAST_UPDATE}})'
@@ -51,9 +116,8 @@ def change_account2(**kwargs) -> str:
         f'#end(CAN)'
     )
 
-
-@alexander.route('change.dcml')
-def change(variables: dict, **kwargs) -> str:
+@game.route('change.dcml')
+def change(variables: dict, **kwargs: dict[str, Any]) -> str:
     if not (variables["VE_NICK"], variables["VE_PASS"], variables["VE_GMID"]):
         return (
             "<MESDLG>"
@@ -80,24 +144,16 @@ def change(variables: dict, **kwargs) -> str:
             f'<MESDLG>'
         )
 
-@alexander.route('clan_admin2.dcml')
-def clan_admin2(variables: dict, player_id, **kwargs) -> str:
-    try:
-        with alexander.engine.connect() as connection:
-            connection.execute(text(
-                f'CALL clan_admin({player_id}, {variables.get("new_jointer", 0)}, {variables.get("leaver", 0)}, {variables.get("clanID", 0)}, "{variables["again"]}")'
-            ))
-            connection.commit()
-            return (
-                f'<NGDLG>'
-                f'#exec(GW|open&clan_users.dcml\\00&clanID={variables["clanID"]}\\00|LW_lockall)'
-                f'<NGDLG>'
-            )
-
-    except DBAPIError as err:
-        if err.orig:
-            error_message = err.orig.args[1]
-            if error_message == 'DLG_CLAN_REMOVE':
+@game.route('clan_admin2.dcml')
+def clan_admin(variables: dict, player_id, **kwargs: dict[str, Any]) -> str:
+    response = retrieve_from_API(query="clan_admin", kwargs = variables)
+    if response["result"] == True:
+        return (
+            f'<NGDLG>'
+            f'#exec(GW|open&clan_users.dcml\\00&clanID={variables["clanID"]}\\00|LW_lockall)'
+            f'<NGDLG>'
+        )
+    elif response["result"] == 'DLG_CLAN_REMOVE':
                 return (
                     f'<NGDLG>'
                     f'#ebox[%L0](x:0,y:0,w:100%,h:100%)'
@@ -111,8 +167,8 @@ def clan_admin2(variables: dict, player_id, **kwargs) -> str:
     )
 
 
-@alexander.route('clan_load_image.dcml')
-def clan_load_image(variables: dict, **kwargs) -> str:
+@game.route('clan_load_image.dcml')
+def clan_load_image(variables: dict, **kwargs: dict[str, Any]) -> str:
     if variables['signature'] and variables['icon_name']:
         return (
             f'<NGDLG>'
@@ -150,13 +206,10 @@ def clan_load_image(variables: dict, **kwargs) -> str:
         )
 
 
-@alexander.route('clan_new.dcml')
-def clan_new(variables: dict, player_id: str | int, **kwargs) -> str:
+@game.route('clan_new.dcml')
+def clan_new(variables: dict, player_id: str | int, **kwargs: dict[str, Any]) -> str:
     if variables['title'] and variables['signature']:
-        with alexander.engine.connect() as connection:
-            connection.execute(text(
-                f'CALL create_clan({player_id}, "{variables["title"]}", "{variables["signature"]}", "{variables["info"]}")'))
-            connection.commit()
+        response = retrieve_from_API(query="create_clan", kwargs = variables)
         return (
             f'#ebox[%TB](x:0,y:0,w:100%,h:100%)'
             f'#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)'
@@ -268,8 +321,8 @@ def clan_new(variables: dict, player_id: str | int, **kwargs) -> str:
     )
 
 
-@alexander.route('clan_users.dcml')
-def clan_users(variables: dict, player_id, **kwargs) -> str | None:
+@game.route('clan_users.dcml')
+def clan_users(variables: dict, player_id, **kwargs: dict[str, Any]) -> str | None:
     members_list = []
     members_buttons = []
     if variables['clanID']:
@@ -369,8 +422,8 @@ def clan_users(variables: dict, player_id, **kwargs) -> str | None:
     )
 
 
-@alexander.route('clans_list.dcml')
-def clans_list(variables: dict, **kwargs) -> str:
+@game.route('clans_list.dcml')
+def clans_list(variables: dict, **kwargs: dict[str, Any]) -> str:
     button_list = []
     clan_list = []
     icon_dialog = ""
@@ -452,8 +505,8 @@ def clans_list(variables: dict, **kwargs) -> str:
     )
 
 
-@alexander.route('dbtbl.dcml')
-def dbtbl(**kwargs) -> str:
+@game.route('dbtbl.dcml')
+def dbtbl(**kwargs: dict[str, Any]) -> str:
     with alexander.engine.connect() as connection:
         lobbies = connection.execute(text(
             f"CALL get_lobbies()")).fetchall()
@@ -487,7 +540,7 @@ def dbtbl(**kwargs) -> str:
     )
 
 
-@alexander.route('forum_add.dcml')
+@game.route('forum_add.dcml')
 def forum_add(variables: dict, player_id: str | int, **kwargs) -> str:
     if variables['add_message']:
         with alexander.engine.connect() as connection:
@@ -562,7 +615,7 @@ def forum_add(variables: dict, player_id: str | int, **kwargs) -> str:
     )
 
 
-@alexander.route('forum_search.dcml')
+@game.route('forum_search.dcml')
 def forum_search(**kwargs) -> str:
     return (
         f"<NGDLG>"
@@ -585,7 +638,7 @@ def forum_search(**kwargs) -> str:
     )
 
 
-@alexander.route('forum_view.dcml')
+@game.route('forum_view.dcml')
 def forum_view(variables: dict, **kwargs) -> str:
     with alexander.engine.connect() as connection:
         if variables['theme']:
@@ -794,7 +847,7 @@ def forum(variables: dict, **kwargs) -> str:
     )
 
 
-@alexander.route('games.dcml')
+@game.route('games.dcml')
 def games(**kwargs) -> str:
     return (
         f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
@@ -1003,7 +1056,7 @@ def join_game(variables: dict, player_id: str, **kwargs) -> str:
     )
 
 # TODO: PLACEHOLDER
-@alexander.route('join_pl_cmd.dcml')
+@game.route('join_pl_cmd.dcml')
 def join_pl_cmd(variables: dict, player_id: str | int, **kwargs) -> str:
     if variables['VE_PLAYER'] == str(player_id):
         return (
@@ -1016,7 +1069,7 @@ def join_pl_cmd(variables: dict, player_id: str | int, **kwargs) -> str:
         return ""
 
 
-@alexander.route('log_conf_dlg.dcml')
+@game.route('log_conf_dlg.dcml')
 def log_conf_dlg(variables: dict, **kwargs) -> str:
     return (
         f"#ebox[%EBG](x:0,y:0,w:1024,h:768)"
@@ -1654,7 +1707,7 @@ def mail_view(variables: dict, player_id, **kwargs) -> str | None:
                 )
 
 
-@alexander.route('map.dcml')
+@game.route('map.dcml')
 def map_(**kwargs) -> str:
     return (
         f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
@@ -1705,7 +1758,7 @@ def map_(**kwargs) -> str:
     )
 
 # TODO: PLACEHOLDER
-@alexander.route('mclick.dcml')
+@game.route('mclick.dcml')
 def mclick(variables: dict, **kwargs) -> str:
     # <MCLICK> #ebox[%M](x:550,y:42,w:164,h:291) #font(RG18,WF16,WF16) #pan[%PAN1](%M[x:0,y:0,w:100%,h:100%],
     # 7) #ctxt[%TIT](%M[x:5,y:10,w:100%-10,h:30],{},"Persia") #font(BC12,RC12,RC12) #stbl[%TBL](%M[x:5,y:50,
@@ -1718,7 +1771,7 @@ def mclick(variables: dict, **kwargs) -> str:
     )
 
 # TODO: PLACEHOLDER
-@alexander.route('enter_game_dlg.dcml')
+@game.route('enter_game_dlg.dcml')
 def enter_game_dlg(**kwargs) -> str:
     # · ·· ·open· ·   enter_game_dlg.dcml
     # land_id=2 ·   02     35070762
@@ -1976,7 +2029,7 @@ def punishments(**kwargs) -> str:
     )
 
 
-@alexander.route('rating_calculator.dcml')
+@game.route('rating_calculator.dcml')
 def rating_calculator(variables: dict, **kwargs) -> str:
     error = False
     if (variables['score1'] and variables['score2']) and (
@@ -2023,7 +2076,7 @@ def rating_calculator(variables: dict, **kwargs) -> str:
     )
 
 
-@alexander.route('rating_help.dcml')
+@game.route('rating_help.dcml')
 def rating_help(**kwargs) -> str:
     return (
         f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
@@ -2361,7 +2414,7 @@ def scored_games(variables: defaultdict, **kwargs) -> str:
     )
 
 
-@alexander.route('scored_games2x2.dcml')
+@game.route('scored_games2x2.dcml')
 def scored_games2x2(**kwargs) -> str:
     return (
         f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
@@ -2413,7 +2466,7 @@ def scored_games2x2(**kwargs) -> str:
     )
 
 
-@alexander.route('startup.dcml')
+@game.route('startup.dcml')
 def startup(**kwargs) -> str:
     return (
         f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
@@ -2610,7 +2663,7 @@ def user_details(variables: dict, player_id, **kwargs) -> str | None:
             )
 
 
-@alexander.route('url_open.dcml')
+@game.route('url_open.dcml')
 def url_open(variables: dict, **kwargs) -> str:
     return (
         f"<OPENURL>"
@@ -2942,56 +2995,4 @@ def view_message(button_1: str = "LW_file&Internet/Cash/l_games_btn.cml", button
             f"<MESDLG>"
             )
 
-
-def process_request(request, **kwargs) -> list:
-    command, parameters, player_id = request[0], request[1:-2], request[-1].decode()
-    response = []
-
-    if command == "setipaddr":
-        command_setipaddr(request[1].decode(), request[2].decode().split(':')[0])
-
-    elif command == "leave":
-        command_leave(player_id)
-
-    elif command == "start":
-        pass
-
-    elif command == "url":
-        response.append(LW_time(0, command_url(parameters)))
-
-    elif command == "gmalive":
-        pass
-
-    elif command == "stats":
-        pass
-
-    elif command == "setclan":
-        print("SIGNATURE ", parameters)
-        # signature = parameters[]
-        pass
-
-    elif command == "endgame":
-        pass
-
-    elif command == "alive":
-        command_alive(parameters, alexander.engine)
-
-    elif command == "login":
-        response.append(LW_show(command_login(parameters, alexander.engine)))
-
-    elif command == "open":
-        try:
-            result = command_open(parameters, player_id)
-            response.append(LW_show(result))
-
-        except Exception as exception:
-            print(exception)
-            response.append(LW_show(
-                    f'<MESDLG> '
-                    f'#ebox[%D](x:0,y:0,w:1024,h:768) '
-                    f'#def_dtbl_button_hotkey(13,27) '
-                    f'#table[%TBL](%D[x:306,y:325,w:415,h:205],{{}}{{}}{{GW|open&{parameters[0].decode()}\\00|LW_lockall}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,"CRITICAL ERROR","Server error occurred while processing your request! Press Try Again button to attempt process request again. Press Cancel to exit",26,"Try Again","Cancel") '
-                    f'<MESDLG> '
-                ))
-
-    return response
+GAME_VERSIONS[16] = game

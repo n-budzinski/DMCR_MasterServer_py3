@@ -1,10 +1,13 @@
+from typing import Callable
 from sqlalchemy import create_engine
-from sqlalchemy import exc
 from collections import defaultdict
 from argparse import ArgumentParser
 
 parser = ArgumentParser()
 parser.add_argument("--api", type=str, help="the database host", required=True)
+parser.add_argument("--db", type=str, help="the database host", required=True)
+parser.add_argument("--db_user", type=str, help="the database host", required=True)
+parser.add_argument("--db_pass", type=str, help="the database host", required=True)
 argv = parser.parse_args()
 
 class Server():
@@ -25,45 +28,51 @@ class Game:
             return func
         return inner
 
+    def process(self, data):
+        return self.processor(data)
+
     def __init__(self,
-                 scheme: str,
                  irc_address: str,
                  irc_ch1: str,
                  irc_ch2: str,
+                 scheme: str,
+                 processor: Callable,
                  dbtbl_interval: int) -> None:
         self.irc_address = irc_address
         self.irc_ch1 = irc_ch1
         self.irc_ch2 = irc_ch2
         self.scheme = scheme
+        self.processor = processor
+        self.api = argv.api
         self.dbtbl_interval = dbtbl_interval
         try:
             self.engine = create_engine(f'mysql+pymysql://'
-                                        f'{argv.dbuser}:{argv.dbpass}'
-                                        f'@{argv.dbhost}/{self.scheme}?charset=utf8mb4')
+                                        f'{argv.db_user}:{argv.db_pass}'
+                                        f'@{argv.db}/{self.scheme}?charset=utf8mb4')
         except Exception as ex:
             print(f"Exception {ex}\n")
-        
 
-alexander = Game(
-    scheme = "alexander",
-    irc_address = "192.168.0.200", 
-    irc_ch1 = "#GSP!conquest_m!5", 
-    irc_ch2 = "#GSP!conquest!3",
-    dbtbl_interval = 15)
+GAME_VERSIONS = {}
 
-alexander_demo = Game(
-    scheme = "alexander_demo",
-    irc_address = "192.168.0.200", 
-    irc_ch1 = "#GSP!conquest_m!5", 
-    irc_ch2 = "#GSP!conquest!3",
-    dbtbl_interval = 15)
-
-heroes_of_annihilated_empires = Game(
-    scheme = "herose_of_annihilated_empires",
-    irc_address = "192.168.0.200", 
-    irc_ch1 = "#GSP!conquest_m!5", 
-    irc_ch2 = "#GSP!conquest!3",
-    dbtbl_interval = 15)
+# GAME_VERSIONS = defaultdict(
+#     lambda: Game(
+#         scheme = "alexander",
+#         irc_address = "192.168.0.200", 
+#         irc_ch1 = "#GSP!conquest_m!5", 
+#         irc_ch2 = "#GSP!conquest!3",
+#         processor = alexander,
+#         dbtbl_interval = 15),{
+#     # 13: alexdemo,
+#     # 14: (c2nw, C2NWDB)
+#     16: Game(
+#         scheme = "alexander",
+#         irc_address = "192.168.0.200", 
+#         irc_ch1 = "#GSP!conquest_m!5", 
+#         irc_ch2 = "#GSP!conquest!3",
+#         processor = alexander,
+#         dbtbl_interval = 15),
+#     # 30: (hoae, HOAEDB)
+#     })
 
 mysql_error_messages = defaultdict(lambda: "ERR_INTERNAL",{
     "ERR_INTERNAL" : "Server error occurred while processing your request! Press Try Again button to attempt process request again. Press Cancel to exit",
