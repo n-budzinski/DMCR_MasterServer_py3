@@ -1,13 +1,23 @@
 from typing import Any, Dict
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Request
+from fastapi.responses import JSONResponse
 from database import get_engine
 from sqlalchemy import text
-from sqlalchemy.exc import DBAPIError
+#from sqlalchemy.exc import DBAPIError
 
 app = FastAPI()
 conn = {
     "alexander": get_engine("alexander")
 }
+
+class Auth_Exception(HTTPException):
+    def __init__(self) -> None:
+         super().__init__(200)
+
+def auth_exception_handler(request: Request, exc: Exception):
+     return JSONResponse(status_code=200, content={"ERROR": "AUTH_ERROR"}) 
+
+app.add_exception_handler(Auth_Exception, auth_exception_handler)
 
 async def authenticate(scheme: str, player_id: int | None = None, session_key: str | None = None) -> bool:
     if player_id and session_key:
@@ -17,9 +27,9 @@ async def authenticate(scheme: str, player_id: int | None = None, session_key: s
                 result = connection.execute(text(
                     "SELECT * FROM sessions "
                     "WHERE "
-                    f"player_id = {player_id} AND "
-                    f"session_key = '{session_key}'"
-                )).fetchone()
+                    f"player_id = :1 AND "
+                    f"session_key = :2"
+                ), parameters={"1": player_id, "2": session_key}).fetchone()
                 if result:
                     return True
     return False
@@ -31,7 +41,7 @@ async def common_parameters(scheme: str) -> Dict:
 
 async def is_authenticated(scheme: str, session_key: str = "", player_id: int | None = None) -> None:
     if not await authenticate(scheme, player_id, session_key):
-         raise HTTPException(status_code=200, detail="AUTH_ERROR")
+         raise Auth_Exception
 
 def form_response(result: str, content: Any = None):
      return {
@@ -64,14 +74,14 @@ async def relogin(username: str, password: str, gmid: str | None = None, relogin
     with engine.connect() as connection: # type: ignore
             if relogin == "true":
                 profile = connection.execute(text(
-                f"CALL relogin(\'{username}\',\'{password}\')")).fetchone()
+                f"CALL relogin(:1, :2)"), parameters={"1": username, "2": password}).fetchone()
                 if profile:
                     return form_response("SUCCESS", dict(profile._mapping))
             elif gmid:
                 profile = connection.execute(text(
-                f"CALL login(\'{username}\',\'{password}\', \'{gmid}\')")).fetchone()
+                f"CALL login(:1, :2, :3)"), parameters={"1": username, "2": password, "3": gmid}).fetchone()
                 if profile:
-                    if profile._mapping["profile_id"] == -1:
+                    if profile._mapping["player_id"] == -1:
                             return form_response("ERROR", "ERR_ACC_NOTFOUND")
                     return form_response("SUCCESS", dict(profile._mapping))
             else:
@@ -84,8 +94,14 @@ async def clan_admin2(new_jointer: int, leaver: int, clanID: int, again: str, co
     if again == 'true':
         with engine.connect() as connection: #type: ignore
             connection.execute(text(
-                f'CALL clan_admin({common["player_id"]}, {new_jointer}, {leaver}, {clanID}, "{again}")'
-            ))
+                f'CALL clan_admin(:1, :2, :3, :4, :5)'
+            ), parameters={
+                 "1": common["player_id"],
+                 "2": new_jointer,
+                 "3": leaver,
+                 "4": clanID,
+                 "5": again
+            })
             connection.commit()
         return form_response("SUCCESS")
     else:
@@ -96,8 +112,13 @@ async def create_clan(title: str, signature: str, info: str, common: dict = Depe
     engine = conn.get(common["scheme"])
     with engine.connect() as connection: #type: ignore
         connection.execute(text(
-            f'CALL create_clan({common["player_id"]}, "{title}", "{signature}", "{info}")'
-        ))
+            f'CALL create_clan(:1, :2, :3, :4)'
+        ), parameters={
+             "1": common["player_id"],
+             "2": title,
+             "3": signature,
+             "4": info
+        })
         connection.commit()
     return form_response("SUCCESS")
 
@@ -108,8 +129,11 @@ async def get_clan_summary( clanID: int,
     engine = conn.get(common["scheme"])
     with engine.connect() as connection: #type: ignore
             summary = connection.execute(text(
-                f"CALL get_clan_summary({clanID}, {common['player_id']})"
-            )).fetchone()
+                f"CALL get_clan_summary(:1, :2)"
+            ), parameters={
+                 "1": clanID,
+                 "2": common['player_id']
+            }).fetchone()
             if summary:
                 return form_response("SUCCESS", dict(summary._mapping))
     return form_response("ERROR", "CLAN_NOT_FOUND")
@@ -119,8 +143,8 @@ async def get_clan_members(clanID: int, common: dict = Depends(common_parameters
     engine = conn.get(common["scheme"])
     with engine.connect() as connection: #type: ignore
             result = connection.execute(text(
-                f"CALL get_clan_members({clanID})"
-            )).fetchall()
+                f"CALL get_clan_members(:1)"
+            ), parameters={"1": clanID}).fetchall()
             if result:
                 members = []
                 for member in result:
@@ -162,15 +186,21 @@ async def thread_message(message: str, theme: str | None = None, common: dict = 
             connection.execute(text(
                 'INSERT INTO thread_messages '
                 '(author_id, thread_id, content) '
-                f'VALUES ({common["player_id"]}, {theme}, '
-                f'"{message}")'
-            ))
+                f'VALUES (:1, :2, :3)'
+            ), parameters={
+                 "1": common["player_id"],
+                 "2": theme,
+                 "3": message
+            })
         else:
             connection.execute(text(
                 'INSERT INTO threads '
                 '(author_id, content) '
-                f'VALUES ({common["player_id"]}, "{message}")'
-            ))
+                f'VALUES (:1, :2)'
+            ), parameters={
+                 "1": common["player_id"],
+                 "2": message
+            })
         connection.commit()
     return form_response("SUCCESS")
 
@@ -179,8 +209,8 @@ async def get_thread(theme: int, common: dict = Depends(common_parameters)) -> D
     engine = conn.get(common["scheme"])
     with engine.connect() as connection: #type: ignore
         result = connection.execute(text(
-            f"CALL get_thread({theme})"
-        )).fetchone()
+            f"CALL get_thread(:1)"
+        ), parameters={"1": theme}).fetchone()
         if result:
             return form_response("SUCCESS", dict(result._mapping))
         return form_response("ERROR", "THREAD_NOT_FOUND")
@@ -190,8 +220,8 @@ async def get_thread_messages(theme: int, common: dict = Depends(common_paramete
     engine = conn.get(common["scheme"])
     with engine.connect() as connection: #type: ignore
         result = connection.execute(text(
-            f"CALL get_thread_messages({theme})"
-        )).fetchall()
+            f"CALL get_thread_messages(:1)"
+        ), parameters={"1": theme}).fetchall()
         messages = []
         if result:
             for message in result:
@@ -203,8 +233,8 @@ async def search_forum(search_nick: str = "", search_text: str = "", common: dic
     engine = conn.get(common["scheme"])
     with engine.connect() as connection: #type: ignore
         result = connection.execute(text(
-            f'CALL forum_search("{search_nick}", "{search_text}")'
-        )).fetchall()
+            f'CALL forum_search(:1, :2)'
+        ), parameters={"1": search_nick, "2": search_text}).fetchall()
         messages = []
         if result:
             for message in result:
@@ -216,8 +246,8 @@ async def get_threads(mode: int = 1, next_message: int = 0, common: dict = Depen
     engine = conn.get(common["scheme"])
     with engine.connect() as connection: #type: ignore
         result = connection.execute(text(
-            f'CALL get_thread_list({mode}, {next_message})'
-        )).fetchall()
+            f'CALL get_thread_list(:1, :2)'
+        ), parameters = {"1": mode, "2": next_message}).fetchall()
         threads = []
         if result:
             for thread in result:
@@ -235,7 +265,7 @@ async def get_lobby(id_room: int, common: dict = Depends(common_parameters)) -> 
         "WHERE players.player_id = lobbies.host_id) "
         "AS nick, host_id "
         "FROM lobbies "
-        f"WHERE id = {id_room} LIMIT 1")).fetchone()
+        f"WHERE id = :1 LIMIT 1"), parameters={"1": id_room}).fetchone()
         if result:
             return form_response("SUCCESS", dict(result._mapping))
         return form_response("ERROR", "LOBBY_NOT_FOUND")
@@ -248,20 +278,22 @@ async def mail(messageID: int, sent: str | None = None, readable: str | None = N
             sender = connection.execute(text(
                 f"SELECT id_from, id_to "
                 f"FROM mail_messages "
-                f"WHERE mail_messages.id = {messageID}"
-            )).fetchone()
+                f"WHERE mail_messages.id = :1"
+            ), parameters={"1": messageID}).fetchone()
             if sender:
                 sender = sender._mapping
                 connection.execute(text(
                     f"UPDATE mail_messages "
-                    f"SET {'removed_by_sender' if sender['id_from'] == int(common['player_id']) else 'removed_by_recipient'} = 1 "
-                    f"{', removed_by_recipient = 1' if sender['id_from'] == sender['id_to'] else ''} "
-                    f"WHERE id = {messageID}"
-                ))
+                    f"SET :1 = 1 "
+                    f":2 "
+                    f"WHERE id = :3"
+                ), parameters={"1": 'removed_by_sender' if sender['id_from'] == int(common['player_id']) else 'removed_by_recipient', 
+                               "2": ', removed_by_recipient = 1' if sender['id_from'] == sender['id_to'] else '',
+                               "3": messageID})
                 connection.commit()
         summary = connection.execute(text(
-            f"CALL mail_stats({common['player_id']}) "
-        )).fetchone()
+            f"CALL mail_stats(:1) "
+        ), parameters={"1": common['player_id']}).fetchone()
         if summary:
             summary = summary._mapping
             if sent == 'true':
@@ -273,8 +305,8 @@ async def mail(messageID: int, sent: str | None = None, readable: str | None = N
             else:
                 mode = "4"
             result = connection.execute(text(
-                    f"CALL get_mail({mode}, {common['player_id']})"
-                )).fetchall()
+                    f"CALL get_mail(:1, :2)"
+                ), parameters={"1": mode, "2": common['player_id']}).fetchall()
             mail = []
             for entry in result:
                     mail.append(dict(entry._mapping))
@@ -286,14 +318,14 @@ async def send_mail(send_to: str, subject: str, message: str, send: str | None, 
     engine = conn.get(common["scheme"])
     with engine.connect() as connection: #type: ignore
         summary = connection.execute(text(
-            f"CALL mail_stats({common['player_id']}) "
-        )).fetchone()
+            f"CALL mail_stats(:1) "
+        ), parameters={"1": common['player_id']}).fetchone()
         if summary:
             summary = summary._mapping
             if send == 'true':
                 id = connection.execute(text(
-                    f"CALL get_player_id_by_nick(\"{send_to}\")"
-                )).fetchone()
+                    f"CALL get_player_id_by_nick(:1)"
+                ), parameters={"1": send_to}).fetchone()
                 if id:
                     id = id._mapping.id
                     if id == common["player_id"]:
@@ -303,8 +335,8 @@ async def send_mail(send_to: str, subject: str, message: str, send: str | None, 
                             "INSERT INTO mail_messages "
                             "(id_from, id_to, subject, content) "
                             "VALUES "
-                            f"({common['player_id']}, {id._mapping}, \"{subject}\", \"{message}\")"
-                        ))
+                            f"(:1, :2, :3, :4)"
+                        ), parameters={"1": common["player_id"], "2": id._mapping, "3": subject, "4": message})
                         connection.commit()
                 else:
                     return form_response("ERROR", "RECIPIENT_NOT_FOUND")
@@ -316,8 +348,8 @@ async def view_mail(messageID: int = 1, common: dict = Depends(common_parameters
     engine = conn.get(common["scheme"])
     with engine.connect() as connection: #type: ignore
         summary = connection.execute(text(
-            f"CALL mail_stats({common['player_id']}) "
-        )).fetchone()
+            f"CALL mail_stats(:1) "
+        ), parameters={"1": common['player_id']}).fetchone()
         if summary:
             summary = summary._mapping
             message = connection.execute(text(
@@ -333,16 +365,16 @@ async def view_mail(messageID: int = 1, common: dict = Depends(common_parameters
                 f"FROM mail_messages "
                 f"INNER JOIN players ON players.player_id = id_to "
                 f"LEFT JOIN clans ON clan_id = clans.id "
-                f"WHERE mail_messages.id = {messageID} "
-            )).fetchone()
+                f"WHERE mail_messages.id = :1 "
+            ), parameters={"1": messageID}).fetchone()
             if message:
                 message = message._mapping
                 if message['status'] == 1:
                     connection.execute(text(
                         f"UPDATE mail_messages "
                         f"SET status = 2 "
-                        f"WHERE id = {messageID}"
-                    ))
+                        f"WHERE id = :1"
+                    ), parameters={"1": messageID})
                     connection.commit()
                 return form_response("SUCCESS", {
                         "summary": dict(summary),
@@ -391,13 +423,13 @@ async def get_user_details(ID: str, common: dict = Depends(common_parameters)) -
     engine = conn.get(common["scheme"])
     with engine.connect() as connection: #type: ignore
         profile = connection.execute(text(
-            f"CALL get_user_details({ID})"
-        )).fetchone()
+            f"CALL get_user_details(:1)"
+        ), parameters={"1": ID}).fetchone()
         if profile:
             profile = profile._mapping
             can_be_excluded = connection.execute(text(
-                f"CALL can_be_excluded({ID}, {common['player_id']})"
-            )).fetchone()
+                f"CALL can_be_excluded(:1, :2)"
+            ), parameters={"1": ID, "2": common['player_id']}).fetchone()
 
             return form_response("SUCCESS", [
                 {
@@ -415,11 +447,11 @@ async def get_user_list(page: int = 0, resort: int | None = None, order: str = "
     with engine.connect() as connection: #type: ignore
         result = connection.execute(text(
             f"SELECT get_display_nick(player_id), players.name, players.player_id, countries.name, players.score, ranks.name, row_number()\
-            OVER ( order by {order_by} {order} ) AS 'pos'\
+            OVER ( order by :1 :2 ) AS 'pos'\
             FROM players\
             INNER JOIN ranks ON players.clan_rank = ranks.id\
             LEFT JOIN countries ON players.country = countries.id\
-            ORDER BY {order_by} {order} LIMIT 14 OFFSET {13 * page};")).fetchall()
+            ORDER BY :1 :2 LIMIT 14 OFFSET :3;"), parameters={"1": order_by, "2": order, "3": page * 13}).fetchall()
         users = []
         for user in result:
                 users.append(dict(user._mapping))
