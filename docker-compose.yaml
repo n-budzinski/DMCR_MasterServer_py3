@@ -1,39 +1,46 @@
-version: '3.8'
-
 services:
-
   srv:
-    context: .
-    dockerfile: dockerfile.srv
+    build:
+      context: srv
     ports:
       - "34001:34001"
       - "34000:34000"
-    networks:
-      - dmcr
-
-  db:
-    context: .
-    dockerfile: dockerfile.db
-    expose:
-      - 8000
     environment:
-      HOST: database
-      USERNAME: DMCR
-      PASSWORD: changeme
+      #API_HOST: host.docker.internal
+      API_HOST: host.docker.internal
+      DATABASE_HOST: host.docker.internal
+      DATABASE_USER: DMCR
+      DATABASE_PASS: changeme
+    extra_hosts:
+      - host.docker.internal:host-gateway
     networks:
       dmcr:
         aliases:
-          - database
+          - srv.local
 
-  irc:
-    context: .
-    dockerfile: dockerfile.irc
-    ports:
-      - "6667:6667"
-    networks:
-      dmcr:
-        aliases:
-          - irc
+  # db:
+  #   context: .
+  #   dockerfile: dockerfile.db
+  #   expose:
+  #     - 8000
+  #   environment:
+  #     HOST: database
+  #     USERNAME: DMCR
+  #     PASSWORD: changeme
+  #   networks:
+  #     dmcr:
+  #       aliases:
+  #         - database.local
+
+  # irc:
+  #   context: .
+  #   dockerfile: dockerfile.irc
+  #   ports:
+  #     - "6667:6667"
+  #   networks:
+  #     dmcr:
+  #       aliases:
+  #         - irc.local
 
 networks:
   dmcr:

@@ -16,16 +16,16 @@ class Auth_Exception(HTTPException):
          super().__init__(200)
 
 def route_exception_handler(request: Request, exc: Exception):
-     return JSONResponse(status_code=200, content={"RESULT": "ERROR",
-                                                   "CONTENT": "INVALID_REQUEST"}) 
+     return JSONResponse(status_code=200, content={"result": "error",
+                                                   "content": "INVALID_REQUEST"}) 
 
 def auth_exception_handler(request: Request, exc: Exception):
-     return JSONResponse(status_code=200, content={"RESULT": "ERROR",
-                                                   "CONTENT": "AUTH_ERROR"}) 
+     return JSONResponse(status_code=200, content={"result": "error",
+                                                   "content": "AUTH_ERROR"}) 
 
 def database_exception_handler(request: Request, exc: Exception):
-     return JSONResponse(status_code=200, content={"RESULT": "ERROR",
-                                                   "CONTENT": exc.orig.args[1]}) # type: ignore
+     return JSONResponse(status_code=200, content={"result": "error",
+                                                   "content": exc.orig.args[1]}) # type: ignore
 
 app.add_exception_handler(404, route_exception_handler)
 app.add_exception_handler(Auth_Exception, auth_exception_handler)
@@ -57,8 +57,8 @@ async def is_authenticated(scheme: str, session_key: str = "", player_id: int | 
 
 def form_response(result: str, content: Any = None):
      return {
-          "RESULT": result,
-          "CONTENT": content
+          "result": result,
+          "content": content
      }
 
 @app.get("/{scheme}/get_choices")
@@ -78,27 +78,29 @@ async def get_choices(common: dict = Depends(common_parameters)) -> Dict[str, An
             output["countries"] = []
             for country in countries:
                     output["countries"].append(country._mapping["name"])
-        return form_response("SUCCESS", output)
+        return form_response("success", output)
 
 @app.get("/{scheme}/log_user")
-async def login(username: str, password: str, gmid: str | None = None, relogin: str = "", common: dict = Depends(common_parameters)) -> Dict[str, Any]:
+async def login(username: str, password: str, gmid: str | None = None, relogin: str = "", session_key: str = "", common: dict = Depends(common_parameters)) -> Dict[str, Any]:
     engine = conn.get(common["scheme"]) 
     with engine.connect() as connection: # type: ignore
             if relogin == "true":
                 profile = connection.execute(text(
                 f"CALL relogin(:1, :2)"), parameters={"1": username, "2": password}).fetchone()
                 if profile:
-                    return form_response("SUCCESS", dict(profile._mapping))
+                    connection.commit()
+                    return form_response("success", dict(profile._mapping))
             elif gmid:
                 profile = connection.execute(text(
                 f"CALL login(:1, :2, :3)"), parameters={"1": username, "2": password, "3": gmid}).fetchone()
                 if profile:
                     if profile._mapping["player_id"] == -1:
-                            return form_response("ERROR", "ERR_ACC_NOTFOUND")
-                    return form_response("SUCCESS", dict(profile._mapping))
+                            return form_response("error", "ERR_ACC_NOTFOUND")
+                    connection.commit()
+                    return form_response("success", dict(profile._mapping))
             else:
-                    return form_response("ERROR", "MISSING_GMID_ERROR")
-    return form_response("ERROR", "INTERNAL_ERROR")
+                    return form_response("error", "MISSING_GMID_ERROR")
+    return form_response("error", "INTERNAL_ERROR")
 
 @app.get("/{scheme}/reg_new_user")
 async def reg_new_user(mode: str, nick: str, name: str, mail: str, birthday: str, gmid: str, password: str, rassword: str, icq = "", site = "", sex = 0, country = 0, phone = "", common: dict = Depends(common_parameters)) -> Dict[str, Any]:
@@ -106,7 +108,7 @@ async def reg_new_user(mode: str, nick: str, name: str, mail: str, birthday: str
     if mode in ('edit', 'creat'):
         if mode == 'creat' and \
         not password == rassword:
-             return form_response("ERROR", "PASSWORD_MISMATCH")
+             return form_response("error", "PASSWORD_MISMATCH")
         with engine.connect() as connection: #type: ignore
             connection.execute(text(
                 f'CALL reg_new_user(:1, :2, :3, :4, :5, :6, :7, :8, :9, :10, :11, :12, :13)'
@@ -126,8 +128,8 @@ async def reg_new_user(mode: str, nick: str, name: str, mail: str, birthday: str
                     "13": rassword
             })
             connection.commit()
-            return form_response("SUCCESS")
-    return form_response("ERROR", "INCORRECT_MODE")
+            return form_response("success")
+    return form_response("error", "INCORRECT_MODE")
 
 @app.get("/{scheme}/clan_admin2", dependencies=[Depends(is_authenticated)])
 async def clan_admin2(player_id: int, new_jointer: int, leaver: int, clanID: int, again: str, common: dict = Depends(common_parameters)) -> Dict[str, Any]:
@@ -144,9 +146,9 @@ async def clan_admin2(player_id: int, new_jointer: int, leaver: int, clanID: int
                  "5": again
             })
             connection.commit()
-        return form_response("SUCCESS")
+        return form_response("success")
     else:
-        return form_response("SUCCESS", "CLAN_REMOVE_DLG")
+        return form_response("success", "CLAN_REMOVE_DLG")
 
 @app.get("/{scheme}/create_clan", dependencies=[Depends(is_authenticated)])
 async def create_clan(player_id: int, title: str, signature: str, info: str, common: dict = Depends(common_parameters)) -> Dict[str, Any]:
@@ -161,7 +163,7 @@ async def create_clan(player_id: int, title: str, signature: str, info: str, com
              "4": info
         })
         connection.commit()
-    return form_response("SUCCESS")
+    return form_response("success")
 
 @app.get("/{scheme}/get_clan_summary", dependencies=[Depends(is_authenticated)])
 async def get_clan_summary(clanID: int, player_id: int, common: dict = Depends(common_parameters)) -> Dict[str, Any]:  
@@ -174,8 +176,8 @@ async def get_clan_summary(clanID: int, player_id: int, common: dict = Depends(c
                  "2": player_id
             }).fetchone()
             if summary:
-                return form_response("SUCCESS", dict(summary._mapping))
-    return form_response("ERROR", "CLAN_NOT_FOUND")
+                return form_response("success", dict(summary._mapping))
+    return form_response("error", "CLAN_NOT_FOUND")
     
 @app.get("/{scheme}/get_clan_members", dependencies=[Depends(is_authenticated)])
 async def get_clan_members(clanID: int, common: dict = Depends(common_parameters)) -> Dict[str, Any]:
@@ -188,8 +190,8 @@ async def get_clan_members(clanID: int, common: dict = Depends(common_parameters
                 members = []
                 for member in result:
                     members.append(dict(member._mapping))
-                return form_response("SUCCESS", members)
-            return form_response("ERROR", "CLAN_NOT_FOUND")
+                return form_response("success", members)
+            return form_response("error", "CLAN_NOT_FOUND")
 
 @app.get("/{scheme}/get_clans", dependencies=[Depends(is_authenticated)])
 async def get_clans(common: dict = Depends(common_parameters)) -> Dict[str, list]:
@@ -202,7 +204,7 @@ async def get_clans(common: dict = Depends(common_parameters)) -> Dict[str, list
         if result:
             for clan in result:
                 clans.append(dict(clan._mapping))
-        return form_response("SUCCESS", clans)
+        return form_response("success", clans)
 
 @app.get("/{scheme}/get_lobbies", dependencies=[Depends(is_authenticated)])
 async def get_lobbies(common: dict = Depends(common_parameters)) -> Dict[str, list]:
@@ -215,7 +217,7 @@ async def get_lobbies(common: dict = Depends(common_parameters)) -> Dict[str, li
         if result:
             for lobby in result:
                 lobbies.append(dict(lobby._mapping))
-        return form_response("SUCCESS", lobbies)
+        return form_response("success", lobbies)
 
 @app.get("/{scheme}/send_thread_message", dependencies=[Depends(is_authenticated)])
 async def thread_message(message: str, player_id: int, theme: str | None = None, common: dict = Depends(common_parameters)) -> Dict[str, Any]:
@@ -241,7 +243,7 @@ async def thread_message(message: str, player_id: int, theme: str | None = None,
                  "2": message
             })
         connection.commit()
-    return form_response("SUCCESS")
+    return form_response("success")
 
 @app.get("/{scheme}/get_thread", dependencies=[Depends(is_authenticated)])
 async def get_thread(theme: int, common: dict = Depends(common_parameters)) -> Dict[str, Any]:
@@ -251,8 +253,8 @@ async def get_thread(theme: int, common: dict = Depends(common_parameters)) -> D
             f"CALL get_thread(:1)"
         ), parameters={"1": theme}).fetchone()
         if result:
-            return form_response("SUCCESS", dict(result._mapping))
-        return form_response("ERROR", "THREAD_NOT_FOUND")
+            return form_response("success", dict(result._mapping))
+        return form_response("error", "THREAD_NOT_FOUND")
 
 @app.get("/{scheme}/get_thread_messages", dependencies=[Depends(is_authenticated)])
 async def get_thread_messages(theme: int, common: dict = Depends(common_parameters)) -> Dict[str, Any]:
@@ -265,7 +267,7 @@ async def get_thread_messages(theme: int, common: dict = Depends(common_paramete
         if result:
             for message in result:
                     messages.append(dict(message._mapping))
-        return form_response("SUCCESS", messages)
+        return form_response("success", messages)
 
 @app.get("/{scheme}/search_forum", dependencies=[Depends(is_authenticated)])
 async def search_forum(search_nick: str = "", search_text: str = "", common: dict = Depends(common_parameters)) -> Dict[str, Any]:
@@ -278,7 +280,7 @@ async def search_forum(search_nick: str = "", search_text: str = "", common: dic
         if result:
             for message in result:
                     messages.append(dict(message._mapping))
-        return form_response("SUCCESS", messages)
+        return form_response("success", messages)
 
 @app.get("/{scheme}/get_threads", dependencies=[Depends(is_authenticated)])
 async def get_threads(mode: int = 1, next_message: int = 0, common: dict = Depends(common_parameters)) -> Dict[str, Any]:
@@ -291,7 +293,7 @@ async def get_threads(mode: int = 1, next_message: int = 0, common: dict = Depen
         if result:
             for thread in result:
                     threads.append(dict(thread._mapping))
-        return form_response("SUCCESS", threads)
+        return form_response("success", threads)
 
 @app.get("/{scheme}/get_lobby", dependencies=[Depends(is_authenticated)])
 async def get_lobby(id_room: int, common: dict = Depends(common_parameters)) -> Dict[str, Any]:
@@ -306,11 +308,11 @@ async def get_lobby(id_room: int, common: dict = Depends(common_parameters)) -> 
         "FROM lobbies "
         f"WHERE id = :1 LIMIT 1"), parameters={"1": id_room}).fetchone()
         if result:
-            return form_response("SUCCESS", dict(result._mapping))
-        return form_response("ERROR", "LOBBY_NOT_FOUND")
+            return form_response("success", dict(result._mapping))
+        return form_response("error", "LOBBY_NOT_FOUND")
 
 @app.get("/{scheme}/get_mail", dependencies=[Depends(is_authenticated)])
-async def mail(player_id: str | int, messageID: str | None = None, order: str | None = None, resort: str | int | None = None, sent: str | None = None, readable: str | None = None, delete: str | None = None, common: dict = Depends(common_parameters)) -> Dict[str, Any]:
+async def get_mail(player_id: str | int, messageID: str | None = None, order: str | None = None, resort: str | int | None = None, sent: str | None = None, readable: str | None = None, delete: str | None = None, common: dict = Depends(common_parameters)) -> Dict[str, Any]:
     engine = conn.get(common["scheme"])
     with engine.connect() as connection: #type: ignore
         if delete == "true":
@@ -348,11 +350,11 @@ async def mail(player_id: str | int, messageID: str | None = None, order: str | 
             messages = []
             for entry in result:
                     messages.append(dict(entry._mapping))
-            return form_response("SUCCESS", {
+            return form_response("success", {
                  "messages": messages,
                  "summary": dict(summary._mapping)
             })
-        return form_response("ERROR", "USER_NOT_FOUND")
+        return form_response("error", "USER_NOT_FOUND")
 
 @app.get("/{scheme}/send_mail", dependencies=[Depends(is_authenticated)])
 async def send_mail(player_id: int, send_to: str, subject: str, message: str, send: str | None, common: dict = Depends(common_parameters)) -> Dict[str, Any]:
@@ -370,7 +372,7 @@ async def send_mail(player_id: int, send_to: str, subject: str, message: str, se
                 if id:
                     id = id._mapping.id
                     if id == player_id:
-                            return form_response("ERROR", "INVALID_RECIPIENT")
+                            return form_response("error", "INVALID_RECIPIENT")
                     if subject and message:
                         connection.execute(text(
                             "INSERT INTO mail_messages "
@@ -380,9 +382,9 @@ async def send_mail(player_id: int, send_to: str, subject: str, message: str, se
                         ), parameters={"1": player_id, "2": id._mapping, "3": subject, "4": message})
                         connection.commit()
                 else:
-                    return form_response("ERROR", "RECIPIENT_NOT_FOUND")
-            return form_response("SUCCESS", summary)
-        return form_response("ERROR", "USER_NOT_FOUND")
+                    return form_response("error", "RECIPIENT_NOT_FOUND")
+            return form_response("success", summary)
+        return form_response("error", "USER_NOT_FOUND")
 
 @app.get("/{scheme}/view_mail", dependencies=[Depends(is_authenticated)])
 async def view_mail(messageID: int = 1, common: dict = Depends(common_parameters)) -> Dict[str, Any]:
@@ -417,11 +419,11 @@ async def view_mail(messageID: int = 1, common: dict = Depends(common_parameters
                         f"WHERE id = :1"
                     ), parameters={"1": messageID})
                     connection.commit()
-                return form_response("SUCCESS", {
+                return form_response("success", {
                         "summary": dict(summary),
                         "message": dict(message)
                 })
-        return form_response("ERROR", "USER_NOT_FOUND")
+        return form_response("error", "USER_NOT_FOUND")
 
 @app.get("/{scheme}/get_news", dependencies=[Depends(is_authenticated)])
 async def get_news(common: dict = Depends(common_parameters)) -> Dict[str, Any]:
@@ -433,10 +435,10 @@ async def get_news(common: dict = Depends(common_parameters)) -> Dict[str, Any]:
         news = []
         for article in result:
                 news.append(dict(article._mapping))
-        return form_response("SUCCESS", news)
+        return form_response("success", news)
 
 @app.get("/{scheme}/get_polls", dependencies=[Depends(is_authenticated)])
-async def voting(common: dict = Depends(common_parameters)) -> Dict[str, Any]:
+async def get_polls(common: dict = Depends(common_parameters)) -> Dict[str, Any]:
     engine = conn.get(common["scheme"])
     with engine.connect() as connection: #type: ignore
         result = connection.execute(text(
@@ -451,7 +453,24 @@ async def voting(common: dict = Depends(common_parameters)) -> Dict[str, Any]:
                           "1": attr["id"]
                      }).fetchall()
                 polls.append(dict(attr) | {"answers": [dict(answer._mapping) for answer in answers]})
-        return form_response("SUCCESS", polls)
+        return form_response("success", polls)
+    
+@app.get("/{scheme}/get_latest_poll", dependencies=[Depends(is_authenticated)])
+async def get_latest_poll(common: dict = Depends(common_parameters)) -> Dict[str, Any]:
+    engine = conn.get(common["scheme"])
+    with engine.connect() as connection: #type: ignore
+        result = connection.execute(text(
+        "SELECT id, subject, published_at FROM votes LIMIT 1"
+        )).fetchone()
+        if result:
+            poll = result._mapping
+            answers = connection.execute(
+                text(f"SELECT id, text, votes FROM vote_answers WHERE vote_id = :1 LIMIT 4;"
+                    ), parameters={
+                        "1": poll["id"]
+                    }).fetchall()
+            return form_response("success", dict(poll) | {"answers": [dict(answer._mapping) for answer in answers]})
+    return form_response("error", "POLL_NOT_FOUND")
 
 @app.get("/{scheme}/get_punishments", dependencies=[Depends(is_authenticated)])
 async def get_punishments(common: dict = Depends(common_parameters)) -> Dict[str, Any]:
@@ -463,7 +482,7 @@ async def get_punishments(common: dict = Depends(common_parameters)) -> Dict[str
         punishments = []
         for punishment in result:
                 punishments.append(dict(punishment._mapping))
-        return form_response("SUCCESS", punishments)
+        return form_response("success", punishments)
 
 @app.get("/{scheme}/get_scored_games", dependencies=[Depends(is_authenticated)])
 async def get_scored_games(common: dict = Depends(common_parameters)) -> Dict[str, Any]:
@@ -475,7 +494,7 @@ async def get_scored_games(common: dict = Depends(common_parameters)) -> Dict[st
         scored_games = []
         for game in result:
                 scored_games.append(dict(game._mapping))
-        return form_response("SUCCESS", scored_games)
+        return form_response("success", scored_games)
 
 @app.get("/{scheme}/get_user_details", dependencies=[Depends(is_authenticated)])
 async def get_user_details(ID: str, common: dict = Depends(common_parameters)) -> Dict[str, Any]:
@@ -490,13 +509,13 @@ async def get_user_details(ID: str, common: dict = Depends(common_parameters)) -
                 f"CALL can_be_excluded(:1, :2)"
             ), parameters={"1": ID, "2": common['player_id']}).fetchone()
 
-            return form_response("SUCCESS", [
+            return form_response("success", [
                 {
                 "profile": dict(profile),
                 "can_be_excluded": True if can_be_excluded else False
                 }
             ])
-        return form_response("ERROR", "USER_NOT_FOUND")
+        return form_response("error", "USER_NOT_FOUND")
 
 @app.get("/{scheme}/get_user_list", dependencies=[Depends(is_authenticated)])
 async def get_user_list(page: int = 0, resort: str | None = "1", order: str = "score", common: dict = Depends(common_parameters)) -> Dict[str, Any]:
@@ -519,7 +538,7 @@ async def get_user_list(page: int = 0, resort: str | None = "1", order: str = "s
         users = []
         for user in result:
                 users.append(dict(user._mapping))
-        return form_response("SUCCESS", users)
+        return form_response("success", users)
 
 @app.get("/{scheme}/get_poll", dependencies=[Depends(is_authenticated)])
 async def get_poll(common: dict = Depends(common_parameters)) -> Dict[str, Any]:
@@ -529,11 +548,11 @@ async def get_poll(common: dict = Depends(common_parameters)) -> Dict[str, Any]:
             f"SELECT id, subject, published_at FROM votes;"
             )).fetchone()
             if result:
-                return form_response("SUCCESS", dict(result._mapping))
-    return form_response("ERROR", "POLL_NOT_FOUND")
+                return form_response("success", dict(result._mapping))
+    return form_response("error", "POLL_NOT_FOUND")
 
 @app.get("/{scheme}/command_heartbeat", dependencies=[Depends(is_authenticated)])
-async def heartbeat(player_count: int, host_id: int, common: dict = Depends(common_parameters)) -> Dict[str, Any]:
+async def command_heartbeat(player_count: int, host_id: int, common: dict = Depends(common_parameters)) -> Dict[str, Any]:
     engine = conn.get(common["scheme"])
     with engine.connect() as connection: #type: ignore
         connection.execute(text(
@@ -543,10 +562,10 @@ async def heartbeat(player_count: int, host_id: int, common: dict = Depends(comm
              "2": host_id
         })
         connection.commit()
-    return form_response("SUCCESS")
+    return form_response("success")
 
 @app.get("/{scheme}/command_leave", dependencies=[Depends(is_authenticated)])
-async def leave(player_id: int, common: dict = Depends(common_parameters)) -> Dict[str, Any]:
+async def command_leave(player_id: int, common: dict = Depends(common_parameters)) -> Dict[str, Any]:
     engine = conn.get(common["scheme"])
     with engine.connect() as connection: #type: ignore
         connection.execute(text(
@@ -555,10 +574,10 @@ async def leave(player_id: int, common: dict = Depends(common_parameters)) -> Di
              "1": player_id
         })
         connection.commit()
-    return form_response("SUCCESS")
+    return form_response("success")
 
 @app.get("/{scheme}/command_setipaddr", dependencies=[Depends(is_authenticated)])
-async def setipaddr(player_id: int, lobby_id: int, address: str, common: dict = Depends(common_parameters)) -> Dict[str, Any]:
+async def command_setipaddr(player_id: int, lobby_id: int, address: str, common: dict = Depends(common_parameters)) -> Dict[str, Any]:
     engine = conn.get(common["scheme"])
     with engine.connect() as connection: #type: ignore
         connection.execute(text(
@@ -569,7 +588,7 @@ async def setipaddr(player_id: int, lobby_id: int, address: str, common: dict = 
              "3": player_id
         })
         connection.commit()
-    return form_response("SUCCESS")
+    return form_response("success")
 
 @app.get("/{scheme}/command_login")
 async def command_login(session_key: str, common: dict = Depends(common_parameters)) -> Dict[str, Any]:
@@ -590,9 +609,9 @@ async def command_login(session_key: str, common: dict = Depends(common_paramete
                      "1": result.player_id
                 }).fetchone()
             if profile:
-                return form_response("SUCCESS", dict(profile._mapping))
-    return form_response("ERROR", "INVALID_SESSION")
+                return form_response("success", dict(profile._mapping))
+    return form_response("error", "INVALID_SESSION")
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="localhost", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000)

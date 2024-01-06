@@ -1,11 +1,11 @@
-from telnetlib import GA
 from threading import Thread
 from asyncio import StreamReader, StreamWriter, wait_for, TimeoutError, run, start_server
 from socket import socket, AF_INET, SOCK_DGRAM
 from traceback import print_exc
 from struct import pack, unpack, unpack_from
 from zlib import compress, decompress
-from config import Server, LOCALE, GAME_VERSIONS
+from common import Server, LOCALE
+from games.alexander import get_game
 from typing import Any
 
 def unpack_packet(packet: bytes) -> tuple[Any, list[bytes]]:
@@ -83,11 +83,10 @@ async def handle_tcp(reader: StreamReader, writer: StreamWriter) -> None:
             await process_packet(packet, writer)
         except TimeoutError:
             break
-        except ConnectionResetError:
-            break
-        except Exception as f:
+        except ConnectionError as f:
             print(f)
             print_exc()
+            break
         else:
             continue
     writer.close()
@@ -97,7 +96,7 @@ async def handle_tcp(reader: StreamReader, writer: StreamWriter) -> None:
 async def process_packet(packet, writer) -> None:
     (sequence, language, version), data = unpack_packet(packet)
     print(f"SEQ: {sequence} LANG: {LOCALE.get(language, 1)}\nREQUEST: {data}")
-    response = GAME_VERSIONS[version].process(data) if version in GAME_VERSIONS else "<NGDLG> <NGDLG>"
+    response = VERSIONS[16].handle(data)
     print(f"RESPONSE: {response}\n")
     send_packet(writer, add_header(pack_packet(response, data[-2].decode()), sequence, language, version))
     await writer.drain()
@@ -123,6 +122,9 @@ if __name__ == "__main__":
     TCP_MAX_PACKET_SIZE = 1440
     TCP_TIMEOUT = 120
     UDP_MAX_PACKET_SIZE = 64
+
+    VERSIONS = {16: get_game()}
+    
     SERVER = Server()
     try:
         main()

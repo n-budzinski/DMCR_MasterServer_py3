@@ -1,4 +1,6 @@
 setuptools~=65.5.0
 SQLAlchemy~=2.0.19
 pymysql
-"uvicorn[standard]"
+uvicorn[standard]
+requests
+dotmap
