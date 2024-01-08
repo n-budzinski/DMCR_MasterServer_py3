@@ -1,5 +1,6 @@
 from typing import Any, Dict, Optional
 from typing_extensions import Annotated, Doc
+from dotmap import DotMap
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 from database import get_engine
@@ -10,6 +11,13 @@ app = FastAPI()
 conn = {
     "alexander": get_engine("alexander")
 }
+
+class DotMap(DotMap):
+     def __getattr__(self, k):
+        #   output = super().__getattr__(k)
+        #   return output if output else ""
+          output = super().__getattr__(k)
+          return super().__getattr__(k) or ""
 
 class Auth_Exception(HTTPException):
     def __init__(self) -> None:
@@ -95,11 +103,11 @@ async def login(username: str, password: str, gmid: str | None = None, relogin: 
                 f"CALL login(:1, :2, :3)"), parameters={"1": username, "2": password, "3": gmid}).fetchone()
                 if profile:
                     if profile._mapping["player_id"] == -1:
-                            return form_response("error", "ERR_ACC_NOTFOUND")
+                            return form_response("error", "acc_not_found")
                     connection.commit()
                     return form_response("success", dict(profile._mapping))
             else:
-                    return form_response("error", "MISSING_GMID_ERROR")
+                    return form_response("error", "missing_gmid")
     return form_response("error", "INTERNAL_ERROR")
 
 @app.get("/{scheme}/reg_new_user")
@@ -194,7 +202,7 @@ async def get_clan_members(clanID: int, common: dict = Depends(common_parameters
             return form_response("error", "CLAN_NOT_FOUND")
 
 @app.get("/{scheme}/get_clans", dependencies=[Depends(is_authenticated)])
-async def get_clans(common: dict = Depends(common_parameters)) -> Dict[str, list]:
+async def get_clans(common: dict = Depends(common_parameters)) -> Dict[str, Any]:
     engine = conn.get(common["scheme"])
     with engine.connect() as connection: #type: ignore
         result = connection.execute(text(
@@ -207,7 +215,7 @@ async def get_clans(common: dict = Depends(common_parameters)) -> Dict[str, list
         return form_response("success", clans)
 
 @app.get("/{scheme}/get_lobbies", dependencies=[Depends(is_authenticated)])
-async def get_lobbies(common: dict = Depends(common_parameters)) -> Dict[str, list]:
+async def get_lobbies(common: dict = Depends(common_parameters)) -> Dict[str, Any]:
     engine = conn.get(common["scheme"])
     with engine.connect() as connection: #type: ignore
         result = connection.execute(text(
@@ -217,7 +225,7 @@ async def get_lobbies(common: dict = Depends(common_parameters)) -> Dict[str, li
         if result:
             for lobby in result:
                 lobbies.append(dict(lobby._mapping))
-        return form_response("success", lobbies)
+        return form_response("success", lobbies if lobbies else None)
 
 @app.get("/{scheme}/send_thread_message", dependencies=[Depends(is_authenticated)])
 async def thread_message(message: str, player_id: int, theme: str | None = None, common: dict = Depends(common_parameters)) -> Dict[str, Any]:
