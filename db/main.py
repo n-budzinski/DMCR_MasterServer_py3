@@ -19,24 +19,29 @@ class DotMap(DotMap):
           output = super().__getattr__(k)
           return super().__getattr__(k) or ""
 
-class Auth_Exception(HTTPException):
-    def __init__(self) -> None:
-         super().__init__(200)
+# class Auth_Exception(HTTPException):
+#     def __init__(self) -> None:
+#          super().__init__(200)
 
 def route_exception_handler(request: Request, exc: Exception):
-     return JSONResponse(status_code=200, content={"result": "error",
+     return JSONResponse(status_code=404, content={"result": "error",
                                                    "content": "INVALID_REQUEST"}) 
 
 def auth_exception_handler(request: Request, exc: Exception):
-     return JSONResponse(status_code=200, content={"result": "error",
+     return JSONResponse(status_code=403, content={"result": "error",
+                                                   "content": "AUTH_ERROR"}) 
+
+def missing_cred_exception_handler(request: Request, exc: Exception):
+     return JSONResponse(status_code=403, content={"result": "error",
                                                    "content": "AUTH_ERROR"}) 
 
 def database_exception_handler(request: Request, exc: Exception):
      return JSONResponse(status_code=200, content={"result": "error",
                                                    "content": exc.orig.args[1]}) # type: ignore
 
+app.add_exception_handler(401, missing_cred_exception_handler)
+app.add_exception_handler(403, auth_exception_handler)
 app.add_exception_handler(404, route_exception_handler)
-app.add_exception_handler(Auth_Exception, auth_exception_handler)
 app.add_exception_handler(DBAPIError, database_exception_handler)
 
 async def authenticate(scheme: str, player_id: int | None = None, session_key: str | None = None) -> bool:
@@ -56,12 +61,14 @@ async def authenticate(scheme: str, player_id: int | None = None, session_key: s
 
 async def common_parameters(scheme: str) -> Dict:
     if not conn.get(scheme):
-         raise HTTPException(status_code=200, detail="SCHEME_ERROR")
+         raise HTTPException(status_code=400, detail="SCHEME_ERROR")
     return {"scheme": scheme}
 
 async def is_authenticated(scheme: str, session_key: str = "", player_id: int | None = None) -> None:
+    if not (session_key and player_id):
+         raise HTTPException(status_code=401)
     if not await authenticate(scheme, player_id, session_key):
-         raise Auth_Exception
+         raise HTTPException(status_code=403)
 
 def form_response(result: str, content: Any = None):
      return {
@@ -505,7 +512,7 @@ async def get_scored_games(common: dict = Depends(common_parameters)) -> Dict[st
         return form_response("success", scored_games)
 
 @app.get("/{scheme}/get_user_details", dependencies=[Depends(is_authenticated)])
-async def get_user_details(ID: str, common: dict = Depends(common_parameters)) -> Dict[str, Any]:
+async def get_user_details(player_id: int, ID: str, common: dict = Depends(common_parameters)) -> Dict[str, Any]:
     engine = conn.get(common["scheme"])
     with engine.connect() as connection: #type: ignore
         profile = connection.execute(text(
@@ -513,16 +520,16 @@ async def get_user_details(ID: str, common: dict = Depends(common_parameters)) -
         ), parameters={"1": ID}).fetchone()
         if profile:
             profile = profile._mapping
-            can_be_excluded = connection.execute(text(
+            result = connection.execute(text(
                 f"CALL can_be_excluded(:1, :2)"
-            ), parameters={"1": ID, "2": common['player_id']}).fetchone()
-
-            return form_response("success", [
-                {
-                "profile": dict(profile),
-                "can_be_excluded": True if can_be_excluded else False
-                }
-            ])
+            ), parameters={"1": ID, "2": player_id}).fetchone()
+            if result:
+                return form_response("success",
+                    {
+                    "profile": dict(profile),
+                    "can_be_excluded": True if result.can_be_excluded else False
+                    }
+            )
         return form_response("error", "USER_NOT_FOUND")
 
 @app.get("/{scheme}/get_user_list", dependencies=[Depends(is_authenticated)])

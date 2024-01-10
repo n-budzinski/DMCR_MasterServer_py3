@@ -14,9 +14,23 @@ parser.add_argument("--db_username", type=str, help="the database host", require
 parser.add_argument("--db_password", type=str, help="the database host", required=True)
 argv = parser.parse_args()
 
-# class Response:
-#     def __init__(self, response) -> None:
-#         return response)
+class Response(dotmap.DotMap):
+    def __init__(self, request: dict, *args, **kwargs) -> None:
+        super().__init__(request, *args, **kwargs)
+        self.result = request.get("result", "error")
+        self.content = dotmap.DotMap(request.get("content") if isinstance(request.get("content"), dict) else None)
+        # self.content = dotmap.DotMap(request["content"]) if isinstance(request.get("content"), dict) else request.get("content", {})
+
+    def __bool__(self) -> bool:
+        return self.result != "error"
+
+# print(
+#     Response(requests.get("http://localhost:8000/alexander/get_polls", 
+#                  params={
+#                      "session_key" : "414715a0-af20-11ee-aa7c-704d7b84b2a8",
+#                      "player_id": 2
+#                  }).json()).content
+# )
 
 class Game:
     route_map = {}
@@ -57,5 +71,17 @@ class Game:
                                     f'{self.db_username}:{self.db_password}'
                                     f'@{self.db_address}/{self.scheme}?charset=utf8mb4')
 
-    def get(self, query: str, **kwargs: Any | None):
-        return dotmap.DotMap(requests.get(f"http://{self.api_address}:{self.api_port}/{self.scheme}/{query}", params=kwargs).json(), _dynamic=False)
+
+    def get(self, query: str, **kwargs: Any):
+        return dotmap.DotMap(
+            requests.get(f"http://{self.api_address}:{self.api_port}/{self.scheme}/{query}", params=kwargs).json(), 
+            _dynamic=False
+            )
+    
+    def get_response(self, query: str, session_key: str | None, player_id: str | int | None, **kwargs: Any) -> Response:
+        return Response(requests.get(f"http://{self.api_address}:{self.api_port}/{self.scheme}/{query}", 
+                                     params={
+                                         "session_key": session_key,
+                                         "player_id": player_id
+                                     } | kwargs).json())
+
