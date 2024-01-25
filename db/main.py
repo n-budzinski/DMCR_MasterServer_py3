@@ -629,4 +629,5 @@ async def command_login(session_key: str, common: dict = Depends(common_paramete
 
 if __name__ == "__main__":
     import uvicorn
+    # uvicorn.run(app, host="0.0.0.0", port=8000)
     uvicorn.run(app, host="0.0.0.0", port=8000)

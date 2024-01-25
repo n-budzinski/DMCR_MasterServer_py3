@@ -1,3 +1,4 @@
+from asyncio import StreamWriter
 import dotmap
 import requests
 from typing import Callable
@@ -18,7 +19,13 @@ class Response(dotmap.DotMap):
     def __init__(self, request: dict, *args, **kwargs) -> None:
         super().__init__(request, *args, **kwargs)
         self.result = request.get("result", "error")
-        self.content = dotmap.DotMap(request.get("content") if isinstance(request.get("content"), dict) else None)
+        content = None
+        if isinstance(request.get("content"), dict):
+            content = dotmap.DotMap(request.get("content"))
+        elif isinstance(request.get("content"), list):
+            content = [dotmap.DotMap(entry) for entry in request.get("content", [])]
+        else:
+            self.content = dotmap.DotMap({"message": request.get("content")})
         # self.content = dotmap.DotMap(request["content"]) if isinstance(request.get("content"), dict) else request.get("content", {})
 
     def __bool__(self) -> bool:
@@ -41,8 +48,8 @@ class Game:
             return func
         return inner
 
-    def handle(self, data):
-        return self.packet_handler(data)
+    def handle(self, data, vars: object):
+        return self.packet_handler(data, vars = vars)
 
     def __init__(self,
                  packet_handler: Callable,

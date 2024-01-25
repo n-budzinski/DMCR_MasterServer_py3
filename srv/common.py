@@ -1,7 +1,16 @@
+from asyncio.streams import StreamReader
 import ipaddress
+from typing import Any
 import uuid
 from os import urandom
 from collections import defaultdict
+from asyncio import AbstractEventLoop, BaseProtocol, StreamWriter, WriteTransport
+
+class Properties:
+    def __init__(self, version: int = 16, language: int = 1, session_key: str = "") -> None:
+        self.version = version
+        self.language = language
+        self.session_key = session_key
 
 def getFile(filename: str) -> str:
     return open(f'res/{filename}', 'rb').read().decode()

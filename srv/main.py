@@ -4,7 +4,7 @@ from socket import socket, AF_INET, SOCK_DGRAM
 from traceback import print_exc
 from struct import pack, unpack, unpack_from
 from zlib import compress, decompress
-from common import Server, LOCALE
+from common import Server, LOCALE, Properties
 from games.alexander import get_game
 from typing import Any
 
@@ -75,12 +75,13 @@ def handle_udp(udp_socket: socket) -> None:
 
 
 async def handle_tcp(reader: StreamReader, writer: StreamWriter) -> None:
+    vars = Properties()
     while True:
         try:
             packet = await wait_for(reader.read(TCP_MAX_PACKET_SIZE), timeout=TCP_TIMEOUT)
             if not packet:
                 break
-            await process_packet(packet, writer)
+            await process_packet(packet, writer, vars)
         except TimeoutError:
             break
         except ConnectionError as f:
@@ -92,13 +93,12 @@ async def handle_tcp(reader: StreamReader, writer: StreamWriter) -> None:
     writer.close()
     await writer.wait_closed()
 
-
-async def process_packet(packet, writer) -> None:
-    (sequence, language, version), data = unpack_packet(packet)
-    print(f"SEQ: {sequence} LANG: {LOCALE.get(language, 1)}\nREQUEST: {data}")
-    response = VERSIONS[16].handle(data)
+async def process_packet(packet, writer: StreamWriter, vars: Properties) -> None:
+    (sequence, vars.language, vars.version), data = unpack_packet(packet)
+    print(f"SEQ: {sequence} LANG: {LOCALE.get(vars.language, 1)}\nREQUEST: {data}")
+    response = VERSIONS[16].handle(data, vars)
     print(f"RESPONSE: {response}\n")
-    send_packet(writer, add_header(pack_packet(response, data[-2].decode()), sequence, language, version))
+    send_packet(writer, add_header(pack_packet(response, data[-2].decode()), sequence, vars.language, vars.version))
     await writer.drain()
 
 
