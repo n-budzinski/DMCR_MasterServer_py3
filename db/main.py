@@ -1,3 +1,4 @@
+from curses.ascii import isalnum
 from typing import Any, Dict, Optional
 from typing_extensions import Annotated, Doc
 from dotmap import DotMap
@@ -284,8 +285,8 @@ async def get_thread_messages(theme: int, common: dict = Depends(common_paramete
                     messages.append(dict(message._mapping))
         return form_response("success", messages)
 
-@app.get("/{scheme}/search_forum", dependencies=[Depends(is_authenticated)])
-async def search_forum(search_nick: str = "", search_text: str = "", common: dict = Depends(common_parameters)) -> Dict[str, Any]:
+@app.get("/{scheme}/forum_search", dependencies=[Depends(is_authenticated)])
+async def forum_search(search_nick: str = "", search_text: str = "", common: dict = Depends(common_parameters)) -> Dict[str, Any]:
     engine = conn.get(common["scheme"])
     with engine.connect() as connection: #type: ignore
         result = connection.execute(text(
@@ -315,11 +316,15 @@ async def get_lobby(id_room: int, common: dict = Depends(common_parameters)) -> 
     engine = conn.get(common["scheme"])
     with engine.connect() as connection: #type: ignore
         result = connection.execute(text(
-        "SELECT players, max_players, ip, password, "
+        "SELECT players, "
+        "max_players, "
+        "ip, "
+        "password, "
         "(SELECT nick "
         "FROM players "
         "WHERE players.player_id = lobbies.host_id) "
-        "AS nick, host_id "
+        "AS nick, "
+        "host_id "
         "FROM lobbies "
         f"WHERE id = :1 LIMIT 1"), parameters={"1": id_room}).fetchone()
         if result:

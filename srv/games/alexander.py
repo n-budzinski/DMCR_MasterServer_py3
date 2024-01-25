@@ -1,6 +1,8 @@
 from collections import defaultdict
 from datetime import datetime
 from typing import Any
+
+from requests import session
 from common import clip, clip_string, reverse_address, extract_variables
 from math import floor, ceil
 from struct import unpack
@@ -148,7 +150,6 @@ def clan_admin(variables: dict, player_id, **kwargs: dict[str, Any]) -> str:
             return (
                 f'<NGDLG>'
                 f'#ebox[%L0](x:0,y:0,w:100%,h:100%)'
-                f"#edit[%SKEY](%L0[x:0,y:0,w:0,h:0],{{%GV_SKEY}})"
                 f'#table[%TBL](%L0[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&clan_admin2.dcml\\00&again=true^clanID={variables["clanID"]}^new_jointer={player_id}\\00}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"NOTICE\",\"Delete clan [ SIGNATURE HERE ]?\",26,\"OK\",\"Cancel\")'
                 f'<NGDLG>'
             )
@@ -178,7 +179,6 @@ def clan_load_image(variables: dict, **kwargs: dict[str, Any]) -> str:
         return (
             f'<NGDLG> '
             f'#ebox[%L0](x:0,y:0,w:100%,h:100%)'
-            f"#edit[%SKEY](%L0[x:0,y:0,w:0,h:0],{{%GV_SKEY}})"
             f'#table[%TBL](%L0[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&clan_load_image.dcml\\00'
             f'&help=true^signature={variables["signature"]}^icon_name=<%GV_CLAN_ICON>\\00|LW_lockall}}'
             f'{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"CLAN ICON\",\"\",26,\"Upload\",\"Cancel\")'
@@ -203,9 +203,13 @@ def clan_load_image(variables: dict, **kwargs: dict[str, Any]) -> str:
         )
 
 @game.route('clan_new.dcml')
-def clan_new(variables: dict, player_id: str | int, **kwargs: dict[str, Any]) -> str:
+def clan_new(variables: dict, vars: Properties, player_id: str | int, **kwargs: dict[str, Any]) -> str:
     if variables['title'] and variables['signature']:
-        game.get(query="create_clan", kwargs = variables)
+        game.get(
+            query="create_clan", 
+            kwargs = variables,
+            session_key = vars.session_key
+            )
         return (
             f'#ebox[%TB](x:0,y:0,w:100%,h:100%)'
             f'#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)'
@@ -444,7 +448,6 @@ def clans_list(player_id: int | str, vars: Properties, variables: dict, **kwargs
     clan_list = "".join(clan_list)
     return (
         f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
-        f"#edit[%SKEY](%TB[x:0,y:0,w:0,h:0],{{%GV_SKEY}})"
         f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)"
         f"#pix[%PXT2](%TB[x:0,y:263,w:100%,h:100%],{{}},Internet/pix/i_pri0,13,13,13,13)"
         f"#pan[%P1](%TB[x:42,y:0-22,w:0,h:80],10)"
@@ -521,17 +524,16 @@ def dbtbl(player_id: int | str, vars: Properties, variables: dict, **kwargs: dic
     return (
         f"<DBTBL>"
         f"#exec(LW_time&{1000 * game.dbtbl_interval}&l_games_btn.cml\\00)"
-        f"#edit[%SKEY](%TB[x:0,y:0,w:0,h:0],{{%GV_SKEY}})"
         f"#block(l_games_btn.cml,l_g):GW|open&dbtbl.dcml\\00&order=r.hbtime^resort=\\00|LW_lockall"
         f"#end(l_g)"
         f"#ebox[%BB](x:0,y:0,w:100%,h:100%)"
         f"#font(R2C12,R2C12,RC12)"
         f"#stbl[%TBL](%BB[x:154,y:42,w:523,h:291],"
-            f"{{GW|open&dbtbl.dcml\\00&order=r.title^resort=\\00|LW_lockall}}"
-            f"{{GW|open&dbtbl.dcml\\00&order=u.nick^resort=\\00|LW_lockall}}"
-            f"{{GW|open&dbtbl.dcml\\00&order=t.name^resort=\\00|LW_lockall}}"
-            f"{{}}"
-            f"{{}},5,7,33,1,25,1,14,1,14,1,14,1,20,\"{{Game Title\",\"{{Host\",\"{{Type\",\"Players\",\"Ping\")"
+        f"{{GW|open&dbtbl.dcml\\00&order=r.title^resort=\\00|LW_lockall}}"
+        f"{{GW|open&dbtbl.dcml\\00&order=u.nick^resort=\\00|LW_lockall}}"
+        f"{{GW|open&dbtbl.dcml\\00&order=t.name^resort=\\00|LW_lockall}}"
+        f"{{}}"
+        f"{{}},5,7,33,1,25,1,14,1,14,1,14,1,20,\"{{Game Title\",\"{{Host\",\"{{Type\",\"Players\",\"Ping\")"
         f"#def_sbox(Internet/pix/i_pri%d,-1,-1,-1,-1,-1,-1,-1,-1,0,0,0,0,6,-21,25)"
         f"#sbox[%SB](x:150,y:60,w:526+4,h:271)"
         f"{ping_list}"
@@ -623,7 +625,6 @@ def forum_search(**kwargs) -> str:
     return (
         f"<NGDLG>"
         f"#ebox[%L0](x:0,y:0,w:100%,h:100%)"
-        f"#edit[%SKEY](%L0[x:0,y:0,w:0,h:0],{{%GV_SKEY}})"
         f"#ebox[%L](x:244,y:140,w:415,h:165)"
         f"#exec(LW_cfile&\\00&Cookies/%GV_SEARCH_NICK)"
         f"#exec(LW_cfile&\\00&Cookies/%GV_SEARCH_TEXT)"
@@ -740,225 +741,130 @@ def forum_search(**kwargs) -> str:
 #     )
 
 
-# @alexander.route('forum.dcml')@alexander.route('forum.dcml')
-# def forum(variables: dict, **kwargs) -> str:
-#     thread_strings = ""
-#     thread_list = []
-#     search = False
-#     if variables['mode'] not in ('1', '2', '3', '4'):
-#         variables['mode'] = '1'
-#     if variables['search_nick'] or variables['search_text']:
-#         search = True
-#     with alexander.engine.connect() as connection:
-#         threads = connection.execute(
-#             text(f'CALL forum_search(\"{variables["search_nick"]}\", \"{variables["search_text"]}\" )')).fetchall()
-#         threads = connection.execute(text(
-#             f"CALL get_thread_list({variables['mode']}, {int(variables['next_message']) if variables['next_message'] else 0})")).fetchall()
-#         for idx, entry in enumerate(threads[:30]):
-#             thread = entry._mapping
-#             thread_list.append(" ".join([
-#                 f"#font(BC12,RC12,RC12)",
-#                 f"""#txt[%TXT{idx + 1}](%SB[x:218,y:{'4' if idx == 0 else f'%P{idx}-21'},w:100%-215,h:24],{{}},\"{thread['content'].replace(variables['search_text'], '{' + variables['search_text'] + '}') if search else thread['content']}\")""",
-#                 f"#exec(LW_vis&0&%TXT{idx + 1})",
-#                 f"#apan[%PAN{idx + 1}](%SB[x:0,y:{'4' if idx == 0 else f'%P{idx}-21'}-10,w:100%,y1:{'4' if idx == 0 else f'%P{idx}-21'}+{'42' if variables['mode'] == '1' else '28'}>%TXT{idx + 1}+5],{{GW|open&forum_view.dcml&last_view=0^theme={thread['id']}|LW_lockall}},14,\"\")",
-#                 f"#font(BC12,RC12,RC12)",
-#                 f"#txt[%TEXT{idx + 1}](%SB[x:218,y:{'4' if idx == 0 else f'%P{idx}-21'},w:100%-220,h:24],{{}},\"{thread['content'].replace(variables['search_text'], '{' + variables['search_text'] + '}') if search else thread['content']}\")",
-#                 f"#font(R2C12,R2C12,RC12)",
-#                 f"#txt[%S_DATE{idx + 1}](%SB[x:8,y:{'4' if idx == 0 else f'%P{idx}-21'},w:170,h:24],{{}},\"Date:\")",
-#                 f"#font(BC12,R2C12,RC12)",
-#                 f"#txt[%DATE{idx + 1}](%SB[x:%S_DATE{idx + 1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'},w:170,h:24],{{}},\"{thread['created_at']}\")",
-#                 f"#font(R2C12,BC12,RC12)",
-#                 f"#txt[%S_CR{idx + 1}](%SB[x:8,y:{'4' if idx == 0 else f'%P{idx}-21'}+14,w:170,h:24],{{}},\"Author:\")",
-#                 f"#txt[%CR{idx + 1}](%SB[x:%S_CR{idx + 1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'}+14,w:170,h:24],{{GW|open&user_details.dcml&ID={thread['author_id']}|LW_lockall}},\"{{{thread['nick']}}}\")",
-#                 f"#txt[%S_COU{idx + 1}](%SB[x:8,y:{'4' if idx == 0 else f'%P{idx}-21'}+28,w:170,h:24],{{}},\"Message:\")" if
-#                 variables['mode'] == '1' else '',
-#                 f"#font(BC12,BC12,BC12)",
-#                 f"#txt[%COU{idx + 1}](%SB[x:%S_COU{idx + 1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'}+28,w:170,h:24],{{}},\"{thread['messages']}\")" if
-#                 variables["mode"] == "1" else "",
-#                 f"#pan[%P{idx + 1}](%SB[x:0-32,y:{'4' if idx == 0 else f'%P{idx}-21'}+{'42' if variables['mode'] == '1' else '28'}>%TEXT{idx + 1}+38,w:100%+65,h:0],9)",
-#             ]))
-#     thread_strings = "".join(thread_list) + \
-#                      f"#ebox[%B1](x:0,y:0,w:100%,h:100%)\
-#         #pan[%PAN0](%B1[x:390,y:8,w:0,h:359],10)" if thread_list else "".join([
-#         f"#font(BC14,WC14,BC14)",
-#         f"#sbtn[%BT3](%B[x:684,y:377,w:15,h:305],{{GW|open&forum.dcml\\00&mode=^next_message={int(variables['next_message']) + 30 if variables['next_message'] else 0}^last_view=0^search_nick=^search_text=\\00|LW_lockall}},\"Next\")" if len(
-#             threads) > 29 else "",
-#     ]) if threads else "".join([
-#         f"#font(RG18,RG18,RG18)", f"#ctxt[%T0](%B[x:154,y:179,w:523,h:20],{{}},\"{{No search results}}\")"]),
-#     return (
-#         f"#exec(LW_cfile&20230722144507&Cookies/%GV_FORUM_LAST_TIME)"
-#         f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
-#         f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)"
-#         f"#pix[%PXT2](%TB[x:0,y:263,w:100%,h:100%],{{}},Internet/pix/i_pri0,13,13,13,13)"
-#         f"#pan[%P1](%TB[x:42,y:0-22,w:0,h:80],10)"
-#         f"#font(RG18,RG18,RG18)"
-#         f"#txt[%PL](%TB[x:737,y:0,w:150,h:20],{{}},\"Players\")"
-#         f"#font(BG18,BG18,BG18)"
-#         f"#ctxt[%TTTEXT](%TB[x:0-62,y:0-32,w:1024,h:20],{{}},\"NEWS & EVENTS\")"
-#         f"#font(R2C12,R2C12,R2C12)"
-#         f"#txt[%TMTEXT](%TB[x:0,y:514,w:100,h:20],{{}},\"Message:\")"
-#         f"#font(RC12,RC12,RC12)"
-#         f"#def_gp_btn(Internet/pix/i_pri0,51,51,0,1)"
-#         f"#gpbtn[%BT1](%TB[x:74,y:22,w:-22,h:-18],{{GW|open&news.dcml\\00&language=\\00|LW_lockall}},\"News & Events\")"
-#         f"#hint(%BT1,\"News, events, forum and punishment list\")"
-#         f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)"
-#         f"#font(RC12,R2C12,RC12)"
-#         f"#gpbtn[%BT2](%TB[x:196,y:23,w:-22,h:-18],{{GW|open&users_list.dcml\\00|LW_lockall}},\"Player List\")"
-#         f"#hint(%BT2,\"Player list, personal mail and clan information\")"
-#         f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)"
-#         f"#font(RC12,R2C12,RC12)"
-#         f"#gpbtn[%BT4](%TB[x:318,y:23,w:-22,h:-18],{{GW|open&games.dcml\\00|LW_lockall}},\"Custom Games\")"
-#         f"#hint(%BT4,\"Play custom games\")"
-#         f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)"
-#         f"#font(RC12,R2C12,RC12)"
-#         f"#gpbtn[%BT5](%TB[x:440,y:23,w:-22,h:-18],{{GW|open&scored_games.dcml\\00&player_id=0\\00|LW_lockall}},\"Scored Games\")"
-#         f"#hint(%BT5,\"Played games and their scores\")"
-#         f"#ebox[%B_VOTE](x:5,y:396,w:140,h:103)"
-#         f"<VOTING>"
-#         f"#exec(GW|open&voting.dcml\\00&question=46\\00)"
-#         f"<VOTING>"
-#         f"#ebox[%B](x:0,y:0,w:100%,h:10%)"
-#         f"#font(R2C14,R2C14,RC14)"
-#         f"#ctxt[%LIST1](%B[x:0,y:106,w:146,h:24],{{GW|open&news.dcml\\00|LW_lockall}},\"{{News & Events}}\")"
-#         f"#ctxt[%LIST2](%B[x:0,y:%LIST1-9,w:146,h:24],{{GW|open&punishments.dcml\\00|LW_lockall}},\"{{Punishments}}\")"
-#         f"#hint(%LIST2,\"List of punished players\")"
-#         f"#font(RC14,GC14,RC14)"
-#         f"#ctxt[%LIST3](%B[x:0,y:%LIST2-9,w:146,h:24],{{GW|open&forum.dcml\\00&last_view=0\\00|LW_lockall}},\"{{Forum}}\")"
-#         f"#hint(%LIST3,\"Read and write forum messages\")"
-#         f"{'#font(RC12,GC12,RC12)' if variables['mode'] == '1' else '#font(RC12,R2C12,RC12)'}"
-#         f"#ctxt[%LIST4](%B[x:0,y:%LIST3-10,w:146,h:24],{{GW|open&forum.dcml\\00&mode=1^last_view=0\\00|LW_lockall}},\"{{All themes}}\")"
-#         f"{'#font(RC12,GC12,RC12)' if variables['mode'] == '2' else '#font(RC12,R2C12,RC12)'}"
-#         f"#ctxt[%LIST5](%B[x:0,y:%LIST4-1,w:146,h:24],{{GW|open&forum.dcml\\00&mode=2^last_view=0\\00|LW_lockall}},\"{{Last 10 messages}}\")"
-#         f"{'#font(RC12,GC12,RC12)' if variables['mode'] == '3' else '#font(RC12,R2C12,RC12)'}"
-#         f"#ctxt[%LIST6](%B[x:0,y:%LIST5-1,w:146,h:24],{{GW|open&forum.dcml\\00&mode=3^last_view=0\\00|LW_lockall}},\"{{Messages for this day}}\")"
-#         f"{'#font(RC12,GC12,RC12)' if variables['mode'] == '4' else '#font(RC12,R2C12,RC12)'}"
-#         f"#ctxt[%LIST7](%B[x:0,y:%LIST6-1,w:146,h:24],{{GW|open&forum.dcml\\00&mode=4^last_view=0\\00|LW_lockall}},\"{{Messages for this week}}\")"
-#         f"#font(RC12,R2C12,RC12)"
-#         f"#ctxt[%LIST8](%B[x:0,y:%LIST7-1,w:146,h:24],{{GW|open&forum_add.dcml\\00&last_view=0\\00|LW_lockall}},\"{{Add theme}}\")"
-#         f"#hint(%LIST8,\"Create a new forum theme\")"
-#         f"#font(RC12,R2C12,RC12)"
-#         f"#ctxt[%LIST9](%B[x:0,y:%LIST8-1,w:146,h:24],{{GW|open&forum_search.dcml\\00&last_view=0\\00|LW_lockall}},\"{{Search}}\")"
-#         f"#hint(%LIST9,\"Search a message by author or text\")"
-#         f"#pan[%PAN](%B[x:154,y:42,w:526-3,h:291],7)"
-#         f"#sbox[%SB](x:150,y:42+4,w:526+4,h:291-8)"
-#         f"{thread_strings}"
-#         f"<NGDLG>"
-#         f"<NGDLG>"
-#         f"#block(cancel.cml,CAN)"
-#         f"<NGDLG>"
-#         f"<NGDLG>"
-#         f"#end(CAN)"
-#     )
-#         variables['mode'] = '1'
-#     if variables['search_nick'] or variables['search_text']:
-#         search = True
-#     with alexander.engine.connect() as connection:
-#         threads = connection.execute(
-#             text(f'CALL forum_search(\"{variables["search_nick"]}\", \"{variables["search_text"]}\" )')).fetchall()
-#         threads = connection.execute(text(
-#             f"CALL get_thread_list({variables['mode']}, {int(variables['next_message']) if variables['next_message'] else 0})")).fetchall()
-#         for idx, entry in enumerate(threads[:30]):
-#             thread = entry._mapping
-#             thread_list.append(" ".join([
-#                 f"#font(BC12,RC12,RC12)",
-#                 f"""#txt[%TXT{idx + 1}](%SB[x:218,y:{'4' if idx == 0 else f'%P{idx}-21'},w:100%-215,h:24],{{}},\"{thread['content'].replace(variables['search_text'], '{' + variables['search_text'] + '}') if search else thread['content']}\")""",
-#                 f"#exec(LW_vis&0&%TXT{idx + 1})",
-#                 f"#apan[%PAN{idx + 1}](%SB[x:0,y:{'4' if idx == 0 else f'%P{idx}-21'}-10,w:100%,y1:{'4' if idx == 0 else f'%P{idx}-21'}+{'42' if variables['mode'] == '1' else '28'}>%TXT{idx + 1}+5],{{GW|open&forum_view.dcml&last_view=0^theme={thread['id']}|LW_lockall}},14,\"\")",
-#                 f"#font(BC12,RC12,RC12)",
-#                 f"#txt[%TEXT{idx + 1}](%SB[x:218,y:{'4' if idx == 0 else f'%P{idx}-21'},w:100%-220,h:24],{{}},\"{thread['content'].replace(variables['search_text'], '{' + variables['search_text'] + '}') if search else thread['content']}\")",
-#                 f"#font(R2C12,R2C12,RC12)",
-#                 f"#txt[%S_DATE{idx + 1}](%SB[x:8,y:{'4' if idx == 0 else f'%P{idx}-21'},w:170,h:24],{{}},\"Date:\")",
-#                 f"#font(BC12,R2C12,RC12)",
-#                 f"#txt[%DATE{idx + 1}](%SB[x:%S_DATE{idx + 1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'},w:170,h:24],{{}},\"{thread['created_at']}\")",
-#                 f"#font(R2C12,BC12,RC12)",
-#                 f"#txt[%S_CR{idx + 1}](%SB[x:8,y:{'4' if idx == 0 else f'%P{idx}-21'}+14,w:170,h:24],{{}},\"Author:\")",
-#                 f"#txt[%CR{idx + 1}](%SB[x:%S_CR{idx + 1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'}+14,w:170,h:24],{{GW|open&user_details.dcml&ID={thread['author_id']}|LW_lockall}},\"{{{thread['nick']}}}\")",
-#                 f"#txt[%S_COU{idx + 1}](%SB[x:8,y:{'4' if idx == 0 else f'%P{idx}-21'}+28,w:170,h:24],{{}},\"Message:\")" if
-#                 variables['mode'] == '1' else '',
-#                 f"#font(BC12,BC12,BC12)",
-#                 f"#txt[%COU{idx + 1}](%SB[x:%S_COU{idx + 1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'}+28,w:170,h:24],{{}},\"{thread['messages']}\")" if
-#                 variables["mode"] == "1" else "",
-#                 f"#pan[%P{idx + 1}](%SB[x:0-32,y:{'4' if idx == 0 else f'%P{idx}-21'}+{'42' if variables['mode'] == '1' else '28'}>%TEXT{idx + 1}+38,w:100%+65,h:0],9)",
-#             ]))
-#     thread_strings = "".join(thread_list) + \
-#                      f"#ebox[%B1](x:0,y:0,w:100%,h:100%)\
-#         #pan[%PAN0](%B1[x:390,y:8,w:0,h:359],10)" if thread_list else "".join([
-#         f"#font(BC14,WC14,BC14)",
-#         f"#sbtn[%BT3](%B[x:684,y:377,w:15,h:305],{{GW|open&forum.dcml\\00&mode=^next_message={int(variables['next_message']) + 30 if variables['next_message'] else 0}^last_view=0^search_nick=^search_text=\\00|LW_lockall}},\"Next\")" if len(
-#             threads) > 29 else "",
-#     ]) if threads else "".join([
-#         f"#font(RG18,RG18,RG18)", f"#ctxt[%T0](%B[x:154,y:179,w:523,h:20],{{}},\"{{No search results}}\")"]),
-#     return (
-#         f"#exec(LW_cfile&20230722144507&Cookies/%GV_FORUM_LAST_TIME)"
-#         f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
-#         f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)"
-#         f"#pix[%PXT2](%TB[x:0,y:263,w:100%,h:100%],{{}},Internet/pix/i_pri0,13,13,13,13)"
-#         f"#pan[%P1](%TB[x:42,y:0-22,w:0,h:80],10)"
-#         f"#font(RG18,RG18,RG18)"
-#         f"#txt[%PL](%TB[x:737,y:0,w:150,h:20],{{}},\"Players\")"
-#         f"#font(BG18,BG18,BG18)"
-#         f"#ctxt[%TTTEXT](%TB[x:0-62,y:0-32,w:1024,h:20],{{}},\"NEWS & EVENTS\")"
-#         f"#font(R2C12,R2C12,R2C12)"
-#         f"#txt[%TMTEXT](%TB[x:0,y:514,w:100,h:20],{{}},\"Message:\")"
-#         f"#font(RC12,RC12,RC12)"
-#         f"#def_gp_btn(Internet/pix/i_pri0,51,51,0,1)"
-#         f"#gpbtn[%BT1](%TB[x:74,y:22,w:-22,h:-18],{{GW|open&news.dcml\\00&language=\\00|LW_lockall}},\"News & Events\")"
-#         f"#hint(%BT1,\"News, events, forum and punishment list\")"
-#         f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)"
-#         f"#font(RC12,R2C12,RC12)"
-#         f"#gpbtn[%BT2](%TB[x:196,y:23,w:-22,h:-18],{{GW|open&users_list.dcml\\00|LW_lockall}},\"Player List\")"
-#         f"#hint(%BT2,\"Player list, personal mail and clan information\")"
-#         f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)"
-#         f"#font(RC12,R2C12,RC12)"
-#         f"#gpbtn[%BT4](%TB[x:318,y:23,w:-22,h:-18],{{GW|open&games.dcml\\00|LW_lockall}},\"Custom Games\")"
-#         f"#hint(%BT4,\"Play custom games\")"
-#         f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)"
-#         f"#font(RC12,R2C12,RC12)"
-#         f"#gpbtn[%BT5](%TB[x:440,y:23,w:-22,h:-18],{{GW|open&scored_games.dcml\\00&player_id=0\\00|LW_lockall}},\"Scored Games\")"
-#         f"#hint(%BT5,\"Played games and their scores\")"
-#         f"#ebox[%B_VOTE](x:5,y:396,w:140,h:103)"
-#         f"<VOTING>"
-#         f"#exec(GW|open&voting.dcml\\00&question=46\\00)"
-#         f"<VOTING>"
-#         f"#ebox[%B](x:0,y:0,w:100%,h:10%)"
-#         f"#font(R2C14,R2C14,RC14)"
-#         f"#ctxt[%LIST1](%B[x:0,y:106,w:146,h:24],{{GW|open&news.dcml\\00|LW_lockall}},\"{{News & Events}}\")"
-#         f"#ctxt[%LIST2](%B[x:0,y:%LIST1-9,w:146,h:24],{{GW|open&punishments.dcml\\00|LW_lockall}},\"{{Punishments}}\")"
-#         f"#hint(%LIST2,\"List of punished players\")"
-#         f"#font(RC14,GC14,RC14)"
-#         f"#ctxt[%LIST3](%B[x:0,y:%LIST2-9,w:146,h:24],{{GW|open&forum.dcml\\00&last_view=0\\00|LW_lockall}},\"{{Forum}}\")"
-#         f"#hint(%LIST3,\"Read and write forum messages\")"
-#         f"{'#font(RC12,GC12,RC12)' if variables['mode'] == '1' else '#font(RC12,R2C12,RC12)'}"
-#         f"#ctxt[%LIST4](%B[x:0,y:%LIST3-10,w:146,h:24],{{GW|open&forum.dcml\\00&mode=1^last_view=0\\00|LW_lockall}},\"{{All themes}}\")"
-#         f"{'#font(RC12,GC12,RC12)' if variables['mode'] == '2' else '#font(RC12,R2C12,RC12)'}"
-#         f"#ctxt[%LIST5](%B[x:0,y:%LIST4-1,w:146,h:24],{{GW|open&forum.dcml\\00&mode=2^last_view=0\\00|LW_lockall}},\"{{Last 10 messages}}\")"
-#         f"{'#font(RC12,GC12,RC12)' if variables['mode'] == '3' else '#font(RC12,R2C12,RC12)'}"
-#         f"#ctxt[%LIST6](%B[x:0,y:%LIST5-1,w:146,h:24],{{GW|open&forum.dcml\\00&mode=3^last_view=0\\00|LW_lockall}},\"{{Messages for this day}}\")"
-#         f"{'#font(RC12,GC12,RC12)' if variables['mode'] == '4' else '#font(RC12,R2C12,RC12)'}"
-#         f"#ctxt[%LIST7](%B[x:0,y:%LIST6-1,w:146,h:24],{{GW|open&forum.dcml\\00&mode=4^last_view=0\\00|LW_lockall}},\"{{Messages for this week}}\")"
-#         f"#font(RC12,R2C12,RC12)"
-#         f"#ctxt[%LIST8](%B[x:0,y:%LIST7-1,w:146,h:24],{{GW|open&forum_add.dcml\\00&last_view=0\\00|LW_lockall}},\"{{Add theme}}\")"
-#         f"#hint(%LIST8,\"Create a new forum theme\")"
-#         f"#font(RC12,R2C12,RC12)"
-#         f"#ctxt[%LIST9](%B[x:0,y:%LIST8-1,w:146,h:24],{{GW|open&forum_search.dcml\\00&last_view=0\\00|LW_lockall}},\"{{Search}}\")"
-#         f"#hint(%LIST9,\"Search a message by author or text\")"
-#         f"#pan[%PAN](%B[x:154,y:42,w:526-3,h:291],7)"
-#         f"#sbox[%SB](x:150,y:42+4,w:526+4,h:291-8)"
-#         f"{thread_strings}"
-#         f"<NGDLG>"
-#         f"<NGDLG>"
-#         f"#block(cancel.cml,CAN)"
-#         f"<NGDLG>"
-#         f"<NGDLG>"
-#         f"#end(CAN)"
-#     )
-
+@game.route('forum.dcml')
+def forum(variables: dict, vars: Properties, player_id: int | str, **kwargs) -> str:
+    thread_strings = ""
+    thread_list = []
+    search = False
+    if variables['mode'] not in ('1', '2', '3', '4'):
+        variables['mode'] = '1'
+    if variables['search_nick'] or variables['search_text']:
+        search = True
+    if search:
+        results = game.get_response(
+            query = "forum_search",
+            search_nick = variables['search_nick'],
+            search_text = variables['search_text'],
+            player_id = player_id,
+            session_key = vars.session_key
+            )
+    else:
+        results = game.get_response(
+            query = "get_threads",
+            mode = variables['mode'], 
+            next_message = variables.get('next_message', 0),
+            player_id = player_id,
+            session_key = vars.session_key
+            )
+    for idx, thread in enumerate(results.content[:30]):
+        thread_list.append(" ".join([
+            f"#font(BC12,RC12,RC12)",
+            f"""#txt[%TXT{idx + 1}](%SB[x:218,y:{'4' if idx == 0 else f'%P{idx}-21'},w:100%-215,h:24],{{}},\"{thread['content'].replace(variables['search_text'], '{' + variables['search_text'] + '}') if search else thread['content']}\")""",
+            f"#exec(LW_vis&0&%TXT{idx + 1})",
+            f"#apan[%PAN{idx + 1}](%SB[x:0,y:{'4' if idx == 0 else f'%P{idx}-21'}-10,w:100%,y1:{'4' if idx == 0 else f'%P{idx}-21'}+{'42' if variables['mode'] == '1' else '28'}>%TXT{idx + 1}+5],{{GW|open&forum_view.dcml&last_view=0^theme={thread['id']}|LW_lockall}},14,\"\")",
+            f"#font(BC12,RC12,RC12)",
+            f"#txt[%TEXT{idx + 1}](%SB[x:218,y:{'4' if idx == 0 else f'%P{idx}-21'},w:100%-220,h:24],{{}},\"{thread['content'].replace(variables['search_text'], '{' + variables['search_text'] + '}') if search else thread['content']}\")",
+            f"#font(R2C12,R2C12,RC12)",
+            f"#txt[%S_DATE{idx + 1}](%SB[x:8,y:{'4' if idx == 0 else f'%P{idx}-21'},w:170,h:24],{{}},\"Date:\")",
+            f"#font(BC12,R2C12,RC12)",
+            f"#txt[%DATE{idx + 1}](%SB[x:%S_DATE{idx + 1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'},w:170,h:24],{{}},\"{thread['created_at']}\")",
+            f"#font(R2C12,BC12,RC12)",
+            f"#txt[%S_CR{idx + 1}](%SB[x:8,y:{'4' if idx == 0 else f'%P{idx}-21'}+14,w:170,h:24],{{}},\"Author:\")",
+            f"#txt[%CR{idx + 1}](%SB[x:%S_CR{idx + 1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'}+14,w:170,h:24],{{GW|open&user_details.dcml&ID={thread['author_id']}|LW_lockall}},\"{{{thread['nick']}}}\")",
+            f"#txt[%S_COU{idx + 1}](%SB[x:8,y:{'4' if idx == 0 else f'%P{idx}-21'}+28,w:170,h:24],{{}},\"Message:\")" if
+            variables['mode'] == '1' else '',
+            f"#font(BC12,BC12,BC12)",
+            f"#txt[%COU{idx + 1}](%SB[x:%S_COU{idx + 1}+5,y:{'4' if idx == 0 else f'%P{idx}-21'}+28,w:170,h:24],{{}},\"{thread['messages']}\")" if
+            variables["mode"] == "1" else "",
+            f"#pan[%P{idx + 1}](%SB[x:0-32,y:{'4' if idx == 0 else f'%P{idx}-21'}+{'42' if variables['mode'] == '1' else '28'}>%TEXT{idx + 1}+38,w:100%+65,h:0],9)",
+        ]))
+    thread_strings = "".join(thread_list) + \
+                     f"#ebox[%B1](x:0,y:0,w:100%,h:100%)\
+        #pan[%PAN0](%B1[x:390,y:8,w:0,h:359],10)" if thread_list else "".join([
+        f"#font(BC14,WC14,BC14)",
+        f"#sbtn[%BT3](%B[x:684,y:377,w:15,h:305],{{GW|open&forum.dcml\\00&mode=^next_message={int(variables['next_message']) + 30 if variables['next_message'] else 0}^last_view=0^search_nick=^search_text=\\00|LW_lockall}},\"Next\")" if len(
+            results.content) > 29 else "",
+    ]) if results.content else "".join([
+        f"#font(RG18,RG18,RG18)", f"#ctxt[%T0](%B[x:154,y:179,w:523,h:20],{{}},\"{{No search results}}\")"]),
+    return (
+        f"#exec(LW_cfile&20230722144507&Cookies/%GV_FORUM_LAST_TIME)"
+        f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
+        f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)"
+        f"#pix[%PXT2](%TB[x:0,y:263,w:100%,h:100%],{{}},Internet/pix/i_pri0,13,13,13,13)"
+        f"#pan[%P1](%TB[x:42,y:0-22,w:0,h:80],10)"
+        f"#font(RG18,RG18,RG18)"
+        f"#txt[%PL](%TB[x:737,y:0,w:150,h:20],{{}},\"Players\")"
+        f"#font(BG18,BG18,BG18)"
+        f"#ctxt[%TTTEXT](%TB[x:0-62,y:0-32,w:1024,h:20],{{}},\"NEWS & EVENTS\")"
+        f"#font(R2C12,R2C12,R2C12)"
+        f"#txt[%TMTEXT](%TB[x:0,y:514,w:100,h:20],{{}},\"Message:\")"
+        f"#font(RC12,RC12,RC12)"
+        f"#def_gp_btn(Internet/pix/i_pri0,51,51,0,1)"
+        f"#gpbtn[%BT1](%TB[x:74,y:22,w:-22,h:-18],{{GW|open&news.dcml\\00&language=\\00|LW_lockall}},\"News & Events\")"
+        f"#hint(%BT1,\"News, events, forum and punishment list\")"
+        f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)"
+        f"#font(RC12,R2C12,RC12)"
+        f"#gpbtn[%BT2](%TB[x:196,y:23,w:-22,h:-18],{{GW|open&users_list.dcml\\00|LW_lockall}},\"Player List\")"
+        f"#hint(%BT2,\"Player list, personal mail and clan information\")"
+        f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)"
+        f"#font(RC12,R2C12,RC12)"
+        f"#gpbtn[%BT4](%TB[x:318,y:23,w:-22,h:-18],{{GW|open&games.dcml\\00|LW_lockall}},\"Custom Games\")"
+        f"#hint(%BT4,\"Play custom games\")"
+        f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)"
+        f"#font(RC12,R2C12,RC12)"
+        f"#gpbtn[%BT5](%TB[x:440,y:23,w:-22,h:-18],{{GW|open&scored_games.dcml\\00&player_id=0\\00|LW_lockall}},\"Scored Games\")"
+        f"#hint(%BT5,\"Played games and their scores\")"
+        f"#ebox[%B_VOTE](x:5,y:396,w:140,h:103)"
+        f"<VOTING>"
+        f"#exec(GW|open&voting.dcml\\00&question=46\\00)"
+        f"<VOTING>"
+        f"#ebox[%B](x:0,y:0,w:100%,h:10%)"
+        f"#font(R2C14,R2C14,RC14)"
+        f"#ctxt[%LIST1](%B[x:0,y:106,w:146,h:24],{{GW|open&news.dcml\\00|LW_lockall}},\"{{News & Events}}\")"
+        f"#ctxt[%LIST2](%B[x:0,y:%LIST1-9,w:146,h:24],{{GW|open&punishments.dcml\\00|LW_lockall}},\"{{Punishments}}\")"
+        f"#hint(%LIST2,\"List of punished players\")"
+        f"#font(RC14,GC14,RC14)"
+        f"#ctxt[%LIST3](%B[x:0,y:%LIST2-9,w:146,h:24],{{GW|open&forum.dcml\\00&last_view=0\\00|LW_lockall}},\"{{Forum}}\")"
+        f"#hint(%LIST3,\"Read and write forum messages\")"
+        f"{'#font(RC12,GC12,RC12)' if variables['mode'] == '1' else '#font(RC12,R2C12,RC12)'}"
+        f"#ctxt[%LIST4](%B[x:0,y:%LIST3-10,w:146,h:24],{{GW|open&forum.dcml\\00&mode=1^last_view=0\\00|LW_lockall}},\"{{All themes}}\")"
+        f"{'#font(RC12,GC12,RC12)' if variables['mode'] == '2' else '#font(RC12,R2C12,RC12)'}"
+        f"#ctxt[%LIST5](%B[x:0,y:%LIST4-1,w:146,h:24],{{GW|open&forum.dcml\\00&mode=2^last_view=0\\00|LW_lockall}},\"{{Last 10 messages}}\")"
+        f"{'#font(RC12,GC12,RC12)' if variables['mode'] == '3' else '#font(RC12,R2C12,RC12)'}"
+        f"#ctxt[%LIST6](%B[x:0,y:%LIST5-1,w:146,h:24],{{GW|open&forum.dcml\\00&mode=3^last_view=0\\00|LW_lockall}},\"{{Messages for this day}}\")"
+        f"{'#font(RC12,GC12,RC12)' if variables['mode'] == '4' else '#font(RC12,R2C12,RC12)'}"
+        f"#ctxt[%LIST7](%B[x:0,y:%LIST6-1,w:146,h:24],{{GW|open&forum.dcml\\00&mode=4^last_view=0\\00|LW_lockall}},\"{{Messages for this week}}\")"
+        f"#font(RC12,R2C12,RC12)"
+        f"#ctxt[%LIST8](%B[x:0,y:%LIST7-1,w:146,h:24],{{GW|open&forum_add.dcml\\00&last_view=0\\00|LW_lockall}},\"{{Add theme}}\")"
+        f"#hint(%LIST8,\"Create a new forum theme\")"
+        f"#font(RC12,R2C12,RC12)"
+        f"#ctxt[%LIST9](%B[x:0,y:%LIST8-1,w:146,h:24],{{GW|open&forum_search.dcml\\00&last_view=0\\00|LW_lockall}},\"{{Search}}\")"
+        f"#hint(%LIST9,\"Search a message by author or text\")"
+        f"#pan[%PAN](%B[x:154,y:42,w:526-3,h:291],7)"
+        f"#sbox[%SB](x:150,y:42+4,w:526+4,h:291-8)"
+        f"{thread_strings}"
+        f"<NGDLG>"
+        f"<NGDLG>"
+        f"#block(cancel.cml,CAN)"
+        f"<NGDLG>"
+        f"<NGDLG>"
+        f"#end(CAN)"
+    )
 
 @game.route('games.dcml') #OK
 def games(**kwargs) -> str:
     return (
         f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
-        f"#edit[%SKEY](%TB[x:0,y:0,w:0,h:0],{{%GV_SKEY}})"
         f"#edit[%VE_PROF](%TB[x:0,y:0,w:0,h:0],{{%GV_VE_PROF}})"
         f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)"
         f"#pix[%PXT2](%TB[x:0,y:263,w:100%,h:100%],{{}},Internet/pix/i_pri0,13,13,13,13)"
@@ -1005,13 +911,13 @@ def games(**kwargs) -> str:
         f"#end(CAN)"
     )
 
-"""
-@alexander.route('join_game.dcml')
-def join_game(variables: dict, player_id: str, **kwargs) -> str:
-    with alexander.engine.connect() as connection:
-        lobby = connection.execute(text(
-            f"SELECT players, max_players, ip, password, (SELECT nick FROM players WHERE players.player_id = "
-            f"lobbies.host_id) as nick, host_id FROM lobbies WHERE id = {variables['id_room']} LIMIT 1")).fetchone()
+@game.route('join_game.dcml')
+def join_game(variables: dict, vars: Properties, player_id: str, **kwargs) -> str:
+    lobby = game.get_response(
+        query = "get_lobby",
+        session_key = vars.session_key,
+        player_id = player_id,
+    ).content
     if lobby:
         if lobby.max_players <= lobby.players:
             return (
@@ -1163,7 +1069,7 @@ def join_game(variables: dict, player_id: str, **kwargs) -> str:
         f"#table[%TBL](%BF[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&join_game.dcml\\00&id_room={variables['id_room']}\\00|LW_lockall}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"ERROR\",\"You cannot join the room! This is an incorrect room. Press Cancel button to exit\",26,\"Try Again\",\"Cancel\")"
         f"<NGDLG>"
     )
-"""
+
 
 # TODO: PLACEHOLDER
 @game.route('join_pl_cmd.dcml')
@@ -1459,7 +1365,7 @@ def mail_list(variables: dict, vars: Properties, player_id, **kwargs: dict) -> s
         selection = 3
     return (
         f"#ebox[%TB](x:0,y:0,w:100%,h:100%) "
-        f"#edit[%SKEY](%TB[x:0,y:0,w:0,h:0],{{%GV_SKEY}})"
+        
         f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12) "
         f"#pix[%PXT2](%TB[x:0,y:263,w:100%,h:100%],{{}},Internet/pix/i_pri0,13,13,13,13) "
         f"#pan[%P1](%TB[x:42,y:0-22,w:0,h:80],10) "
@@ -1534,134 +1440,129 @@ def mail_list(variables: dict, vars: Properties, player_id, **kwargs: dict) -> s
         f"#end(CAN)"
     )
 
-"""
-@alexander.route('mail_new.dcml')
+@game.route('mail_new.dcml')
 def mail_new(variables: dict, player_id, **kwargs) -> str | None:
-    with alexander.engine.connect() as connection:
-        summary = connection.execute(text(
-            f"CALL mail_stats({player_id}) "
-        )).fetchone()
-        if summary:
-            summary = summary._mapping
-            if variables['send']:
-                id = connection.execute(text(
-                    f"CALL get_player_id_by_nick(\"{variables['send_to']}\")"
-                )).fetchone()
-                if id:
-                    connection.execute(text(
-                        "INSERT INTO mail_messages ("
-                        "id_from, id_to, subject, content "
-                        ") "
-                        "VALUES "
-                        "( "
-                        f"{player_id}, {id._mapping.id}, \"{variables['subject']}\", \"{variables['message']}\""
-                        ")"
-                    ))
-                    connection.commit()
-                    return f"#exec(GW|open&mail_list.dcml\\00&sent=true\\00|LW_lockall)"
-                else:
-                    return (
-                        f"<NGDLG>"
-                        f"#ebox[%BF](x:0,y:0,w:100%,h:100%)"
-                        f"#table[%TBL](%BF[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&mail_new.dcml\\00&subject={variables['subject']}^message={variables['message']}\\00|LW_lockall}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"ERROR\",\"The user with the provided nickname does not exist.\",26,\"OK\")"
-                        f"<NGDLG>"
-                    )
-            not_found = False
-            return " ".join((
-                f"#block(l_games_btn.cml,l_g):<!goback!>\\00",
-                f"#end(l_g) ",
-                f"#ebox[%TB](x:0,y:0,w:100%,h:100%) ",
-                f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12) ",
-                f"#pix[%PXT2](%TB[x:0,y:263,w:100%,h:100%],{{}},Internet/pix/i_pri0,13,13,13,13) ",
-                f"#pan[%P1](%TB[x:42,y:0-22,w:0,h:80],10) ",
-                f"#font(RG18,RG18,RG18) ",
-                f"#txt[%PL](%TB[x:737,y:0,w:150,h:20],{{}},\"Players\")",
-                f"#font(BG18,BG18,BG18) ",
-                f"#ctxt[%TTTEXT](%TB[x:0-62,y:0-32,w:1024,h:20],{{}},\"PLAYER LIST\") ",
-                f"#font(R2C12,R2C12,R2C12) ",
-                f"#txt[%TMTEXT](%TB[x:0,y:514,w:100,h:20],{{}},\"Message:\") ",
-                f"#def_gp_btn(Internet/pix/i_pri0,53,53,0,1)      ",
-                f"#font(RC12,R2C12,RC12) ",
-                f"#gpbtn[%BT1](%TB[x:74,y:23,w:-22,h:-18],{{GW|open&news.dcml\\00|LW_lockall}},\"News & Events\")",
-                f"#hint(%BT1,\"News, events, forum and punishment list\")      ",
-                f"#font(RC12,RC12,RC12) ",
-                f"#def_gp_btn(Internet/pix/i_pri0,51,51,0,1) ",
-                f"#gpbtn[%BT2](%TB[x:196,y:22,w:-22,h:-18],{{GW|open&users_list.dcml\\00&language=\\00|LW_lockall}},\"Player List\")",
-                f"#hint(%BT2,\"Player list, personal mail and clan information\")",
-                f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)      ",
-                f"#font(RC12,R2C12,RC12) ",
-                f"#gpbtn[%BT4](%TB[x:318,y:23,w:-22,h:-18],{{GW|open&games.dcml\\00|LW_lockall}},\"Custom Games\")",
-                f"#hint(%BT4,\"Play custom games\")",
-                f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)      ",
-                f"#font(RC12,R2C12,RC12) ",
-                f"#gpbtn[%BT5](%TB[x:440,y:23,w:-22,h:-18],{{GW|open&scored_games.dcml\\00&player_id=0\\00|LW_lockall}},\"Scored Games\")",
-                f"#hint(%BT5,\"Played games and their scores\")     ",
-                f"#ebox[%B_VOTE](x:5,y:396,w:140,h:103) ",
-                f"<VOTING> ",
-                f"#exec(GW|open&voting.dcml\\00&question=46\\00) ",
-                f"<VOTING> ",
-                f"<MAILBUTTONS> ",
-                f"#ebox[%MB](x:0,y:0,w:100%,h:100%) ",
-                f"#font(RC14,GC14,RC14) ",
-                f"#ctxt[%LIST1](%MB[x:0,y:106,w:146,h:24],{{GW|open&users_list.dcml\\00|LW_lockall}},\"{{Player List}}\") ",
-                f"#hint(%LIST1,\"Player list, personal mail and clan information\") ",
-                f"#font(RC12,GC12,RC12) ",
-                f"#ctxt[%LIST2](%MB[x:0,y:%LIST1-10,w:146,h:24],{{GW|open&mail_list.dcml\\00|LW_lockall}},\"{{Mail}}\") ",
-                f"#hint(%LIST2,\"Manage your personal mail\") ",
-                f"#font(R2C14,R2C14,RC14) ",
-                f"#ctxt[%LIST3](%MB[x:0,y:%LIST2+7,w:146,h:24],{{GW|open&clans_list.dcml\\00|LW_lockall}},\"{{Clan List}}\") ",
-                f"#hint(%LIST3,\"Clans, their members and details\") ",
-                f"#ebox[%B1](x:154,y:40,w:559,h:45) ",
-                f"#pan[%P1](%B1[x:0,y:0,w:100%,h:100%],7) ",
-                f"#font(BC12,BC12,GC12)"
-                f"#txt[%TITRE1](%B1[x:4,y:0+8,w:150,h:20],{{}},\"Mail Inbox total: {summary.messages_total}\")"
-                f"#apan[%APAN0](%B1[x:4,y:%TITRE1-18,x1:%TITRE1,h:16],{{GW|open&mail_list.dcml\\00|LW_lockall}},15)"
-                f"#font(BC12,BC12,GC12)"
-                f"#txt[%TITRE2](%B1[x:4,y:18+8,w:150,h:20],{{}},\"Sent: {summary.messages_sent}\")"
-                f"#apan[%APAN1](%B1[x:4,y:%TITRE2-18,x1:%TITRE2,h:16],{{GW|open&mail_list.dcml\\00&sent=true\\00|LW_lockall}},15)"
-                f"#font(BC12,BC12,GC12)"
-                f"#txt[%TITRE3](%B1[x:292,y:0+8,w:150,h:20],{{}},\"Unread: {summary.messages_unread}\")"
-                f"#apan[%APAN2](%B1[x:292,y:%TITRE3-18,x1:%TITRE3,h:16],{{GW|open&mail_list.dcml\\00&readable=2\\00|LW_lockall}},15)"
-                f"#font(BC12,BC12,GC12)"
-                f"#txt[%TITRE4](%B1[x:292,y:18+8,w:150,h:20],{{}},\"Read: {summary.messages_read}\")"
-                f"#apan[%APAN3](%B1[x:292,y:%TITRE4-18,x1:%TITRE4,h:16],{{GW|open&mail_list.dcml\\00&readable=3\\00|LW_lockall}},15)"
-                f"#pan[%P2](%B1[x:314,y:0-34,w:0,h:100%+68],10) ",
-                f"<MAILBUTTONS>",
-                f"#ebox[%B](x:0,y:0,w:100%,h:100%) ",
-                f"#exec(LW_cfile&\\00&Cookies/%GV_SEND_TO) " if not variables[
-                    'send_to'] else f"#exec(LW_cfile&{variables['send_to']}\\00&Cookies/%GV_SEND_TO) ",
-                f"#exec(LW_cfile&{variables['subject'] if variables['subject'] else ''}\\00&Cookies/%GV_SUBJECT) ",
-                f"#exec(LW_cfile&{variables['message'] if variables['message'] else ''}\\00&Cookies/%GV_TEXT) ",
-                f"#ebox[%B0](x:154,y:95,w:559,h:238) ",
-                f"#pan[%P1](%B0[x:0,y:0,w:100%,h:100%],5) ",
-                f"#font(R2C12,RC12,RC12) ",
-                f"#txt[%T1](%B0[x:4,y:8,w:100,h:20],{{}},\"Send to:\") ",
-                f"#font(BC12,RC12,RC12) ",
-                f"#pan[%P2](%B0[x:8,y:27,w:543,h:14],1) ",
-                f"#edit[%E1](%B0[x:14,y:26,w:538,h:18],{{%GV_SEND_TO}},0,0,0,1) ",
-                f"#font(R2C12,RC12,RC12) ",
-                f"#txt[%T2](%B0[x:4,y:53,w:100,h:20],{{}},\"Subject:\") ",
-                f"#pan[%P3](%B0[x:8,y:72,w:543,h:14],1) ",
-                f"#font(BC12,RC12,RC12) ",
-                f"#edit[%E2](%B0[x:13,y:71,w:538,h:18],{{%GV_SUBJECT}}) ",
-                f"#font(R2C12,RC12,RC12) ",
-                f"#txt[%T3](%B0[x:4,y:98,w:100,h:20],{{}},\"Text:\") ",
-                f"#pan[%P4](%B0[x:8,y:117,w:543,h:111],1) ",
-                f"#font(BC12,RC12,RC12) ",
-                f"#edit[%E3](%B0[x:13,y:117,w:534,h:111],{{%GV_TEXT}},1) ",
-                f"#font(BC14,WC14,BC14) ",
-                f"#sbtn[%Send](%B[x:521,y:377,w:100,h:305],{{GW|open&mail_new.dcml\\00&cansel=true^send=1^send_to=<%GV_SEND_TO>^subject=<%GV_SUBJECT>^message=<%GV_TEXT>\\00|LW_lockall}},\"Send\") ",
-                f"#sbtn[%Back](%B[x:641,y:377,w:100,h:305],{{LW_file&Internet/Cash/l_games_btn.cml}},\"Cancel\") ",
-                f"<NGDLG> ",
-                f"#ebox[%L0](x:0,y:0,w:100%,h:100%)\
-                #table[%TBL](%L0[x:243,y:130,w:415,h:205],{{}}{{}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"NOTICE\",\" Players with nicknames \'\'c\'\' not found! \",0,\"OK\")" if not_found else "",
-                f"<NGDLG> ",
-                f"#block(cancel.cml,CAN)<NGDLG> ",
-                f"<NGDLG> ",
-                f"#end(CAN)",
-            ))
-"""
-"""
+    if variables['send']:
+        result = game.get_response(
+            query = "send_mail",
+            id_from = variables.get("id_from"),
+            id_to = variables.get("id_to"),
+            subject = variables.get("subject"),
+            content = variables.get("content"),
+            session_key = vars.session_key,
+            player_id = player_id,
+        )
+        if not result:
+            if result.content == "INVALID_RECIPIENT":
+                return f"#exec(GW|open&mail_list.dcml\\00&sent=true\\00|LW_lockall)"
+            else:
+                return (
+                    f"<NGDLG>"
+                    f"#ebox[%BF](x:0,y:0,w:100%,h:100%)"
+                    f"#table[%TBL](%BF[x:243,y:130,w:415,h:205],{{}}{{}}{{GW|open&mail_new.dcml\\00&subject={variables['subject']}^message={variables['message']}\\00|LW_lockall}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"ERROR\",\"The user with the provided nickname does not exist.\",26,\"OK\")"
+                    f"<NGDLG>"
+                )
+        not_found = False
+        summary = game.get_response(
+            query = "get_mail",
+            session_key = vars.session_key,
+            player_id = player_id,
+        ).content.summary
+        return " ".join((
+            f"#block(l_games_btn.cml,l_g):<!goback!>\\00",
+            f"#end(l_g) ",
+            f"#ebox[%TB](x:0,y:0,w:100%,h:100%) ",
+            f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12) ",
+            f"#pix[%PXT2](%TB[x:0,y:263,w:100%,h:100%],{{}},Internet/pix/i_pri0,13,13,13,13) ",
+            f"#pan[%P1](%TB[x:42,y:0-22,w:0,h:80],10) ",
+            f"#font(RG18,RG18,RG18) ",
+            f"#txt[%PL](%TB[x:737,y:0,w:150,h:20],{{}},\"Players\")",
+            f"#font(BG18,BG18,BG18) ",
+            f"#ctxt[%TTTEXT](%TB[x:0-62,y:0-32,w:1024,h:20],{{}},\"PLAYER LIST\") ",
+            f"#font(R2C12,R2C12,R2C12) ",
+            f"#txt[%TMTEXT](%TB[x:0,y:514,w:100,h:20],{{}},\"Message:\") ",
+            f"#def_gp_btn(Internet/pix/i_pri0,53,53,0,1)      ",
+            f"#font(RC12,R2C12,RC12) ",
+            f"#gpbtn[%BT1](%TB[x:74,y:23,w:-22,h:-18],{{GW|open&news.dcml\\00|LW_lockall}},\"News & Events\")",
+            f"#hint(%BT1,\"News, events, forum and punishment list\")      ",
+            f"#font(RC12,RC12,RC12) ",
+            f"#def_gp_btn(Internet/pix/i_pri0,51,51,0,1) ",
+            f"#gpbtn[%BT2](%TB[x:196,y:22,w:-22,h:-18],{{GW|open&users_list.dcml\\00&language=\\00|LW_lockall}},\"Player List\")",
+            f"#hint(%BT2,\"Player list, personal mail and clan information\")",
+            f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)      ",
+            f"#font(RC12,R2C12,RC12) ",
+            f"#gpbtn[%BT4](%TB[x:318,y:23,w:-22,h:-18],{{GW|open&games.dcml\\00|LW_lockall}},\"Custom Games\")",
+            f"#hint(%BT4,\"Play custom games\")",
+            f"#def_gp_btn(Internet/pix/i_pri0,52,52,0,1)      ",
+            f"#font(RC12,R2C12,RC12) ",
+            f"#gpbtn[%BT5](%TB[x:440,y:23,w:-22,h:-18],{{GW|open&scored_games.dcml\\00&player_id=0\\00|LW_lockall}},\"Scored Games\")",
+            f"#hint(%BT5,\"Played games and their scores\")     ",
+            f"#ebox[%B_VOTE](x:5,y:396,w:140,h:103) ",
+            f"<VOTING> ",
+            f"#exec(GW|open&voting.dcml\\00&question=46\\00) ",
+            f"<VOTING> ",
+            f"<MAILBUTTONS> ",
+            f"#ebox[%MB](x:0,y:0,w:100%,h:100%) ",
+            f"#font(RC14,GC14,RC14) ",
+            f"#ctxt[%LIST1](%MB[x:0,y:106,w:146,h:24],{{GW|open&users_list.dcml\\00|LW_lockall}},\"{{Player List}}\") ",
+            f"#hint(%LIST1,\"Player list, personal mail and clan information\") ",
+            f"#font(RC12,GC12,RC12) ",
+            f"#ctxt[%LIST2](%MB[x:0,y:%LIST1-10,w:146,h:24],{{GW|open&mail_list.dcml\\00|LW_lockall}},\"{{Mail}}\") ",
+            f"#hint(%LIST2,\"Manage your personal mail\") ",
+            f"#font(R2C14,R2C14,RC14) ",
+            f"#ctxt[%LIST3](%MB[x:0,y:%LIST2+7,w:146,h:24],{{GW|open&clans_list.dcml\\00|LW_lockall}},\"{{Clan List}}\") ",
+            f"#hint(%LIST3,\"Clans, their members and details\") ",
+            f"#ebox[%B1](x:154,y:40,w:559,h:45) ",
+            f"#pan[%P1](%B1[x:0,y:0,w:100%,h:100%],7) ",
+            f"#font(BC12,BC12,GC12)"
+            f"#txt[%TITRE1](%B1[x:4,y:0+8,w:150,h:20],{{}},\"Mail Inbox total: {summary.messages_total}\")"
+            f"#apan[%APAN0](%B1[x:4,y:%TITRE1-18,x1:%TITRE1,h:16],{{GW|open&mail_list.dcml\\00|LW_lockall}},15)"
+            f"#font(BC12,BC12,GC12)"
+            f"#txt[%TITRE2](%B1[x:4,y:18+8,w:150,h:20],{{}},\"Sent: {summary.messages_sent}\")"
+            f"#apan[%APAN1](%B1[x:4,y:%TITRE2-18,x1:%TITRE2,h:16],{{GW|open&mail_list.dcml\\00&sent=true\\00|LW_lockall}},15)"
+            f"#font(BC12,BC12,GC12)"
+            f"#txt[%TITRE3](%B1[x:292,y:0+8,w:150,h:20],{{}},\"Unread: {summary.messages_unread}\")"
+            f"#apan[%APAN2](%B1[x:292,y:%TITRE3-18,x1:%TITRE3,h:16],{{GW|open&mail_list.dcml\\00&readable=2\\00|LW_lockall}},15)"
+            f"#font(BC12,BC12,GC12)"
+            f"#txt[%TITRE4](%B1[x:292,y:18+8,w:150,h:20],{{}},\"Read: {summary.messages_read}\")"
+            f"#apan[%APAN3](%B1[x:292,y:%TITRE4-18,x1:%TITRE4,h:16],{{GW|open&mail_list.dcml\\00&readable=3\\00|LW_lockall}},15)"
+            f"#pan[%P2](%B1[x:314,y:0-34,w:0,h:100%+68],10) ",
+            f"<MAILBUTTONS>",
+            f"#ebox[%B](x:0,y:0,w:100%,h:100%) ",
+            f"#exec(LW_cfile&\\00&Cookies/%GV_SEND_TO) " if not variables[
+                'send_to'] else f"#exec(LW_cfile&{variables['send_to']}\\00&Cookies/%GV_SEND_TO) ",
+            f"#exec(LW_cfile&{variables['subject'] if variables['subject'] else ''}\\00&Cookies/%GV_SUBJECT) ",
+            f"#exec(LW_cfile&{variables['message'] if variables['message'] else ''}\\00&Cookies/%GV_TEXT) ",
+            f"#ebox[%B0](x:154,y:95,w:559,h:238) ",
+            f"#pan[%P1](%B0[x:0,y:0,w:100%,h:100%],5) ",
+            f"#font(R2C12,RC12,RC12) ",
+            f"#txt[%T1](%B0[x:4,y:8,w:100,h:20],{{}},\"Send to:\") ",
+            f"#font(BC12,RC12,RC12) ",
+            f"#pan[%P2](%B0[x:8,y:27,w:543,h:14],1) ",
+            f"#edit[%E1](%B0[x:14,y:26,w:538,h:18],{{%GV_SEND_TO}},0,0,0,1) ",
+            f"#font(R2C12,RC12,RC12) ",
+            f"#txt[%T2](%B0[x:4,y:53,w:100,h:20],{{}},\"Subject:\") ",
+            f"#pan[%P3](%B0[x:8,y:72,w:543,h:14],1) ",
+            f"#font(BC12,RC12,RC12) ",
+            f"#edit[%E2](%B0[x:13,y:71,w:538,h:18],{{%GV_SUBJECT}}) ",
+            f"#font(R2C12,RC12,RC12) ",
+            f"#txt[%T3](%B0[x:4,y:98,w:100,h:20],{{}},\"Text:\") ",
+            f"#pan[%P4](%B0[x:8,y:117,w:543,h:111],1) ",
+            f"#font(BC12,RC12,RC12) ",
+            f"#edit[%E3](%B0[x:13,y:117,w:534,h:111],{{%GV_TEXT}},1) ",
+            f"#font(BC14,WC14,BC14) ",
+            f"#sbtn[%Send](%B[x:521,y:377,w:100,h:305],{{GW|open&mail_new.dcml\\00&cansel=true^send=1^send_to=<%GV_SEND_TO>^subject=<%GV_SUBJECT>^message=<%GV_TEXT>\\00|LW_lockall}},\"Send\") ",
+            f"#sbtn[%Back](%B[x:641,y:377,w:100,h:305],{{LW_file&Internet/Cash/l_games_btn.cml}},\"Cancel\") ",
+            f"<NGDLG> ",
+            f"#ebox[%L0](x:0,y:0,w:100%,h:100%)\
+            #table[%TBL](%L0[x:243,y:130,w:415,h:205],{{}}{{}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,\"NOTICE\",\" Players with nicknames \'\'c\'\' not found! \",0,\"OK\")" if not_found else "",
+            f"<NGDLG> ",
+            f"#block(cancel.cml,CAN)<NGDLG> ",
+            f"<NGDLG> ",
+            f"#end(CAN)",
+        ))
+
+'''
 @alexander.route('mail_view.dcml')
 def mail_view(variables: dict, player_id, **kwargs) -> str | None:
     with alexander.engine.connect() as connection:
@@ -1777,7 +1678,7 @@ def mail_view(variables: dict, player_id, **kwargs) -> str | None:
                     f"<NGDLG> "
                     f"#end(CAN)"
                 )
-"""
+'''
 
 @game.route('map.dcml')
 def map_(**kwargs) -> str:
@@ -1970,7 +1871,7 @@ def news(player_id: int | str, vars: Properties, variables: dict, **kwargs: dict
                 )  # type: ignore
     return (
         f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
-        f"#edit[%SKEY](%TB[x:0,y:0,w:0,h:0],{{%GV_SKEY}})"
+        
         f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)"
         f"#pix[%PXT2](%TB[x:0,y:263,w:100%,h:100%],{{}},Internet/pix/i_pri0,13,13,13,13)"
         f"#pan[%P1](%TB[x:42,y:0-22,w:0,h:80],10)"
@@ -2053,7 +1954,7 @@ def punishments(player_id: int | str, vars: Properties, variables: dict, **kwarg
             )
     return (
         f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
-        f"#edit[%SKEY](%TB[x:0,y:0,w:0,h:0],{{%GV_SKEY}})"
+        
         f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)"
         f"#pix[%PXT2](%TB[x:0,y:263,w:100%,h:100%],{{}},Internet/pix/i_pri0,13,13,13,13)"
         f"#pan[%P1](%TB[x:42,y:0-22,w:0,h:80],10)"
@@ -2158,7 +2059,7 @@ def rating_calculator(variables: dict, **kwargs) -> str:
 def rating_help(**kwargs: dict) -> str:
     return (
         f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
-        f"#edit[%SKEY](%TB[x:0,y:0,w:0,h:0],{{%GV_SKEY}})"
+        
         f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)"
         f"#pix[%PXT2](%TB[x:0,y:263,w:100%,h:100%],{{}},Internet/pix/i_pri0,13,13,13,13)"
         f"#pan[%P1](%TB[x:42,y:0-22,w:0,h:80],10)"
@@ -2492,7 +2393,7 @@ def scored_games(variables: defaultdict, **kwargs) -> str:
 def scored_games2x2(player_id: str | int, variables: dict, **kwargs: dict) -> str:
     return (
         f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
-        f"#edit[%SKEY](%TB[x:0,y:0,w:0,h:0],{{%GV_SKEY}})"
+        
         f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)"
         f"#pix[%PXT2](%TB[x:0,y:263,w:100%,h:100%],{{}},Internet/pix/i_pri0,13,13,13,13)"
         f"#pan[%P1](%TB[x:42,y:0-22,w:0,h:80],10)"
@@ -2544,7 +2445,7 @@ def scored_games2x2(player_id: str | int, variables: dict, **kwargs: dict) -> st
 def startup(**kwargs: dict) -> str:
     return (
         f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
-        f"#edit[%SKEY](%TB[x:0,y:0,w:0,h:0],{{%GV_SKEY}})"
+        
         f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)"
         f"#pix[%PXT2](%TB[x:0,y:263,w:100%,h:100%],{{}},Internet/pix/i_pri0,13,13,13,13)"
         f"#pan[%P1](%TB[x:42,y:0-22,w:0,h:80],10)"
@@ -2613,7 +2514,7 @@ def user_details(variables: dict, vars: Properties, player_id: int | str, **kwar
         clan_str = f"{{GW|open&clan_users.dcml\\00&clanID={profile.clan_id}\\00|LW_lockall}},\"{{{profile.signature}\")" if profile.clan_id else "{},\"\")"
         return (
             f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
-            f"#edit[%SKEY](%TB[x:0,y:0,w:0,h:0],{{%GV_SKEY}})"
+            
             f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)"
             f"#pix[%PXT2](%TB[x:0,y:263,w:100%,h:100%],{{}},Internet/pix/i_pri0,13,13,13,13)"
             f"#pan[%P1](%TB[x:42,y:0-22,w:0,h:80],10)"
@@ -2774,7 +2675,7 @@ def users_list(player_id: str | int, vars: Properties, variables: dict, **kwargs
             for player in result.content]
     return "".join((
         f"#ebox[%TB](x:0,y:0,w:100%,h:100%)",
-        f"#edit[%SKEY](%TB[x:0,y:0,w:0,h:0],{{%GV_SKEY}})"
+        
         f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)",
         f"#pix[%PXT2](%TB[x:0,y:263,w:100%,h:100%],{{}},Internet/pix/i_pri0,13,13,13,13)",
         f"#pan[%P1](%TB[x:42,y:0-22,w:0,h:80],10)",
@@ -2871,7 +2772,7 @@ def voting_view(player_id: int | str, vars: Properties, variables: dict, **kwarg
             voting+=f'#pan[%HPAN{idx}](%SB[x:0-32,y:%ANS{idx}_{n}+40,w:100%+65,h:0],9)'
     return (
         f"#ebox[%TB](x:0,y:0,w:100%,h:100%)"
-        f"#edit[%SKEY](%TB[x:0,y:0,w:0,h:0],{{%GV_SKEY}})"
+        
         f"#pix[%PXT1](%TB[x:0,y:38,w:100%,h:100%],{{}},Internet/pix/i_pri0,12,12,12,12)"
         f"#pix[%PXT2](%TB[x:0,y:263,w:100%,h:100%],{{}},Internet/pix/i_pri0,13,13,13,13)"
         f"#pan[%P1](%TB[x:42,y:0-22,w:0,h:80],10)"
@@ -3042,15 +2943,6 @@ def command_setipaddr(lobby_id: str, address: str, player_id: int) -> None:
         address = address,
         player_id = player_id
     )
-
-# def view_message(button_1: str = "LW_file&Internet/Cash/l_games_btn.cml", button_2: str = "LW_file&Internet/Cash/l_games_btn.cml", title: str = "ERROR", message: str = "INTERNAL SERVER ERROR") -> str:
-#     return (
-#             f"<MESDLG>"
-#             f"#ebox[%MBG](x:0,y:0,w:1024,h:768)"
-#             f"#def_dtbl_button_hotkey(13,27)"
-#             f"#table[%TBL](%MBG[x:306,y:325,w:415,h:205],{{}}{{}}{button_1}{button_2},2,0,3,13,252,\"{title}\",\"{mysqlerr[message]}\",26,\"Edit\",\"Cancel\")"
-#             f"<MESDLG>"
-#             )
 
 def get_game():
     return game
