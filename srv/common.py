@@ -3,13 +3,23 @@ from collections import defaultdict
 from struct import pack, unpack, unpack_from
 from zlib import compress, decompress
 from requests import RequestException
-
+import dotmap
+import requests
+from typing import Callable
+from sqlalchemy import create_engine
+from typing import Any
+import configparser
 
 class Client:
 
-    def __init__(self, address: str, port: int | str, session_key: str = "") -> None:
+    def __init__(self, 
+                 address: str, 
+                 port: int | str,
+                 player_id: int | str = 0,
+                 session_key: str = "") -> None:
         self.address = address
         self.port = port
+        self.player_id = player_id
         self.session_key = session_key
 
 
@@ -83,8 +93,63 @@ class Response(Packet):
                 packet.extend(str(parameter).encode() + b'\x00')
         return packet
 
-def getFile(filename: str) -> str:
-    return open(f'res/{filename}', 'rb').read().decode()
+class Api_Response(dotmap.DotMap):
+    def __init__(self, request: dict, *args, **kwargs) -> None:
+        super().__init__(request, *args, **kwargs)
+        self.result = request.get("result", "error")
+        content = None
+        if isinstance(request.get("content"), dict):
+            content = dotmap.DotMap(request.get("content"))
+        elif isinstance(request.get("content"), list):
+            content = [dotmap.DotMap(entry) for entry in request.get("content", [])]
+        else:
+            self.content = dotmap.DotMap({"message": request.get("content")})
+        # self.content = dotmap.DotMap(request["content"]) if isinstance(request.get("content"), dict) else request.get("content", {})
+
+    def __bool__(self) -> bool:
+        return self.result != "error"
+
+class Game:
+    configparser.ConfigParser()
+    route_map = {}
+
+    def route(self, dcml: str):
+        def inner(func):
+            self.route_map[dcml] = func
+            return func
+        return inner
+
+    def __init__(self,
+                 packet_handler: Callable,
+                 config_file: str = "config.ini",
+                 ) -> None:
+        self.packet_handler = packet_handler
+        self.config = configparser.ConfigParser()
+        self.config.read(config_file)
+        self.irc_address = self.config["IRC"]["HOSTNAME"]
+        self.irc_ch1 = self.config["IRC"]["CH1"]
+        self.irc_ch2 = self.config["IRC"]["CH2"]
+        self.config['API']['HOST']
+        self.dbtbl_interval = self.config["SETTINGS"]["DBTBL_INTERVAL"]
+        self.engine = create_engine(f'mysql+pymysql://'
+                                    f'{self.config["DATABASE"]["USERNAME"]}:{self.config["DATABASE"]["PASSWORD"]}'
+                                    f'@{self.config["DATABASE"]["HOSTNAME"]}/{self.config["DATABASE"]["SCHEME"]}?charset=utf8mb4')
+
+
+    def get_response(self, client: Client, query: str, **kwargs: Any) -> Api_Response:
+        return Api_Response(requests.get(f"http://{self.config['API']['HOSTNAME']}:{self.config['API']['PORT']}/{self.config['API']['SCHEME']}/{query}", 
+                                     params={
+                                         "session_key": client.session_key,
+                                         "player_id": client.player_id
+                                     } | kwargs).json())
+
+
+
+def render_tempate(filename: str, **kwargs) -> str:
+    file = open(f'res/{filename}', 'rb').read().decode()
+    for pair in kwargs:
+        file.replace(pair, kwargs[pair])
+    return file
 
 def reverse_address(address):
     address = address.split(".")

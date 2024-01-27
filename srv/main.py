@@ -5,7 +5,7 @@ from traceback import print_exc
 from asyncio import StreamWriter
 from common import Server, LOCALE, Client, Request, Response
 from struct import pack
-from games.alexander import get_game
+from srv.games.alexander.alexander import get_game
 
 def send_packet(writer: StreamWriter, response: bytearray) -> None:
     for n in range(0, len(response)//TCP_MAX_PACKET_SIZE+1):
@@ -59,7 +59,7 @@ async def handle_tcp(reader: StreamReader, writer: StreamWriter) -> None:
 async def process_packet(packet, writer: StreamWriter, client: Client) -> None:
     request = Request(packet)
     print(f"SEQ: {request.seq} LANG: {LOCALE.get(request.language, 1)}\nREQUEST: {request.data}")
-    response = Response(request.seq, request.language, request.version, VERSIONS[16].handle(request, client))
+    response = Response(request.seq, request.language, request.version, VERSIONS[16].packet_handler(request, client))
     print(f"RESPONSE: {response}\n")
     send_packet(writer, response.as_packet)
     await writer.drain()
