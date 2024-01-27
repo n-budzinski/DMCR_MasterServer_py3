@@ -7,25 +7,26 @@ from common import clip, clip_string, reverse_address, extract_variables
 from math import floor, ceil
 from struct import unpack
 from api import Game
-from common import Properties
+from common import Client
 
-def process_request(request, vars: Properties, **kwargs) -> list:
+def process_request(request, client: Client, **kwargs) -> tuple[list, int]:
     command, parameters, player_id = request[0], request[1:-2], request[-1].decode()
     response = []
 
     if command == "setipaddr":
         command_setipaddr(lobby_id = request[1].decode(), 
                           address = request[2].decode().split(':')[0],
-                          player_id = player_id)
+                          player_id = player_id, 
+                          client = client)
 
     elif command == "leave":
-        command_leave(player_id)
+        command_leave(player_id, client)
 
     elif command == "start":
         pass
 
     elif command == "url":
-        response.append(LW_time(0, command_url(parameters)))
+        response.append(LW_time(0, command_url(parameters, client)))
 
     elif command == "gmalive":
         pass
@@ -42,26 +43,16 @@ def process_request(request, vars: Properties, **kwargs) -> list:
         pass
 
     elif command == "alive":
-        command_alive(parameters)
+        command_alive(parameters, client)
 
     elif command == "login":
-        response.append(LW_show(command_login(parameters)))
+        response.append(LW_show(command_login(parameters, client)))
 
     elif command == "open":
-        result = command_open(parameters, player_id, vars = vars)
+        result = command_open(parameters, player_id, client = client)
         response.append(LW_show(result))
 
-        # except Exception as exception:
-        #     print(exception)
-        #     response.append(LW_show(
-        #             f'<MESDLG> '
-        #             f'#ebox[%D](x:0,y:0,w:1024,h:768) '
-        #             f'#def_dtbl_button_hotkey(13,27) '
-        #             f'#table[%TBL](%D[x:306,y:325,w:415,h:205],{{}}{{}}{{GW|open&{parameters[0].decode()}\\00|LW_lockall}}{{LW_file&Internet/Cash/cancel.cml}},2,0,3,13,252,"CRITICAL ERROR","Server error occurred while processing your request! Press Try Again button to attempt process request again. Press Cancel to exit",26,"Try Again","Cancel") '
-        #             f'<MESDLG> '
-        #         ))
-
-    return response
+    return response, request[-2]
 
 game = Game(
         scheme = "alexander",
@@ -203,12 +194,12 @@ def clan_load_image(variables: dict, **kwargs: dict[str, Any]) -> str:
         )
 
 @game.route('clan_new.dcml')
-def clan_new(variables: dict, vars: Properties, player_id: str | int, **kwargs: dict[str, Any]) -> str:
+def clan_new(variables: dict, client: Client, player_id: str | int, **kwargs: dict[str, Any]) -> str:
     if variables['title'] and variables['signature']:
         game.get(
             query="create_clan", 
             kwargs = variables,
-            session_key = vars.session_key
+            session_key = client.session_key
             )
         return (
             f'#ebox[%TB](x:0,y:0,w:100%,h:100%)'
@@ -321,19 +312,19 @@ def clan_new(variables: dict, vars: Properties, player_id: str | int, **kwargs: 
     )
 
 @game.route('clan_users.dcml')
-def clan_users(variables: dict, vars: Properties, player_id: int | str, **kwargs: dict[str, Any]) -> str | None:
+def clan_users(variables: dict, client: Client, player_id: int | str, **kwargs: dict[str, Any]) -> str | None:
     members_list = []
     members_buttons = []
     if variables['clanID']:
         clan = game.get_response("get_clan_summary", 
             clanID = variables['clanID'],
             player_id = player_id,
-            session_key = vars.session_key
+            session_key = client.session_key
         ).content
         members = game.get("get_clan_members",
             clanID = variables['clanID'],
             player_id = player_id,
-            session_key = vars.session_key
+            session_key = client.session_key
         ).content
         for idx, member in enumerate(members):
             members_buttons.append(
@@ -421,7 +412,7 @@ def clan_users(variables: dict, vars: Properties, player_id: int | str, **kwargs
     )
 
 @game.route('clans_list.dcml') #OK
-def clans_list(player_id: int | str, vars: Properties, variables: dict, **kwargs: dict[str, Any]) -> str:
+def clans_list(player_id: int | str, client: Client, variables: dict, **kwargs: dict[str, Any]) -> str:
     button_list = []
     clan_list = []
     icon_dialog = ""
@@ -433,7 +424,7 @@ def clans_list(player_id: int | str, vars: Properties, variables: dict, **kwargs
     clans = game.get_response(
         query = "get_clans",
         player_id = player_id,
-        session_key = vars.session_key
+        session_key = client.session_key
         )
     print(clans)
     if clans:
@@ -504,10 +495,10 @@ def clans_list(player_id: int | str, vars: Properties, variables: dict, **kwargs
     )
 
 @game.route('dbtbl.dcml') #OK
-def dbtbl(player_id: int | str, vars: Properties, variables: dict, **kwargs: dict[str, Any]) -> str:
+def dbtbl(player_id: int | str, client: Client, variables: dict, **kwargs: dict[str, Any]) -> str:
     response = game.get(
         query = "get_lobbies",
-        session_key = vars.session_key,
+        session_key = client.session_key,
         player_id = player_id,
     )
     ping_list, lobbies = "", ""
@@ -742,7 +733,7 @@ def forum_search(**kwargs) -> str:
 
 
 @game.route('forum.dcml')
-def forum(variables: dict, vars: Properties, player_id: int | str, **kwargs) -> str:
+def forum(variables: dict, client: Client, player_id: int | str, **kwargs) -> str:
     thread_strings = ""
     thread_list = []
     search = False
@@ -756,7 +747,7 @@ def forum(variables: dict, vars: Properties, player_id: int | str, **kwargs) -> 
             search_nick = variables['search_nick'],
             search_text = variables['search_text'],
             player_id = player_id,
-            session_key = vars.session_key
+            session_key = client.session_key
             )
     else:
         results = game.get_response(
@@ -764,7 +755,7 @@ def forum(variables: dict, vars: Properties, player_id: int | str, **kwargs) -> 
             mode = variables['mode'], 
             next_message = variables.get('next_message', 0),
             player_id = player_id,
-            session_key = vars.session_key
+            session_key = client.session_key
             )
     for idx, thread in enumerate(results.content[:30]):
         thread_list.append(" ".join([
@@ -912,10 +903,10 @@ def games(**kwargs) -> str:
     )
 
 @game.route('join_game.dcml')
-def join_game(variables: dict, vars: Properties, player_id: str, **kwargs) -> str:
+def join_game(variables: dict, client: Client, player_id: str, **kwargs) -> str:
     lobby = game.get_response(
         query = "get_lobby",
-        session_key = vars.session_key,
+        session_key = client.session_key,
         player_id = player_id,
     ).content
     if lobby:
@@ -1137,11 +1128,11 @@ def log_conf_dlg(variables: dict, **kwargs: dict) -> str:
     )
 
 @game.route('log_new_form.dcml') #OK
-def log_new_form(variables: dict, vars: Properties, **kwargs: dict) -> str:
+def log_new_form(variables: dict, client: Client, **kwargs: dict) -> str:
     choices = game.get_response(
         query = "get_choices",
         player_id = None,
-        session_key = vars.session_key
+        session_key = client.session_key
         )
     genders = ",".join(choices.content.sexes)
     countries = ",".join(choices.content.countries)
@@ -1300,7 +1291,7 @@ def log_new_form(variables: dict, vars: Properties, **kwargs: dict) -> str:
         )
 
 @game.route('log_user.dcml') #OK
-def log_user(variables: dict, vars: Properties, **kwargs: dict) -> str | None:
+def log_user(variables: dict, client: Client, **kwargs: dict) -> str | None:
     response = game.get_response(
         query = "log_user", 
         username = variables["VE_NICK"], 
@@ -1308,9 +1299,9 @@ def log_user(variables: dict, vars: Properties, **kwargs: dict) -> str | None:
         gmid = variables["VE_GMID"], 
         relogin = variables["relogin"],
         player_id = None,
-        session_key = vars.session_key
+        session_key = client.session_key
         )
-    vars.session_key=response.content.session_key
+    client.session_key=response.content.session_key
     if response:
         return (
             f"<MESDLG> "
@@ -1340,12 +1331,12 @@ def log_user(variables: dict, vars: Properties, **kwargs: dict) -> str | None:
     )
 
 @game.route('mail_list.dcml') #OK
-def mail_list(variables: dict, vars: Properties, player_id, **kwargs: dict) -> str | None:
+def mail_list(variables: dict, client: Client, player_id, **kwargs: dict) -> str | None:
     panel_list = ""
     message_list = ""
     result = game.get_response(
         query = "get_mail",
-        session_key = vars.session_key,
+        session_key = client.session_key,
         player_id = player_id,
     )
     for idx, message in enumerate(result.content.messages):
@@ -1441,7 +1432,7 @@ def mail_list(variables: dict, vars: Properties, player_id, **kwargs: dict) -> s
     )
 
 @game.route('mail_new.dcml')
-def mail_new(variables: dict, player_id, **kwargs) -> str | None:
+def mail_new(variables: dict, client: Client, player_id, **kwargs) -> str | None:
     if variables['send']:
         result = game.get_response(
             query = "send_mail",
@@ -1449,7 +1440,7 @@ def mail_new(variables: dict, player_id, **kwargs) -> str | None:
             id_to = variables.get("id_to"),
             subject = variables.get("subject"),
             content = variables.get("content"),
-            session_key = vars.session_key,
+            session_key = client.session_key,
             player_id = player_id,
         )
         if not result:
@@ -1465,7 +1456,7 @@ def mail_new(variables: dict, player_id, **kwargs) -> str | None:
         not_found = False
         summary = game.get_response(
             query = "get_mail",
-            session_key = vars.session_key,
+            session_key = client.session_key,
             player_id = player_id,
         ).content.summary
         return " ".join((
@@ -1844,10 +1835,10 @@ def new_game_dlg(variables: dict, player_id, **kwargs) -> str:
 """
 
 @game.route('news.dcml') #OK
-def news(player_id: int | str, vars: Properties, variables: dict, **kwargs: dict) -> str:
+def news(player_id: int | str, client: Client, variables: dict, **kwargs: dict) -> str:
     result = game.get_response(
         query = "get_news",
-        session_key = vars.session_key,
+        session_key = client.session_key,
         player_id = player_id,
     )
     news_board = []
@@ -1926,12 +1917,12 @@ def news(player_id: int | str, vars: Properties, variables: dict, **kwargs: dict
     )
 
 @game.route('punishments.dcml') #OK
-def punishments(player_id: int | str, vars: Properties, variables: dict, **kwargs: dict) -> str:
+def punishments(player_id: int | str, client: Client, variables: dict, **kwargs: dict) -> str:
     punishment_list = ""
     punishments = game.get_response("get_punishments", 
         ID = variables['ID'],
         player_id = player_id,
-        session_key = vars.session_key
+        session_key = client.session_key
     )
     if punishments:
         for idx, entry in enumerate(punishments.content):
@@ -2499,11 +2490,11 @@ def startup(**kwargs: dict) -> str:
     )
 
 @game.route('user_details.dcml') #OK
-def user_details(variables: dict, vars: Properties, player_id: int | str, **kwargs: dict) -> str | None:
+def user_details(variables: dict, client: Client, player_id: int | str, **kwargs: dict) -> str | None:
     result = game.get_response("get_user_details", 
         ID = variables['ID'],
         player_id = player_id,
-        session_key = vars.session_key
+        session_key = client.session_key
     )
     exclude_button = ""
     if result:
@@ -2643,7 +2634,7 @@ def url_open(variables: dict, **kwargs) -> str:
     )
 
 @game.route('users_list.dcml') #OK
-def users_list(player_id: str | int, vars: Properties, variables: dict, **kwargs: dict) -> str:
+def users_list(player_id: str | int, client: Client, variables: dict, **kwargs: dict) -> str:
     user_list = []
     user_buttons = []
     page = variables.get("next_user", 0)
@@ -2664,7 +2655,7 @@ def users_list(player_id: str | int, vars: Properties, variables: dict, **kwargs
         page = page,
         resort = resort,
         order = order,
-        session_key = vars.session_key,
+        session_key = client.session_key,
         player_id = player_id
     )
     if result:
@@ -2747,11 +2738,11 @@ def users_list(player_id: str | int, vars: Properties, variables: dict, **kwargs
     ))
 
 @game.route('voting_view.dcml') #OK
-def voting_view(player_id: int | str, vars: Properties, variables: dict, **kwargs: dict) -> str:
+def voting_view(player_id: int | str, client: Client, variables: dict, **kwargs: dict) -> str:
     voting = ""
     result = game.get_response(
         query = "get_polls",
-        session_key = vars.session_key,
+        session_key = client.session_key,
         player_id = player_id
     )
     n = None
@@ -2827,10 +2818,10 @@ def voting_view(player_id: int | str, vars: Properties, variables: dict, **kwarg
     )
 
 @game.route('voting.dcml') #OK
-def voting(player_id: int | str, vars: Properties, variables: dict, **kwargs: dict) -> str:
+def voting(player_id: int | str, client: Client, variables: dict, **kwargs: dict) -> str:
     response = game.get_response(
         query = "get_latest_poll",
-        session_key = vars.session_key,
+        session_key = client.session_key,
         player_id = player_id,
     )
     if response:
@@ -2865,15 +2856,14 @@ def LW_time(time: str | int, url: str) -> list:
 def LW_show(content: str) -> list:
     return ['LW_show', content]
 
-def command_open(parameters: list[bytes], player_id: str | int, vars: Properties) -> str:
-    filename = parameters[0].decode()
+def command_open(parameters: list[bytes], player_id: str | int, client: Client) -> str:
     variables = defaultdict(lambda: "")
     if len(parameters) > 1:
         variable_string = parameters[1].decode()
         extract_variables(variables, variable_string)
-    return game.route_map.get(filename, cancel)(variables=variables, player_id=player_id, vars = vars)
+    return game.route_map.get(parameters[0].decode(), cancel)(variables=variables, player_id=player_id, client = client)
 
-def command_login(parameters: list[bytes]) -> str:
+def command_login(parameters: list[bytes], client: Client) -> str:
     session_key = parameters[0].decode()
     if session_key:
         response = game.get("command_login", 
@@ -2916,10 +2906,10 @@ def command_login(parameters: list[bytes]) -> str:
         f"#end(l_g)"
     )
 
-def command_url(parameters: list[bytes]) -> str:
+def command_url(parameters: list[bytes], client: Client) -> str:
     return parameters[0].decode()
 
-def command_alive(parameters: list[bytes]) -> None:
+def command_alive(parameters: list[bytes], client: Client) -> None:
     data = bytearray(parameters[0])
     data.extend(b'\x00' * (4 - len(data) % 4))
     values = []
@@ -2932,16 +2922,18 @@ def command_alive(parameters: list[bytes]) -> None:
         host_id = host_id
     )
 
-def command_leave(player_id: int | str) -> None:
+def command_leave(player_id: int | str, client: Client) -> None:
     game.get(query="leave",
-        player_id = player_id
+        player_id = player_id,
+        session_key = client.session_key
     )
 
-def command_setipaddr(lobby_id: str, address: str, player_id: int) -> None:
+def command_setipaddr(lobby_id: str, address: str, player_id: int, client: Client) -> None:
     game.get(query="setipaddr",
         lobby_id = lobby_id,
         address = address,
-        player_id = player_id
+        player_id = player_id,
+        session_key = client.session_key
     )
 
 def get_game():

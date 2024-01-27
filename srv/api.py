@@ -48,8 +48,8 @@ class Game:
             return func
         return inner
 
-    def handle(self, data, vars: object):
-        return self.packet_handler(data, vars = vars)
+    def handle(self, data, client):
+        return self.packet_handler(data, client)
 
     def __init__(self,
                  packet_handler: Callable,

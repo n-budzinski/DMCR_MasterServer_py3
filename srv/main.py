@@ -2,48 +2,10 @@ from threading import Thread
 from asyncio import StreamReader, StreamWriter, wait_for, TimeoutError, run, start_server
 from socket import socket, AF_INET, SOCK_DGRAM
 from traceback import print_exc
-from struct import pack, unpack, unpack_from
-from zlib import compress, decompress
-from common import Server, LOCALE, Properties
+from asyncio import StreamWriter
+from common import Server, LOCALE, Client, Request, Response
+from struct import pack
 from games.alexander import get_game
-from typing import Any
-
-def unpack_packet(packet: bytes) -> tuple[Any, list[bytes]]:
-    payload = decompress(packet[12:])
-    data = []
-    lsize = unpack('H', payload[0:2])[0]
-    function_length = unpack_from("B"*lsize, payload[2:])[0]
-    cursor = 5 + function_length
-    data.append(payload[3:3 + function_length].decode())
-    param_n = unpack("H", payload[3 + function_length:5 + function_length])[0]
-    for _ in range(0, param_n):
-        parameter_length = unpack(
-            "I", payload[cursor:cursor+4], )[0]
-        cursor += 4
-        value = payload[cursor:cursor+parameter_length].rstrip(b'\x00')
-        data.append(value)
-        cursor += parameter_length
-    return unpack("HBB", packet[:4]), data
-
-
-def pack_packet(data, integrity: str) -> bytearray:
-    packet = bytearray()
-    packet.extend(pack("H", len(data)))
-    for idx, function in enumerate(data):
-        data[idx].append(integrity)
-        packet.extend(pack("B", len(data[idx][0])))
-        packet.extend(data[idx][0].encode())
-        packet.extend(pack("H", len(data[idx])-1))
-        for parameter in function[1:]:
-            packet.extend(pack("I", len(str(parameter)) + 1))
-            packet.extend(str(parameter).encode() + b'\x00')
-    return packet
-
-
-def add_header(packet, sequence, language, version) -> bytearray:
-    data = compress(packet)
-    return bytearray(pack('HBBII', sequence, language, version, len(data) + 12, len(packet)) + data)
-
 
 def send_packet(writer: StreamWriter, response: bytearray) -> None:
     for n in range(0, len(response)//TCP_MAX_PACKET_SIZE+1):
@@ -75,13 +37,13 @@ def handle_udp(udp_socket: socket) -> None:
 
 
 async def handle_tcp(reader: StreamReader, writer: StreamWriter) -> None:
-    vars = Properties()
+    client = Client(*writer.get_extra_info('peername'))
     while True:
         try:
             packet = await wait_for(reader.read(TCP_MAX_PACKET_SIZE), timeout=TCP_TIMEOUT)
             if not packet:
                 break
-            await process_packet(packet, writer, vars)
+            await process_packet(packet, writer, client)
         except TimeoutError:
             break
         except ConnectionError as f:
@@ -91,14 +53,15 @@ async def handle_tcp(reader: StreamReader, writer: StreamWriter) -> None:
         else:
             continue
     writer.close()
+    
     await writer.wait_closed()
 
-async def process_packet(packet, writer: StreamWriter, vars: Properties) -> None:
-    (sequence, vars.language, vars.version), data = unpack_packet(packet)
-    print(f"SEQ: {sequence} LANG: {LOCALE.get(vars.language, 1)}\nREQUEST: {data}")
-    response = VERSIONS[16].handle(data, vars)
+async def process_packet(packet, writer: StreamWriter, client: Client) -> None:
+    request = Request(packet)
+    print(f"SEQ: {request.seq} LANG: {LOCALE.get(request.language, 1)}\nREQUEST: {request.data}")
+    response = Response(request.seq, request.language, request.version, VERSIONS[16].handle(request, client))
     print(f"RESPONSE: {response}\n")
-    send_packet(writer, add_header(pack_packet(response, data[-2].decode()), sequence, vars.language, vars.version))
+    send_packet(writer, response.as_packet)
     await writer.drain()
 
 

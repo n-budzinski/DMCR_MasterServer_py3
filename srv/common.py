@@ -1,16 +1,87 @@
-from asyncio.streams import StreamReader
 import ipaddress
-from typing import Any
-import uuid
-from os import urandom
 from collections import defaultdict
-from asyncio import AbstractEventLoop, BaseProtocol, StreamWriter, WriteTransport
+from struct import pack, unpack, unpack_from
+from zlib import compress, decompress
+from requests import RequestException
 
-class Properties:
-    def __init__(self, version: int = 16, language: int = 1, session_key: str = "") -> None:
-        self.version = version
-        self.language = language
+
+class Client:
+
+    def __init__(self, address: str, port: int | str, session_key: str = "") -> None:
+        self.address = address
+        self.port = port
         self.session_key = session_key
+
+
+class Server():
+
+    def __init__(self, 
+                address: str = "0.0.0.0", 
+                udp_port: int = 34000, 
+                tcp_port: int = 34001
+                ) -> None:
+        self.address, self.udp_port, self.tcp_port = address, udp_port, tcp_port
+
+
+class Packet:
+
+    def __init__(self, seq: int, language: int, version: int, data: list) -> None:
+        self.seq, self.language, self.version, self.data =\
+            seq, language, version, data
+
+
+class Request(Packet):
+
+    def __init__(self, request: bytes) -> None:
+        metadata, data = Request._unpack(request)
+        super().__init__(*metadata, data)
+
+    @staticmethod
+    def _unpack(packet: bytes) -> tuple[tuple[int, int, int], list]:
+        try:
+            payload = decompress(packet[12:])
+            data = []
+            lsize = unpack('H', payload[0:2])[0]
+            function_length = unpack_from("B"*lsize, payload[2:])[0]
+            cursor = 5 + function_length
+            data.append(payload[3:3 + function_length].decode())
+            param_n = unpack("H", payload[3 + function_length:5 + function_length])[0]
+            for _ in range(0, param_n):
+                parameter_length = unpack("I", payload[cursor:cursor+4], )[0]
+                cursor += 4
+                data.append(payload[cursor:cursor+parameter_length].rstrip(b'\x00'))
+                cursor += parameter_length
+            metadata = unpack("HBB", packet[:4])
+            if len(metadata) == 3 and all(isinstance(i, int) for i in metadata):
+                return metadata, data
+            raise
+        except:
+            raise RequestException
+
+
+class Response(Packet):
+
+    def __init__(self, seq: int, language: int, version: int, data: list) -> None:
+        super().__init__(seq, language, version, data)
+        self.as_packet = Response._add_header(seq, language, version, Response._pack(data))
+
+    @staticmethod
+    def _add_header(sequence: int, language: int, version: int, data: bytearray) -> bytearray:
+        _data = compress(data)
+        return bytearray(pack('HBBII', sequence, language, version, len(_data) + 12, len(_data)) + _data)
+
+    @staticmethod
+    def _pack(data: list) -> bytearray:
+        packet = bytearray()
+        packet.extend(pack("H", len(data)))
+        for idx, function in enumerate(data):
+            packet.extend(pack("B", len(data[idx][0])))
+            packet.extend(data[idx][0].encode())
+            packet.extend(pack("H", len(data[idx])-1))
+            for parameter in function[1:]:
+                packet.extend(pack("I", len(str(parameter)) + 1))
+                packet.extend(str(parameter).encode() + b'\x00')
+        return packet
 
 def getFile(filename: str) -> str:
     return open(f'res/{filename}', 'rb').read().decode()
@@ -20,9 +91,6 @@ def reverse_address(address):
     address = [octet for octet in address[::-1]]
     address = ".".join(address)
     return str(int(ipaddress.IPv4Address(address)))
-
-def genID():
-    return str(uuid.UUID(bytes = urandom(16)))
 
 def clip_string(string:str, limit: int) -> str:
     return string if len(string) <= limit else string[:limit]
@@ -35,15 +103,6 @@ def extract_variables(destination: defaultdict, variable_string: str) -> None:
         t = (option.strip("'").split(sep="="))
         if len(t) == 2:
             destination[t[0]] = t[1]  # type: ignore
-
-class Server():
-    def __init__(self, 
-                address: str = "0.0.0.0", 
-                udp_port: int = 34000, 
-                tcp_port: int = 34001
-                ) -> None:
-        self.address, self.udp_port, self.tcp_port = address, udp_port, tcp_port
-
 
 mysql_error_messages = defaultdict(lambda: "ERR_INTERNAL",{
     "ERR_INTERNAL" : "Server error occurred while processing your request! Press Try Again button to attempt process request again. Press Cancel to exit",
@@ -59,7 +118,6 @@ mysql_error_messages = defaultdict(lambda: "ERR_INTERNAL",{
     "ERR_GMID_INVALID" : "An invalid Game Box Identifier was entered! Please enter more carefully. The number of attempts is limited. Press Edit button to check Game Box Identifier. Press Cancel to exit",
     "ERR_GMID_USED" : "The provided Game Box Identifier has already been used. The number of attempts is limited. Press Edit button to check Game Box Identifier. Press Cancel to exit",
     "ERR_EMAIL_USED" : "The provided E-Mail address has already been used. Press Edit button to check E-Mail address. Press Cancel to exit",
-    "ERR_EMAIL_FORMAT" : 45012,
     "ERR_BIRTH_FORMAT" : "Incorrect birthday date! Birthday must be in DD/MM/YYYY or DD.MM.YYYY format. Where DD - day (1-31), MM - month (1-12), YYYY - year. Press Edit button to check birthday date. Press Cancel to exit.",
     "ERR_ACC_NOTFOUND" : "Invalid login data were specified! Press Edit button to update your login data. Press Cancel to exit.",
     "REG_NEW_USER_EDIT_OK": "Your personal profile data has been successfully updated!\\Press OK button to save password, in other case press Cancel.\\This option saves your password and Game Box #ID. Don't use it, if you play from computer accessible for other people.",
