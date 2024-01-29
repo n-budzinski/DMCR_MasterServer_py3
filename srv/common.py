@@ -3,7 +3,6 @@ from collections import defaultdict
 from struct import pack, unpack, unpack_from
 from zlib import compress, decompress
 from requests import RequestException
-import dotmap
 import requests
 from typing import Callable
 from sqlalchemy import create_engine
@@ -71,46 +70,42 @@ class Request(Packet):
 
 class Response(Packet):
 
-    def __init__(self, seq: int, language: int, version: int, data: list) -> None:
+    def __init__(self, seq: int, language: int, version: int, data: list, integrity: str) -> None:
         super().__init__(seq, language, version, data)
-        self.as_packet = Response._add_header(seq, language, version, Response._pack(data))
+        self.as_packet = Response._add_header(seq, language, version, Response._pack(data, integrity))
 
     @staticmethod
     def _add_header(sequence: int, language: int, version: int, data: bytearray) -> bytearray:
         _data = compress(data)
-        return bytearray(pack('HBBII', sequence, language, version, len(_data) + 12, len(_data)) + _data)
+        print(data)
+        return bytearray(pack('HBBII', sequence, language, version, len(_data) + 12, len(data)) + _data)
 
     @staticmethod
-    def _pack(data: list) -> bytearray:
+    def _pack(data: list, integrity: str) -> bytearray:
         packet = bytearray()
         packet.extend(pack("H", len(data)))
         for idx, function in enumerate(data):
+            # data[idx].append(integrity)
             packet.extend(pack("B", len(data[idx][0])))
             packet.extend(data[idx][0].encode())
-            packet.extend(pack("H", len(data[idx])-1))
+            packet.extend(pack("H", len(data[idx])))
             for parameter in function[1:]:
-                packet.extend(pack("I", len(str(parameter)) + 1))
-                packet.extend(str(parameter).encode() + b'\x00')
+                packet.extend(pack("I", len(str(parameter))))
+                packet.extend(str(parameter).encode())
+            packet.extend(pack("I", len(str(integrity)) + 1))
+            packet.extend(str(integrity).encode() + b'\x00')
         return packet
 
-class Api_Response(dotmap.DotMap):
-    def __init__(self, request: dict, *args, **kwargs) -> None:
-        super().__init__(request, *args, **kwargs)
-        self.result = request.get("result", "error")
-        content = None
-        if isinstance(request.get("content"), dict):
-            content = dotmap.DotMap(request.get("content"))
-        elif isinstance(request.get("content"), list):
-            content = [dotmap.DotMap(entry) for entry in request.get("content", [])]
-        else:
-            self.content = dotmap.DotMap({"message": request.get("content")})
-        # self.content = dotmap.DotMap(request["content"]) if isinstance(request.get("content"), dict) else request.get("content", {})
+class Api_Response:
+    def __init__(self, response: dict, *args, **kwargs) -> None:
+        self.result = response['result']
+        self.content = response['content']
 
     def __bool__(self) -> bool:
-        return self.result != "error"
+        return self.result == "success"
 
 class Game:
-    configparser.ConfigParser()
+
     route_map = {}
 
     def route(self, dcml: str):
@@ -121,35 +116,34 @@ class Game:
 
     def __init__(self,
                  packet_handler: Callable,
-                 config_file: str = "config.ini",
+                 config_file: str = "games/alexander/config.ini",
+                 dcml_directory: str = "games/alexander/dcml/"
                  ) -> None:
         self.packet_handler = packet_handler
-        self.config = configparser.ConfigParser()
+        self.dcml_directory = dcml_directory
+        self.config = configparser.ConfigParser(inline_comment_prefixes=("//"))
         self.config.read(config_file)
         self.irc_address = self.config["IRC"]["HOSTNAME"]
         self.irc_ch1 = self.config["IRC"]["CH1"]
         self.irc_ch2 = self.config["IRC"]["CH2"]
-        self.config['API']['HOST']
         self.dbtbl_interval = self.config["SETTINGS"]["DBTBL_INTERVAL"]
         self.engine = create_engine(f'mysql+pymysql://'
                                     f'{self.config["DATABASE"]["USERNAME"]}:{self.config["DATABASE"]["PASSWORD"]}'
                                     f'@{self.config["DATABASE"]["HOSTNAME"]}/{self.config["DATABASE"]["SCHEME"]}?charset=utf8mb4')
 
 
-    def get_response(self, client: Client, query: str, **kwargs: Any) -> Api_Response:
-        return Api_Response(requests.get(f"http://{self.config['API']['HOSTNAME']}:{self.config['API']['PORT']}/{self.config['API']['SCHEME']}/{query}", 
-                                     params={
+    def get_response(self, query: str, client: Client, **kwargs: Any) -> Api_Response:
+        return Api_Response(requests.get(f"http://{self.config['API']['HOSTNAME']}:{self.config['API']['PORT']}/{self.config['DATABASE']['SCHEME']}/{query}", 
+                                     params= kwargs | {
                                          "session_key": client.session_key,
                                          "player_id": client.player_id
-                                     } | kwargs).json())
+                                     }).json())
 
-
-
-def render_tempate(filename: str, **kwargs) -> str:
-    file = open(f'res/{filename}', 'rb').read().decode()
-    for pair in kwargs:
-        file.replace(pair, kwargs[pair])
-    return file
+    def render_tempate(self, filename: str, **kwargs) -> str:
+        file = open(self.dcml_directory + filename, 'rb').read().decode()
+        for key, value in kwargs.items():
+            file = file.replace(f"<<{key}>>", str(value)).replace('\r', '').replace('\n', '')
+        return file
 
 def reverse_address(address):
     address = address.split(".")

@@ -5,7 +5,7 @@ from traceback import print_exc
 from asyncio import StreamWriter
 from common import Server, LOCALE, Client, Request, Response
 from struct import pack
-from srv.games.alexander.alexander import get_game
+from games.alexander.alexander import get_game
 
 def send_packet(writer: StreamWriter, response: bytearray) -> None:
     for n in range(0, len(response)//TCP_MAX_PACKET_SIZE+1):
@@ -41,17 +41,15 @@ async def handle_tcp(reader: StreamReader, writer: StreamWriter) -> None:
     while True:
         try:
             packet = await wait_for(reader.read(TCP_MAX_PACKET_SIZE), timeout=TCP_TIMEOUT)
-            if not packet:
-                break
             await process_packet(packet, writer, client)
         except TimeoutError:
             break
         except ConnectionError as f:
-            print(f)
-            print_exc()
             break
-        else:
-            continue
+        except:
+            print_exc()
+            writer.write(bytearray())
+        continue
     writer.close()
     
     await writer.wait_closed()
@@ -59,8 +57,8 @@ async def handle_tcp(reader: StreamReader, writer: StreamWriter) -> None:
 async def process_packet(packet, writer: StreamWriter, client: Client) -> None:
     request = Request(packet)
     print(f"SEQ: {request.seq} LANG: {LOCALE.get(request.language, 1)}\nREQUEST: {request.data}")
-    response = Response(request.seq, request.language, request.version, VERSIONS[16].packet_handler(request, client))
-    print(f"RESPONSE: {response}\n")
+    response = Response(request.seq, request.language, request.version, *VERSIONS[16].packet_handler(request, client))
+    print(f"RESPONSE: {response.data}\n")
     send_packet(writer, response.as_packet)
     await writer.drain()
 
@@ -82,6 +80,11 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    # config = ConfigParser(inline_comment_prefixes=("//"))
+    # config.read("config.ini")
+    # TCP_MAX_PACKET_SIZE = config.getint('PROTOCOL', 'TCP_MAX_PACKET_SIZE')
+    # TCP_TIMEOUT = config.getint('PROTOCOL', 'TCP_TIMEOUT')
+    # UDP_MAX_PACKET_SIZE = config.getint('PROTOCOL', 'UDP_MAX_PACKET_SIZE')
     TCP_MAX_PACKET_SIZE = 1440
     TCP_TIMEOUT = 120
     UDP_MAX_PACKET_SIZE = 64
@@ -89,7 +92,9 @@ if __name__ == "__main__":
     VERSIONS = {16: get_game()}
     
     SERVER = Server()
-    try:
-        main()
-    except KeyboardInterrupt:
-        print("Shutting down...")
+    while True:
+        try:
+            main()
+        except KeyboardInterrupt:
+            print("Shutting down...")
+            break
